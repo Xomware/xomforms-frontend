@@ -1,0 +1,94 @@
+<div class="poll-create-page" *ngIf="!createdPoll; else createdView">
+  <h1>Create a poll</h1>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <div class="field">
+      <label for="title">Title</label>
+      <input id="title" type="text" formControlName="title" placeholder="Fantasy Draft Night" />
+      <p class="field-error" *ngIf="fieldInvalid('title')">Title is required.</p>
+    </div>
+
+    <div class="field">
+      <label for="description">Description <span class="optional">(optional)</span></label>
+      <textarea id="description" formControlName="description" rows="3"></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="startDate">Start date</label>
+        <input id="startDate" type="date" formControlName="startDate" />
+        <p class="field-error" *ngIf="fieldInvalid('startDate')">Start date is required.</p>
+      </div>
+      <div class="field">
+        <label for="endDate">End date</label>
+        <input id="endDate" type="date" formControlName="endDate" />
+        <p class="field-error" *ngIf="fieldInvalid('endDate')">End date is required.</p>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="dayStartTime">Earliest time each day</label>
+        <input id="dayStartTime" type="time" formControlName="dayStartTime" />
+      </div>
+      <div class="field">
+        <label for="dayEndTime">Latest time each day</label>
+        <input id="dayEndTime" type="time" formControlName="dayEndTime" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="granularityMinutes">Block size</label>
+        <select id="granularityMinutes" formControlName="granularityMinutes">
+          <option *ngFor="let g of granularityOptions" [value]="g">{{ g }} minutes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="timezone">Timezone</label>
+        <select id="timezone" formControlName="timezone">
+          <option *ngFor="let tz of commonTimezones" [value]="tz">{{ tz }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field checkbox-field">
+      <label>
+        <input type="checkbox" formControlName="guestAllowed" />
+        Allow guests to respond without an account
+      </label>
+    </div>
+
+    <div class="field checkbox-field">
+      <label>
+        <input type="checkbox" formControlName="showResultsToRespondents" />
+        Let respondents see the live results too
+      </label>
+    </div>
+
+    <div class="field">
+      <label for="closeAt">Close responses at <span class="optional">(optional)</span></label>
+      <input id="closeAt" type="datetime-local" formControlName="closeAt" />
+    </div>
+
+    <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+
+    <button type="submit" class="submit-btn" [disabled]="submitting">
+      {{ submitting ? 'Creating…' : 'Create poll' }}
+    </button>
+  </form>
+</div>
+
+<ng-template #createdView>
+  <div class="poll-created-page">
+    <h1>Poll created</h1>
+    <p class="share-label">Share this link with respondents:</p>
+    <div class="share-row">
+      <input type="text" [value]="shareUrl" readonly (click)="$any($event.target).select()" />
+      <button type="button" (click)="copyShareLink()">Copy</button>
+    </div>
+
+    <h2>Live results</h2>
+    <p class="form-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>
+    <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+  </div>
+</ng-template>

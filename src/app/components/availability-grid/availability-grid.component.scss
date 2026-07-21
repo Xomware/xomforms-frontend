@@ -1,0 +1,157 @@
+.grid-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.selected-count {
+  font-weight: 600;
+  color: #333;
+}
+
+.clear-btn {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover:not(:disabled) {
+    background: #f5f5f5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #4caf50;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.grid-scroll {
+  overflow: auto;
+  max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.grid {
+  display: grid;
+  width: max-content;
+  // Critical for mobile Safari: stop the browser from hijacking the
+  // gesture as a page-scroll before our pointer handlers run. Verified in
+  // Phase 0 (window.scrollY stayed 0 during an in-grid drag).
+  touch-action: none;
+}
+
+.cell {
+  border: 1px solid #eee;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #555;
+  min-height: 32px;
+}
+
+.label {
+  background: #fafafa;
+  font-weight: 600;
+  color: #333;
+  padding: 4px 8px;
+}
+
+.corner {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 3;
+}
+
+.row-header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fafafa;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.col-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fafafa;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.paint-cell {
+  background: #fff;
+  cursor: pointer;
+  border: 1px solid #eee;
+  padding: 0;
+  margin: 0;
+  transition: background-color 0.1s ease;
+
+  &:hover {
+    background: #f0f7f0;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #1976d2;
+    outline-offset: -2px;
+    z-index: 1;
+    position: relative;
+  }
+
+  &.selected {
+    background: #4caf50;
+    border-color: #388e3c;
+
+    &:hover {
+      background: #43a047;
+    }
+  }
+}
+
+.tz-note {
+  font-size: 12px;
+  color: #777;
+  margin: 0;
+}
+
+// Phase 0 follow-up: mobile touch targets were ~28px at 390px/7-col --
+// grow row height toward the ~44px recommendation on narrow viewports.
+// Column headers narrow instead of the cells to keep the grid legible
+// without forcing horizontal scroll on every phone.
+@media (max-width: 480px) {
+  .cell {
+    min-height: 44px;
+  }
+
+  .row-header {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+
+  .col-header {
+    font-size: 10px;
+    padding: 4px 2px;
+  }
+}

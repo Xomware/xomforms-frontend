@@ -1,0 +1,158 @@
+.poll-create-page,
+.poll-created-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 18px;
+  margin: 24px 0 12px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field-row {
+  display: flex;
+  gap: 16px;
+
+  .field {
+    flex: 1;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.optional {
+  font-weight: 400;
+  color: #888;
+}
+
+input[type='text'],
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'],
+textarea,
+select {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+
+  &:focus-visible {
+    outline: 2px solid #1976d2;
+    outline-offset: 1px;
+    border-color: #1976d2;
+  }
+
+  &:disabled {
+    background: #f5f5f5;
+    color: #999;
+  }
+}
+
+.checkbox-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.field-error {
+  color: #c62828;
+  font-size: 12px;
+  margin: 0;
+}
+
+.form-error {
+  color: #c62828;
+  font-size: 14px;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 0;
+}
+
+.submit-btn {
+  padding: 10px 20px;
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+
+  &:hover:not(:disabled) {
+    background: #43a047;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #1976d2;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background: #a5d6a7;
+    cursor: wait;
+  }
+}
+
+.share-label {
+  color: #555;
+  font-size: 14px;
+}
+
+.share-row {
+  display: flex;
+  gap: 8px;
+
+  input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: monospace;
+  }
+
+  button {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+
+    &:hover {
+      background: #f5f5f5;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #1976d2;
+      outline-offset: 2px;
+    }
+  }
+}

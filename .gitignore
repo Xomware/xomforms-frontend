@@ -44,8 +44,11 @@ Thumbs.db
 # Local .terraform directories
 **/.terraform/*
 
-# Testing
-src/environments/environment.dev.ts
+# Note: unlike xomify-frontend, environment.development.ts IS committed
+# here -- Cognito pool/client id are public-by-design (frontend bundles
+# ship them; see xomware-infrastructure/terraform/cognito_ssm.tf), so
+# there's no real secret to keep local-only, and committing it means a
+# fresh clone can `ng serve` without extra setup.
 
 # Claude Code session memory (personal, not shared)
 .claude/memory/

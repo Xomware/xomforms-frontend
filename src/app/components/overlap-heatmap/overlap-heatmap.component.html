@@ -1,0 +1,37 @@
+<div class="heatmap-wrap" *ngIf="result; else emptyState">
+  <div class="best-time-banner" *ngIf="result.bestBlockIds.length > 0; else noVotesYet">
+    <span class="banner-icon" aria-hidden="true">&#9733;</span>
+    <span>Best time{{ result.bestBlockIds.length > 1 ? 's (tied)' : '' }}: <strong>{{ bestTimesLabel }}</strong></span>
+    <span class="respondent-count">{{ result.totalRespondents }} respondent{{ result.totalRespondents === 1 ? '' : 's' }}</span>
+  </div>
+  <ng-template #noVotesYet>
+    <div class="best-time-banner empty">
+      <span>No responses yet -- results will appear here as people submit their availability.</span>
+    </div>
+  </ng-template>
+
+  <div class="grid-scroll">
+    <div class="grid" [style.gridTemplateColumns]="'88px repeat(' + colDates.length + ', minmax(28px, 1fr))'">
+      <div class="cell label corner"></div>
+      <div class="cell label col-header" *ngFor="let date of colDates">{{ colHeaderLabel(date) }}</div>
+
+      <ng-container *ngFor="let row of rows">
+        <div class="cell label row-header">{{ row.label }}</div>
+        <div
+          *ngFor="let block of row.cells"
+          class="cell heat-cell"
+          [class.best]="isBest(block)"
+          [style.backgroundColor]="'rgba(76, 175, 80, ' + cellOpacity(block) + ')'"
+          [title]="cellTitle(block)"
+          [attr.aria-label]="cellTitle(block)"
+        ></div>
+      </ng-container>
+    </div>
+  </div>
+
+  <p class="tz-note">Times shown in your local timezone ({{ viewerTz }}).</p>
+</div>
+
+<ng-template #emptyState>
+  <p class="empty-message">No results to show yet.</p>
+</ng-template>

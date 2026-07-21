@@ -1,0 +1,32 @@
+<div class="grid-wrap">
+  <div class="toolbar">
+    <span class="selected-count">{{ selected.size }} block{{ selected.size === 1 ? '' : 's' }} selected</span>
+    <button type="button" class="clear-btn" (click)="clear()" [disabled]="selected.size === 0">
+      Clear all
+    </button>
+  </div>
+
+  <div class="grid-scroll">
+    <div #gridEl class="grid" [style.gridTemplateColumns]="'88px repeat(' + colDates.length + ', minmax(44px, 1fr))'">
+      <div class="cell label corner"></div>
+      <div class="cell label col-header" *ngFor="let date of colDates">{{ colHeaderLabel(date) }}</div>
+
+      <ng-container *ngFor="let row of rows">
+        <div class="cell label row-header">{{ row.label }}</div>
+        <button
+          type="button"
+          *ngFor="let block of row.cells"
+          class="cell paint-cell"
+          [class.selected]="isSelected(block.blockId)"
+          [attr.data-block-id]="block.blockId"
+          [attr.aria-pressed]="isSelected(block.blockId)"
+          [attr.aria-label]="cellTitle(block)"
+          [title]="cellTitle(block)"
+          (click)="onCellClick(block.blockId)"
+        ></button>
+      </ng-container>
+    </div>
+  </div>
+
+  <p class="tz-note">Times shown in your local timezone ({{ viewerTz }}). Drag to paint availability, drag again over painted cells to erase.</p>
+</div>

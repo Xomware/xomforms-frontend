@@ -26,11 +26,12 @@ github_project_number: 2
 github_project_owner: Xomware
 base_branch: master
 test_commands:
-  - echo "no tests configured yet"
+  - npm run test -- --watch=false --browsers=ChromeHeadless
 ```
 
 ## Constraints
 - No charting/heatmap library — hand-rolled drag-paint grid (Phase 0 de-risked).
-- Cognito auth uses the shared `xomware_users` pool via `cognito_client_xomforms` app client.
+- Cognito auth uses the shared `xomware_users` pool via `cognito_client_xomforms` app client (deployed in `xomware-infrastructure`, read back via SSM at deploy time — see `deploy-frontend.yml`).
+- API base URL: `https://api.xomforms.xomware.com` (verified live against the deployed API Gateway base path mapping).
 
 ## Lessons
