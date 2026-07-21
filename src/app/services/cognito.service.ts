@@ -1,6 +1,11 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, from, map } from 'rxjs';
-import { signIn, signOut, fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
+import {
+  signOut,
+  fetchAuthSession,
+  getCurrentUser,
+  signInWithRedirect,
+} from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 
 export interface XomUser {
@@ -12,15 +17,18 @@ export interface XomUser {
 /**
  * Wraps Amplify v6 Auth APIs for the SHARED `xomware_users` Cognito pool,
  * via the `cognito_client_xomforms` app client (deployed in
- * xomware-infrastructure -- see docs/features/xomforms/PLAN.md). Ported
- * from xomware-frontend's cognito.service.ts, the actual live Cognito
- * reference in this app family -- xomify-frontend predates the Cognito
- * migration and has no Cognito integration to mirror.
+ * xomware-infrastructure -- see docs/features/xomforms/PLAN.md). Mirrors
+ * xomware-frontend's cognito.service.ts, the live Cognito reference in this
+ * app family.
  *
- * Trimmed for xomforms' MVP scope: sign-in only, no local sign-up/
- * password-reset UI (a creator with an existing Xomware account -- from
- * xomware.com or any other app on the shared pool -- can already sign in
- * here; new-account creation is out of scope for Phase 3).
+ * Auth is done entirely through the SHARED Cognito Hosted UI (same domain +
+ * pool as xomware.com). Two consequences we rely on:
+ *   - SSO carry-over: a user already signed into any Xomware app has a live
+ *     Hosted UI session cookie on the shared domain, so a redirect here
+ *     issues a fresh code for the xomforms app client WITHOUT re-prompting
+ *     for credentials.
+ *   - Sign-up == sign-in: the Google IdP (and Hosted UI) provision a new
+ *     account on first use, so there's no separate local sign-up flow.
  */
 @Injectable({ providedIn: 'root' })
 export class CognitoService implements OnDestroy {
@@ -43,6 +51,7 @@ export class CognitoService implements OnDestroy {
     this.hubSub = Hub.listen('auth', ({ payload }) => {
       switch (payload.event) {
         case 'signedIn':
+        case 'signInWithRedirect':
         case 'tokenRefresh':
           this.refreshUser();
           break;
@@ -76,16 +85,26 @@ export class CognitoService implements OnDestroy {
     }
   }
 
-  signIn(email: string, password: string): Observable<XomUser> {
-    return from(this.signInInternal(email, password));
+  /**
+   * Kick off Google sign-in/sign-up through the shared Cognito Hosted UI.
+   * First-time users are auto-provisioned on the shared pool; returning
+   * users (incl. those already signed into another Xomware app) come
+   * straight back with a session. The page navigates away, so there's no
+   * success value -- completion is handled on /auth/callback via Hub.
+   */
+  signInWithGoogle(): Observable<void> {
+    return from(signInWithRedirect({ provider: 'Google' }).then(() => undefined));
   }
 
-  private async signInInternal(email: string, password: string): Promise<XomUser> {
-    const result = await signIn({ username: email, password });
-    if (!result.isSignedIn) {
-      throw new Error(result.nextStep?.signInStep ?? 'SIGN_IN_INCOMPLETE');
-    }
-    return this.refreshUser();
+  /**
+   * Redirect to the shared Cognito Hosted UI without forcing a provider.
+   * This is the true SSO carry-over path: if a Hosted UI session cookie
+   * already exists (from xomware.com or any sibling app), Cognito returns a
+   * code immediately with no credential prompt. Otherwise the Hosted UI
+   * offers Google + email sign-in/sign-up.
+   */
+  signInWithHostedUi(): Observable<void> {
+    return from(signInWithRedirect().then(() => undefined));
   }
 
   signOut(): Observable<void> {

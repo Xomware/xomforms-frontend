@@ -1,39 +1,36 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, Subscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import { CognitoService } from '../../../services/cognito.service';
 
 /**
- * Minimal sign-in against the shared xomware_users Cognito pool, via the
- * cognito_client_xomforms app client. Ported/trimmed from
- * xomware-frontend's sign-in.component.ts.
- *
- * No local sign-up UI in this MVP -- a creator with an existing Xomware
- * account (from xomware.com or any other app on the shared pool) can
- * already sign in here; new-account creation is out of Phase 3 scope.
+ * Sign-in / sign-up entry for Xomforms. Auth runs through the SHARED
+ * Cognito Hosted UI (same pool + domain as xomware.com), so:
+ *   - A user already signed into another Xomware app is carried over here
+ *     silently -- we short-circuit to `next` as soon as the session check
+ *     settles, without ever showing a credential prompt.
+ *   - Otherwise we offer "Continue with Google" (Google IdP) as the primary
+ *     path and a generic Hosted UI fallback (email / another account).
+ * There is no local password form -- sign-up happens on first Google/Hosted
+ * UI use. Mirrors xomware-frontend's Google IdP UX.
  */
 @Component({
   selector: 'app-sign-in',
   templateUrl: './sign-in.component.html',
   styleUrls: ['./sign-in.component.scss'],
 })
-export class SignInComponent implements OnInit {
-  readonly form: FormGroup;
+export class SignInComponent implements OnInit, OnDestroy {
   loading = false;
   errorMessage = '';
   private nextPath = '/';
+  private sub?: Subscription;
 
   constructor(
-    private fb: FormBuilder,
     private cognito: CognitoService,
     private router: Router,
     private route: ActivatedRoute,
-  ) {
-    this.form = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
     const raw = this.route.snapshot.queryParamMap.get('next');
@@ -44,24 +41,46 @@ export class SignInComponent implements OnInit {
         this.nextPath = decoded;
       }
     }
+
+    // SSO carry-over: if the shared session already resolved into a signed-in
+    // user, don't make them click anything -- go straight to the target.
+    this.sub = this.cognito.isReady$
+      .pipe(
+        filter((ready) => ready),
+        take(1),
+      )
+      .subscribe(() => {
+        if (this.cognito.isAuthenticated()) {
+          this.router.navigateByUrl(this.nextPath);
+        }
+      });
   }
 
-  fieldInvalid(name: 'email' | 'password'): boolean {
-    const ctrl = this.form.get(name);
-    return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched);
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
-  onSubmit(): void {
-    if (this.form.invalid || this.loading) {
-      this.form.markAllAsTouched();
-      return;
-    }
+  onGoogleSignIn(): void {
+    this.redirect(() => this.cognito.signInWithGoogle());
+  }
+
+  onHostedUiSignIn(): void {
+    this.redirect(() => this.cognito.signInWithHostedUi());
+  }
+
+  private redirect(start: () => Observable<void>): void {
+    if (this.loading) return;
     this.loading = true;
     this.errorMessage = '';
-    const { email, password } = this.form.value as { email: string; password: string };
-
-    this.cognito.signIn(email, password).subscribe({
-      next: () => this.router.navigateByUrl(this.nextPath),
+    // The Hosted UI round-trip drops our `?next=`, so stash it for the
+    // callback to pick up (survives the full-page redirect via sessionStorage).
+    try {
+      sessionStorage.setItem('xf_next', this.nextPath);
+    } catch {
+      /* private mode / storage disabled -- fall back to home after auth */
+    }
+    start().subscribe({
+      // On success the browser navigates away to the Hosted UI; nothing to do.
       error: (err: Error) => {
         this.loading = false;
         this.errorMessage = this.friendlyError(err);
@@ -70,13 +89,13 @@ export class SignInComponent implements OnInit {
   }
 
   private friendlyError(err: Error): string {
-    const name = (err as { name?: string }).name || '';
-    const msg = err.message || '';
-    const both = `${name} ${msg}`;
-    if (/NotAuthorizedException|Incorrect/i.test(both)) return 'Email or password is incorrect.';
-    if (/UserNotFoundException/i.test(both)) return 'No account found for that email.';
-    if (/UserNotConfirmedException/i.test(both)) return 'Please verify your email before signing in.';
-    if (/network/i.test(both)) return 'Network error -- check your connection and try again.';
-    return msg ? `${name ? name + ': ' : ''}${msg}` : 'Something went wrong. Please try again.';
+    const msg = err?.message || '';
+    if (/not configured|Amplify has not been configured/i.test(msg)) {
+      return 'Sign-in is not available in this environment yet.';
+    }
+    if (/network/i.test(msg)) {
+      return 'Network error -- check your connection and try again.';
+    }
+    return 'Could not start sign-in. Please try again.';
   }
 }

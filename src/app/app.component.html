@@ -1,6 +1,29 @@
 <header class="app-header">
-  <a routerLink="/polls/create" class="brand">Xomforms</a>
+  <a routerLink="/" class="brand" aria-label="Xomforms home">
+    <picture>
+      <source srcset="assets/xomforms-banner.webp" type="image/webp" />
+      <img
+        src="assets/xomforms-banner.png"
+        alt="Xomforms"
+        class="brand-banner"
+        width="1200"
+        height="498"
+        decoding="async"
+      />
+    </picture>
+  </a>
+
+  <nav class="header-actions" *ngIf="cognito.isReady$ | async">
+    <ng-container *ngIf="cognito.user$ | async as user; else signedOut">
+      <span class="account-email" [title]="user.email">{{ user.email }}</span>
+      <button type="button" class="header-btn" (click)="signOut()">Sign out</button>
+    </ng-container>
+    <ng-template #signedOut>
+      <a routerLink="/auth/sign-in" class="header-btn">Sign in</a>
+    </ng-template>
+  </nav>
 </header>
-<main>
+
+<main class="app-main">
   <router-outlet></router-outlet>
 </main>

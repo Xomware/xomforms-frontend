@@ -11,33 +11,40 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  font-size: 14px;
+  font-size: 0.88rem;
 }
 
 .selected-count {
   font-weight: 600;
-  color: #333;
+  color: var(--xf-text);
 }
 
 .clear-btn {
-  padding: 6px 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
+  padding: 7px 15px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-pill);
+  background: var(--xf-surface);
+  color: var(--xf-text-muted);
   cursor: pointer;
-  font-size: 13px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background var(--xf-transition), border-color var(--xf-transition),
+    color var(--xf-transition);
 
   &:hover:not(:disabled) {
-    background: #f5f5f5;
+    background: var(--xf-surface-2);
+    border-color: var(--xf-primary);
+    color: var(--xf-primary);
   }
 
   &:focus-visible {
-    outline: 2px solid #4caf50;
+    outline: 2px solid var(--xf-primary);
     outline-offset: 2px;
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 }
@@ -45,34 +52,34 @@
 .grid-scroll {
   overflow: auto;
   max-width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid var(--xf-border);
+  border-radius: var(--xf-radius);
+  background: var(--xf-surface);
 }
 
 .grid {
   display: grid;
   width: max-content;
   // Critical for mobile Safari: stop the browser from hijacking the
-  // gesture as a page-scroll before our pointer handlers run. Verified in
-  // Phase 0 (window.scrollY stayed 0 during an in-grid drag).
+  // gesture as a page-scroll before our pointer handlers run.
   touch-action: none;
 }
 
 .cell {
-  border: 1px solid #eee;
+  border: 1px solid var(--xf-border);
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  color: #555;
+  font-size: 0.75rem;
+  color: var(--xf-text-muted);
   min-height: 32px;
 }
 
 .label {
-  background: #fafafa;
+  background: var(--xf-surface-2);
   font-weight: 600;
-  color: #333;
+  color: var(--xf-text);
   padding: 4px 8px;
 }
 
@@ -87,7 +94,7 @@
   position: sticky;
   left: 0;
   z-index: 2;
-  background: #fafafa;
+  background: var(--xf-surface-2);
   justify-content: flex-end;
   white-space: nowrap;
 }
@@ -96,62 +103,65 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #fafafa;
+  background: var(--xf-surface-2);
   text-align: center;
   white-space: nowrap;
 }
 
 .paint-cell {
-  background: #fff;
+  background: var(--xf-surface);
   cursor: pointer;
-  border: 1px solid #eee;
+  border: 1px solid var(--xf-border);
   padding: 0;
   margin: 0;
   transition: background-color 0.1s ease;
 
   &:hover {
-    background: #f0f7f0;
+    background: var(--xf-purple-100);
   }
 
   &:focus-visible {
-    outline: 2px solid #1976d2;
+    outline: 2px solid var(--xf-primary);
     outline-offset: -2px;
     z-index: 1;
     position: relative;
   }
 
   &.selected {
-    background: #4caf50;
-    border-color: #388e3c;
+    background: var(--xf-primary);
+    border-color: var(--xf-primary-active);
 
     &:hover {
-      background: #43a047;
+      background: var(--xf-primary-hover);
     }
   }
 }
 
 .tz-note {
-  font-size: 12px;
-  color: #777;
+  font-size: 0.75rem;
+  color: var(--xf-text-faint);
   margin: 0;
 }
 
-// Phase 0 follow-up: mobile touch targets were ~28px at 390px/7-col --
-// grow row height toward the ~44px recommendation on narrow viewports.
-// Column headers narrow instead of the cells to keep the grid legible
-// without forcing horizontal scroll on every phone.
+// Grow touch targets toward the ~44px recommendation on narrow viewports.
 @media (max-width: 480px) {
   .cell {
     min-height: 44px;
   }
 
   .row-header {
-    font-size: 11px;
+    font-size: 0.68rem;
     padding: 4px 6px;
   }
 
   .col-header {
-    font-size: 10px;
+    font-size: 0.62rem;
     padding: 4px 2px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .paint-cell:hover {
+    background: rgba(154, 107, 255, 0.18);
   }
 }

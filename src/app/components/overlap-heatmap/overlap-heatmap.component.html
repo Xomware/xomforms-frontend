@@ -21,7 +21,7 @@
           *ngFor="let block of row.cells"
           class="cell heat-cell"
           [class.best]="isBest(block)"
-          [style.backgroundColor]="'rgba(76, 175, 80, ' + cellOpacity(block) + ')'"
+          [style.backgroundColor]="'rgba(var(--xf-heat-rgb), ' + cellOpacity(block) + ')'"
           [title]="cellTitle(block)"
           [attr.aria-label]="cellTitle(block)"
         ></div>
