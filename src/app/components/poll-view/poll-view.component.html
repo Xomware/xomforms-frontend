@@ -1,0 +1,56 @@
+<div class="poll-view-page">
+  <div class="state-message" *ngIf="state === 'loading'">Loading poll…</div>
+
+  <div class="state-message" *ngIf="state === 'not-found'">
+    <h1>Poll not found</h1>
+    <p>This poll doesn't exist, or the link is incorrect.</p>
+  </div>
+
+  <div class="state-message" *ngIf="state === 'error'">
+    <h1>Something went wrong</h1>
+    <p>We couldn't load this poll right now. Please try again in a moment.</p>
+  </div>
+
+  <div class="state-message" *ngIf="state === 'closed'">
+    <h1>{{ poll?.title }}</h1>
+    <p>Responses for this poll are closed.</p>
+  </div>
+
+  <div class="state-message" *ngIf="state === 'needs-signin'">
+    <h1>{{ poll?.title }}</h1>
+    <p>This poll requires an account to respond.</p>
+    <a [href]="signInUrl" class="sign-in-link">Sign in to respond</a>
+  </div>
+
+  <div class="poll-form" *ngIf="state === 'ready' && poll">
+    <h1>{{ poll.title }}</h1>
+    <p class="description" *ngIf="poll.description">{{ poll.description }}</p>
+
+    <div class="field" *ngIf="!cognito.isAuthenticated()">
+      <label for="displayName">Your name</label>
+      <input id="displayName" type="text" [(ngModel)]="displayName" placeholder="Enter your name" />
+    </div>
+    <div class="field" *ngIf="cognito.isAuthenticated()">
+      <label for="displayNameAuthed">Your name</label>
+      <input id="displayNameAuthed" type="text" [(ngModel)]="displayName" [placeholder]="cognito.currentUser?.email ?? 'Enter your name'" />
+    </div>
+
+    <app-availability-grid [blocks]="grid" (selectionChange)="onSelectionChange($event)"></app-availability-grid>
+
+    <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+
+    <button type="button" class="submit-btn" [disabled]="!canSubmit()" (click)="onSubmit()">
+      {{ submitting ? 'Submitting…' : 'Submit availability' }}
+    </button>
+  </div>
+
+  <div class="submitted-view" *ngIf="state === 'submitted'">
+    <h1>Thanks{{ displayName ? ', ' + displayName : '' }}!</h1>
+    <p>Your availability has been recorded.</p>
+
+    <ng-container *ngIf="poll?.showResultsToRespondents">
+      <h2>Live results</h2>
+      <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+    </ng-container>
+  </div>
+</div>

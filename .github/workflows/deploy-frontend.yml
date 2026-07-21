@@ -1,0 +1,138 @@
+name: Deploy Xomforms Frontend
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    # Run on push, workflow_dispatch, or merged PRs (not just closed)
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Pull Cognito config from SSM (Terraform-managed values)
+        # Pool/client id/domain are public-by-design (see
+        # xomware-infrastructure/terraform/cognito_ssm.tf) -- pulled from
+        # SSM rather than hardcoded so a pool/client change never requires
+        # an application-code change. Mirrors xomware-frontend's
+        # deploy-frontend.yml exactly.
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: |
+          {
+            echo "COGNITO_USER_POOL_ID=$(aws ssm get-parameter --name /xomware/shared/cognito/user-pool-id --query Parameter.Value --output text)"
+            echo "COGNITO_CLIENT_ID=$(aws ssm get-parameter --name /xomware/shared/cognito/clients/xomforms-id --query Parameter.Value --output text)"
+            echo "COGNITO_DOMAIN=$(aws ssm get-parameter --name /xomware/shared/cognito/hosted-ui-domain --query Parameter.Value --output text)"
+          } >> "$GITHUB_ENV"
+
+      - name: Inject environment variables into Angular
+        run: |
+          sed -i "s|cognitoUserPoolId: ''|cognitoUserPoolId: '${COGNITO_USER_POOL_ID}'|g" src/environments/environment.ts
+          sed -i "s|cognitoClientId: ''|cognitoClientId: '${COGNITO_CLIENT_ID}'|g" src/environments/environment.ts
+          sed -i "s|cognitoDomain: 'xomware-auth.auth.us-east-1.amazoncognito.com'|cognitoDomain: '${COGNITO_DOMAIN}'|g" src/environments/environment.ts
+
+      - name: Verify injected environment values
+        run: |
+          if grep -nE "(cognitoUserPoolId|cognitoClientId): *''" src/environments/environment.ts; then
+            echo "::error::environment.ts still contains empty Cognito values after SSM injection -- aborting build."
+            exit 1
+          fi
+          echo "Environment injection verified."
+
+      - name: Build
+        run: npm run build:prod
+
+      - name: Deploy hashed bundles to S3 (1 year cache)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: |
+          aws s3 sync ./dist/xomforms-frontend s3://xomforms.xomware.com --delete \
+            --exclude "index.html" \
+            --cache-control "public, max-age=31536000, immutable"
+
+      - name: Deploy index.html (no-cache)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: |
+          aws s3 cp ./dist/xomforms-frontend/index.html s3://xomforms.xomware.com/index.html \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --content-type "text/html"
+
+      - name: Invalidate CloudFront and wait
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: |
+          # Resolved dynamically (not a stored secret) -- same pattern as
+          # xomware-frontend's deploy-frontend.yml. Distribution is
+          # provisioned by xomforms-infrastructure's web_hosting.tf.
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[?@ == 'xomforms.xomware.com']].Id" \
+            --output text)
+
+          if [ -z "$DISTRIBUTION_ID" ]; then
+            echo "::error::No CloudFront distribution found for xomforms.xomware.com"
+            exit 1
+          fi
+
+          echo "Invalidating CloudFront distribution: $DISTRIBUTION_ID"
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id "$DISTRIBUTION_ID" \
+            --paths "/" "/index.html" \
+            --query 'Invalidation.Id' --output text)
+
+          echo "Invalidation ID: $INVALIDATION_ID — waiting for completion..."
+          TIMEOUT=300
+          ELAPSED=0
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            STATUS=$(aws cloudfront get-invalidation \
+              --distribution-id "$DISTRIBUTION_ID" \
+              --id "$INVALIDATION_ID" \
+              --query 'Invalidation.Status' --output text)
+            echo "  Status: $STATUS (${ELAPSED}s)"
+            if [ "$STATUS" = "Completed" ]; then
+              echo "✅ CloudFront invalidation completed"
+              break
+            fi
+            sleep 10
+            ELAPSED=$((ELAPSED + 10))
+          done
+
+          if [ "$STATUS" != "Completed" ]; then
+            echo "::warning::Invalidation did not complete within ${TIMEOUT}s (status: $STATUS)"
+          fi
+
+      - name: Deployment Summary
+        if: success()
+        run: |
+          echo "## ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** s3://xomforms.xomware.com" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://xomforms.xomware.com" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,16 @@
+.app-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: #4caf50;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid #1976d2;
+    outline-offset: 2px;
+  }
+}
