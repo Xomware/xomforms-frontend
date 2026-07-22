@@ -72,7 +72,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
 
   get shareUrl(): string {
     if (!this.createdPoll) return '';
-    return `${window.location.origin}/poll/${this.createdPoll.pollId}`;
+    return `${window.location.origin}/f/${this.createdPoll.pollId}`;
   }
 
   copyShareLink(): void {

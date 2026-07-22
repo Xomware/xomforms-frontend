@@ -81,7 +81,7 @@ export class PollViewComponent implements OnInit, OnDestroy {
   }
 
   get signInUrl(): string {
-    const next = encodeURIComponent(`/poll/${this.pollId}`);
+    const next = encodeURIComponent(`/f/${this.pollId}`);
     return `/auth/sign-in?next=${next}`;
   }
 

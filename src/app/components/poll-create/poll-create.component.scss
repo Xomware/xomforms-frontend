@@ -13,6 +13,26 @@
   box-shadow: var(--xf-shadow-card);
 }
 
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--xf-text-muted);
+  text-decoration: none;
+  transition: color var(--xf-transition);
+
+  &:hover {
+    color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
+    border-radius: var(--xf-radius-sm);
+  }
+}
+
 h1 {
   font-size: 1.6rem;
   font-weight: 700;

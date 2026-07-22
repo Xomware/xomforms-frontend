@@ -41,6 +41,24 @@ export interface PollListResponse {
 }
 
 /**
+ * Lifecycle status shown on the "My Forms" dashboard. The backend has no
+ * first-class `status` attribute yet (see xomforms-v2 BRAINSTORM — draft/
+ * open/closed/finalized is a later, additive backend change), so for the
+ * Foundation we DERIVE open/closed purely from `closeAt`:
+ *   - closed  → `closeAt` is set and already in the past
+ *   - open    → otherwise (no close time, or close time still in the future)
+ * When the backend gains a real status field, swap this for `poll.status`.
+ */
+export type PollStatus = 'open' | 'closed';
+
+export function derivePollStatus(poll: Pick<Poll, 'closeAt'>, now: number = Date.now()): PollStatus {
+  if (poll.closeAt && new Date(poll.closeAt).getTime() < now) {
+    return 'closed';
+  }
+  return 'open';
+}
+
+/**
  * One candidate availability block in a poll's grid. Matches
  * lambdas/common/timezone.py::generate_grid()'s output shape exactly.
  * blockId is the stable "YYYY-MM-DDTHH:MM" wall-clock label in the poll's

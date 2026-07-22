@@ -1,0 +1,120 @@
+<div class="dashboard">
+  <header class="dash-header">
+    <div>
+      <h1 class="dash-title">My Forms</h1>
+      <p class="dash-sub">Availability forms you've created.</p>
+    </div>
+    <a routerLink="/forms/new" class="btn-create">
+      <span aria-hidden="true">+</span> Create form
+    </a>
+  </header>
+
+  <!-- Loading -->
+  <div class="dash-state" *ngIf="state === 'loading'" role="status" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Loading your forms…</span>
+  </div>
+
+  <!-- Error -->
+  <div class="dash-state dash-state--error" *ngIf="state === 'error'" role="alert">
+    <h2>Couldn't load your forms</h2>
+    <p>Something went wrong reaching the server.</p>
+    <button type="button" class="btn-retry" (click)="load()">Try again</button>
+  </div>
+
+  <!-- Empty (no forms at all) -->
+  <div class="dash-state dash-empty" *ngIf="state === 'empty'">
+    <img src="assets/xomforms-icon-256.png" alt="" width="56" height="56" />
+    <h2>No forms yet</h2>
+    <p>Create your first availability form to start collecting responses.</p>
+    <a routerLink="/forms/new" class="btn-create">
+      <span aria-hidden="true">+</span> Create form
+    </a>
+  </div>
+
+  <!-- Ready -->
+  <ng-container *ngIf="state === 'ready'">
+    <div class="dash-toolbar">
+      <div class="search-wrap">
+        <label for="formSearch" class="sr-only">Search forms</label>
+        <input
+          id="formSearch"
+          type="search"
+          class="search-input"
+          [(ngModel)]="search"
+          placeholder="Search by title…"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="status-tabs" role="group" aria-label="Filter by status">
+        <button
+          type="button"
+          class="tab"
+          [class.tab--active]="statusFilter === 'all'"
+          [attr.aria-pressed]="statusFilter === 'all'"
+          (click)="statusFilter = 'all'"
+        >
+          All
+        </button>
+        <button
+          type="button"
+          class="tab"
+          [class.tab--active]="statusFilter === 'open'"
+          [attr.aria-pressed]="statusFilter === 'open'"
+          (click)="statusFilter = 'open'"
+        >
+          Open
+        </button>
+        <button
+          type="button"
+          class="tab"
+          [class.tab--active]="statusFilter === 'closed'"
+          [attr.aria-pressed]="statusFilter === 'closed'"
+          (click)="statusFilter = 'closed'"
+        >
+          Closed
+        </button>
+      </div>
+    </div>
+
+    <!-- No matches for the current filter -->
+    <div class="dash-state no-matches" *ngIf="visibleRows.length === 0">
+      <p>No forms match your filters.</p>
+      <button type="button" class="btn-retry" (click)="clearFilters()" *ngIf="hasActiveFilter">
+        Clear filters
+      </button>
+    </div>
+
+    <ul class="form-list" *ngIf="visibleRows.length > 0">
+      <li class="form-card" *ngFor="let row of visibleRows; trackBy: trackByPollId">
+        <div class="form-card-main">
+          <div class="form-card-heading">
+            <h2 class="form-card-title">{{ row.poll.title }}</h2>
+            <span
+              class="status-badge"
+              [class.status-badge--open]="row.status === 'open'"
+              [class.status-badge--closed]="row.status === 'closed'"
+            >
+              {{ row.status === 'open' ? 'Open' : 'Closed' }}
+            </span>
+          </div>
+          <p class="form-card-meta">
+            Created {{ row.createdLabel }}
+            <span class="dot" aria-hidden="true">•</span>
+            {{ row.poll.timezone }}
+          </p>
+        </div>
+
+        <div class="form-card-actions">
+          <a [routerLink]="['/forms', row.poll.pollId]" class="btn-results">
+            View results
+          </a>
+          <a [routerLink]="['/f', row.poll.pollId]" class="btn-open-form">
+            Open form
+          </a>
+        </div>
+      </li>
+    </ul>
+  </ng-container>
+</div>
