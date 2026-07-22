@@ -1,16 +1,90 @@
 .app-header {
-  padding: 12px 20px;
-  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px clamp(16px, 4vw, 28px);
+  /* Always dark: the neon banner is designed to sit on a dark backdrop. */
+  background: var(--xf-header-bg);
+  border-bottom: 1px solid var(--xf-header-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .brand {
-  font-size: 18px;
-  font-weight: 700;
-  color: #4caf50;
-  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  border-radius: var(--xf-radius-sm);
 
   &:focus-visible {
-    outline: 2px solid #1976d2;
+    outline: 2px solid var(--xf-yellow);
+    outline-offset: 4px;
+  }
+}
+
+.brand-banner {
+  display: block;
+  height: 46px;
+  width: auto;
+  max-width: 62vw;
+  object-fit: contain;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.account-email {
+  color: var(--xf-header-muted);
+  font-size: 13px;
+  max-width: 42vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: var(--xf-radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--xf-header-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--xf-transition), border-color var(--xf-transition);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-yellow);
     outline-offset: 2px;
+  }
+}
+
+.app-main {
+  display: block;
+}
+
+@media (max-width: 560px) {
+  .brand-banner {
+    height: 36px;
+    max-width: 52vw;
+  }
+
+  .account-email {
+    display: none;
   }
 }

@@ -1,1 +1,149 @@
-/* You can add global styles to this file, and also import other style files */
+/* =====================================================================
+   Xomforms — global design tokens + base styles
+   Brand: PURPLE (primary, #6a36a9) + YELLOW (accent, #ffe455), sampled
+   straight from the app icon/banner. Tokens are CSS custom properties so
+   the whole UI adapts to light + dark from a single source of truth.
+   ===================================================================== */
+
+:root {
+  /* ── Brand (fixed hues, sampled from the logo) ───────────────── */
+  --xf-purple: #6a36a9;
+  --xf-purple-600: #5a2c92;
+  --xf-purple-700: #48226f;
+  --xf-purple-300: #a985d6;
+  --xf-purple-100: #efe7f8;
+  --xf-purple-glow: rgba(106, 54, 169, 0.32);
+
+  --xf-yellow: #ffe455;
+  --xf-yellow-deep: #e0a417; /* readable amber for accents on light bg */
+  --xf-yellow-soft: #fff6cf;
+
+  --xf-danger: #c62828;
+
+  /* ── Semantic tokens — LIGHT theme (default) ─────────────────── */
+  --xf-bg: #f5f2fa;
+  --xf-surface: #ffffff;
+  --xf-surface-2: #f4f0fb;
+  --xf-surface-3: #ece5f7;
+  --xf-border: #e4dcf0;
+  --xf-border-strong: #d3c7e8;
+
+  --xf-text: #201733;
+  --xf-text-muted: #6a6280;
+  --xf-text-faint: #948ca8;
+
+  --xf-primary: var(--xf-purple);
+  --xf-primary-hover: var(--xf-purple-600);
+  --xf-primary-active: var(--xf-purple-700);
+  --xf-on-primary: #ffffff;
+
+  --xf-accent: var(--xf-yellow-deep);
+  --xf-accent-strong: var(--xf-yellow);
+
+  --xf-focus-ring: rgba(106, 54, 169, 0.45);
+  --xf-danger-text: #b3261e;
+  --xf-danger-bg: #fdeceb;
+  --xf-danger-border: #f4c7c3;
+
+  --xf-heat-rgb: 106, 54, 169; /* purple density ramp for the heatmap */
+
+  /* Header is always dark — the neon banner needs a dark backdrop. */
+  --xf-header-bg: #140f22;
+  --xf-header-border: rgba(255, 255, 255, 0.08);
+  --xf-header-text: #f3eefb;
+  --xf-header-muted: #b3a9cc;
+
+  --xf-shadow-sm: 0 1px 2px rgba(32, 18, 56, 0.08);
+  --xf-shadow-card: 0 1px 3px rgba(32, 18, 56, 0.06), 0 10px 30px rgba(32, 18, 56, 0.07);
+
+  /* ── Scale ───────────────────────────────────────────────────── */
+  --xf-radius-sm: 6px;
+  --xf-radius: 10px;
+  --xf-radius-lg: 16px;
+  --xf-radius-pill: 999px;
+
+  --xf-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --xf-font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, 'Fira Code',
+    Consolas, monospace;
+
+  --xf-transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --xf-bg: #0e0b18;
+    --xf-surface: #171227;
+    --xf-surface-2: #1e1834;
+    --xf-surface-3: #271f42;
+    --xf-border: #2c2444;
+    --xf-border-strong: #3a3059;
+
+    --xf-text: #ede9f7;
+    --xf-text-muted: #a79fc2;
+    --xf-text-faint: #7c7498;
+
+    /* Brighten the primary so it stays vivid on dark surfaces. */
+    --xf-purple: #9a6bff;
+    --xf-primary: #9a6bff;
+    --xf-primary-hover: #af8bff;
+    --xf-primary-active: #8a56f0;
+    --xf-purple-glow: rgba(154, 107, 255, 0.4);
+
+    --xf-accent: #ffd23f;
+    --xf-focus-ring: rgba(154, 107, 255, 0.55);
+
+    --xf-danger-text: #ff9d97;
+    --xf-danger-bg: rgba(198, 40, 40, 0.16);
+    --xf-danger-border: rgba(198, 40, 40, 0.42);
+
+    --xf-heat-rgb: 154, 107, 255;
+
+    --xf-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --xf-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.45), 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--xf-bg);
+  color: var(--xf-text);
+  font-family: var(--xf-font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--xf-text);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--xf-primary);
+}
+
+/* Consistent, on-brand focus ring for keyboard users everywhere. */
+:focus-visible {
+  outline: 2px solid var(--xf-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--xf-purple-glow);
+}

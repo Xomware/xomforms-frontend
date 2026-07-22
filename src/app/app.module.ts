@@ -11,6 +11,7 @@ import { AvailabilityGridComponent } from './components/availability-grid/availa
 import { OverlapHeatmapComponent } from './components/overlap-heatmap/overlap-heatmap.component';
 import { PollViewComponent } from './components/poll-view/poll-view.component';
 import { SignInComponent } from './components/auth/sign-in/sign-in.component';
+import { CallbackComponent } from './components/auth/callback/callback.component';
 
 import { jwtInterceptor } from './interceptors/jwt.interceptor';
 
@@ -22,6 +23,7 @@ import { jwtInterceptor } from './interceptors/jwt.interceptor';
     OverlapHeatmapComponent,
     PollViewComponent,
     SignInComponent,
+    CallbackComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, FormsModule, ReactiveFormsModule],
   // provideHttpClient(withInterceptors(...)) is the correct way to register

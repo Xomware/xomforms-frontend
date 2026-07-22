@@ -1,0 +1,203 @@
+// Shared layout for the Xomforms auth screens (sign-in, callback).
+// Dark, on-brand shell with a purple glow — echoes the app header.
+
+.auth-shell {
+  min-height: calc(100vh - 66px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(106, 54, 169, 0.35) 0%, transparent 55%),
+    var(--xf-header-bg);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 36px 32px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--xf-radius-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  animation: authFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  text-decoration: none;
+
+  img {
+    width: 44px;
+    height: 44px;
+    filter: drop-shadow(0 0 14px rgba(255, 228, 85, 0.35));
+  }
+
+  span {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--xf-header-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-yellow);
+    outline-offset: 4px;
+    border-radius: var(--xf-radius-sm);
+  }
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--xf-header-text);
+  margin: 0 0 8px;
+}
+
+.auth-subtitle {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--xf-header-muted);
+  margin: 0 0 24px;
+}
+
+.auth-error {
+  padding: 10px 14px;
+  margin: 0 0 18px;
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid rgba(255, 82, 82, 0.32);
+  border-radius: var(--xf-radius-sm);
+  color: #ff9d97;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border: none;
+  border-radius: var(--xf-radius);
+  background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
+  color: #fff;
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--xf-transition), box-shadow var(--xf-transition),
+    opacity var(--xf-transition);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px var(--xf-purple-glow);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-yellow);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.auth-btn--google {
+  background: #fff;
+  color: #23202b;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.google-icon {
+  flex: none;
+}
+
+.auth-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--xf-radius);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--xf-header-text);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--xf-transition), border-color var(--xf-transition);
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-yellow);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.auth-fineprint {
+  margin: 20px 0 0;
+  font-size: 0.78rem;
+  color: var(--xf-header-muted);
+}
+
+.callback-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 4px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: authSpin 0.6s linear infinite;
+}
+
+@keyframes authFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes authSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

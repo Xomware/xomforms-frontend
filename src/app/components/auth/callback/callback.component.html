@@ -1,0 +1,26 @@
+<div class="auth-shell">
+  <div class="auth-card" role="status" aria-live="polite">
+    <div class="auth-brand" aria-hidden="true">
+      <img src="assets/xomforms-icon-256.png" alt="" width="44" height="44" />
+      <span>Xomforms</span>
+    </div>
+
+    <ng-container *ngIf="!errored">
+      <h1 class="auth-title">Signing you in…</h1>
+      <p class="auth-subtitle">Hang tight while we finish setting things up.</p>
+      <div class="callback-spinner" aria-hidden="true">
+        <span class="spinner"></span>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="errored">
+      <h1 class="auth-title">That took longer than expected</h1>
+      <p class="auth-subtitle">
+        Sign-in didn't complete. Please head back and try again.
+      </p>
+      <div class="auth-actions">
+        <a routerLink="/auth/sign-in" class="auth-btn-ghost">Back to sign in</a>
+      </div>
+    </ng-container>
+  </div>
+</div>
