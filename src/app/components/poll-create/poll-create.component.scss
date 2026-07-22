@@ -145,6 +145,46 @@ textarea {
   margin: 0;
 }
 
+.field-hint {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--xf-text-muted);
+
+  em {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--xf-text);
+  }
+}
+
+.checkbox-note {
+  color: var(--xf-text-faint);
+}
+
+.add-availability-cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 16px;
+  padding: 11px 22px;
+  border-radius: var(--xf-radius);
+  background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
+  color: var(--xf-on-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: transform var(--xf-transition), box-shadow var(--xf-transition);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px var(--xf-purple-glow);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
+  }
+}
+
 .form-error {
   color: var(--xf-danger-text);
   font-size: 0.9rem;

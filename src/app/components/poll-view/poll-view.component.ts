@@ -72,6 +72,13 @@ export class PollViewComponent implements OnInit, OnDestroy {
           this.state = 'needs-signin';
           return;
         }
+        // For a signed-in respondent, seed a friendly display name from their
+        // email's local-part (NOT the raw email) so the required field isn't
+        // empty. A true guest is left blank -- no bogus email prefill.
+        if (this.cognito.isAuthenticated() && !this.displayName) {
+          const email = this.cognito.currentUser?.email ?? '';
+          this.displayName = email.split('@')[0] ?? '';
+        }
         this.state = 'ready';
       },
       error: (err) => {

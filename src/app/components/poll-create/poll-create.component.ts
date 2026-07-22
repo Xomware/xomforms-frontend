@@ -31,11 +31,24 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     ? Intl.supportedValuesOf('timeZone')
     : [viewerTimeZone()];
 
+  readonly eventLengthOptions: { label: string; minutes: number | null }[] = [
+    { label: 'One time slot (default)', minutes: null },
+    { label: '30 minutes', minutes: 30 },
+    { label: '1 hour', minutes: 60 },
+    { label: '1.5 hours', minutes: 90 },
+    { label: '2 hours', minutes: 120 },
+    { label: '3 hours', minutes: 180 },
+    { label: '4 hours', minutes: 240 },
+    { label: '5 hours', minutes: 300 },
+    { label: '6 hours', minutes: 360 },
+  ];
+
   submitting = false;
   errorMessage = '';
   createdPoll: Poll | null = null;
   results: OverlapResult | null = null;
   resultsError = '';
+  addOwnAvailability = false;
 
   private resultsSub?: Subscription;
 
@@ -52,9 +65,13 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       dayStartTime: ['08:00', Validators.required],
       dayEndTime: ['20:00', Validators.required],
       granularityMinutes: [30, Validators.required],
+      eventDurationMinutes: [null],
       timezone: [viewerTimeZone(), Validators.required],
-      guestAllowed: [false],
+      // "Anyone with the link can respond" is the default -- most polls are
+      // shared openly; requiring an account is the exception.
+      guestAllowed: [true],
       showResultsToRespondents: [false],
+      addOwnAvailability: [false],
       closeAt: [''],
     });
   }
@@ -75,6 +92,11 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     return `${window.location.origin}/f/${this.createdPoll.pollId}`;
   }
 
+  /** The respond page for the creator to add their own availability. */
+  get respondUrl(): string {
+    return this.createdPoll ? `/f/${this.createdPoll.pollId}` : '';
+  }
+
   copyShareLink(): void {
     if (!this.shareUrl) return;
     navigator.clipboard?.writeText(this.shareUrl).catch(() => {
@@ -92,6 +114,8 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     const value = this.form.value;
+    this.addOwnAvailability = !!value.addOwnAvailability;
+    const eventDuration = value.eventDurationMinutes ? Number(value.eventDurationMinutes) : null;
     const req: CreatePollRequest = {
       title: value.title.trim(),
       description: value.description?.trim() || null,
@@ -100,6 +124,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       dayStartMinute: this.timeToMinutes(value.dayStartTime),
       dayEndMinute: this.timeToMinutes(value.dayEndTime),
       granularityMinutes: Number(value.granularityMinutes),
+      eventDurationMinutes: eventDuration,
       timezone: value.timezone,
       guestAllowed: !!value.guestAllowed,
       showResultsToRespondents: !!value.showResultsToRespondents,

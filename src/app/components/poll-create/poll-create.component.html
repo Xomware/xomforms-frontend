@@ -51,10 +51,21 @@
       </div>
     </div>
 
+    <div class="field">
+      <label for="eventDurationMinutes">How long is the event?</label>
+      <select id="eventDurationMinutes" formControlName="eventDurationMinutes">
+        <option *ngFor="let opt of eventLengthOptions" [ngValue]="opt.minutes">{{ opt.label }}</option>
+      </select>
+      <p class="field-hint">
+        Results will highlight the best <em>start time</em> where the most people are free for
+        the whole event.
+      </p>
+    </div>
+
     <div class="field checkbox-field">
       <label>
         <input type="checkbox" formControlName="guestAllowed" />
-        Allow guests to respond without an account
+        Anyone with the link can respond <span class="checkbox-note">— no account needed (default)</span>
       </label>
     </div>
 
@@ -62,6 +73,13 @@
       <label>
         <input type="checkbox" formControlName="showResultsToRespondents" />
         Let respondents see the live results too
+      </label>
+    </div>
+
+    <div class="field checkbox-field">
+      <label>
+        <input type="checkbox" formControlName="addOwnAvailability" />
+        Add my own availability after creating
       </label>
     </div>
 
@@ -82,11 +100,15 @@
   <div class="poll-created-page">
     <a routerLink="/dashboard" class="back-link">← My Forms</a>
     <h1>Poll created</h1>
-    <p class="share-label">Share this link with respondents:</p>
+    <p class="share-label">Share this link — <strong>anyone with the link can respond</strong>:</p>
     <div class="share-row">
       <input type="text" [value]="shareUrl" readonly (click)="$any($event.target).select()" />
       <button type="button" (click)="copyShareLink()">Copy</button>
     </div>
+
+    <a *ngIf="addOwnAvailability" [routerLink]="respondUrl" class="add-availability-cta">
+      Add your availability →
+    </a>
 
     <h2>Live results</h2>
     <p class="form-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>

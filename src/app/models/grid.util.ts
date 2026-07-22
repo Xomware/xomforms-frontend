@@ -92,3 +92,36 @@ export function formatLocal(utcInstant: string, timeZone: string = viewerTimeZon
     minute: '2-digit',
   });
 }
+
+/** Just the clock time, e.g. "7:00 PM", in the viewer's local timezone. */
+export function formatTime(utcInstant: string, timeZone: string = viewerTimeZone()): string {
+  return new Date(utcInstant).toLocaleString('en-US', {
+    timeZone,
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+/** The full weekday + date, e.g. "Saturday, Aug 1", in the viewer's local timezone. */
+export function formatDayLong(utcInstant: string, timeZone: string = viewerTimeZone()): string {
+  return new Date(utcInstant).toLocaleString('en-US', {
+    timeZone,
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+/**
+ * Human-friendly event length, e.g. 60 -> "1 hour", 300 -> "5 hours",
+ * 90 -> "1.5 hours", 30 -> "30 minutes". Used for the results "event length"
+ * line so the creator can see the window they're actually scheduling for.
+ */
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+  }
+  const hours = minutes / 60;
+  const rounded = Number.isInteger(hours) ? hours : Math.round(hours * 10) / 10;
+  return `${rounded} hour${rounded === 1 ? '' : 's'}`;
+}

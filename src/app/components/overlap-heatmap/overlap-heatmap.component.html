@@ -1,35 +1,108 @@
 <div class="heatmap-wrap" *ngIf="result; else emptyState">
-  <div class="best-time-banner" *ngIf="result.bestBlockIds.length > 0; else noVotesYet">
-    <span class="banner-icon" aria-hidden="true">&#9733;</span>
-    <span>Best time{{ result.bestBlockIds.length > 1 ? 's (tied)' : '' }}: <strong>{{ bestTimesLabel }}</strong></span>
-    <span class="respondent-count">{{ result.totalRespondents }} respondent{{ result.totalRespondents === 1 ? '' : 's' }}</span>
-  </div>
+  <!-- ── Best-time hero (plain language) ──────────────────────────── -->
+  <section
+    class="hero"
+    *ngIf="hasResponses; else noVotesYet"
+    [class.hero--everyone]="everyoneFree"
+    aria-live="polite"
+  >
+    <p class="hero__eyebrow">
+      <span class="hero__mark" aria-hidden="true">{{ everyoneFree ? '✓' : '★' }}</span>
+      Best time to meet
+    </p>
+
+    <p class="hero__headline">
+      {{ bestDayLabel }}<span class="hero__dot" aria-hidden="true">·</span
+      ><span class="hero__time">{{ bestTimeRangeLabel }}</span>
+    </p>
+
+    <p class="hero__avail">
+      <span class="hero__badge">{{ bestAvailabilityLabel }}</span>
+      <span class="hero__tied" *ngIf="tiedAlternatives > 0">
+        +{{ tiedAlternatives }} other equally good start{{ tiedAlternatives === 1 ? '' : 's' }}
+      </span>
+    </p>
+
+    <p class="hero__meta">
+      <span *ngIf="durationLabel" class="hero__meta-item">
+        Event length: <strong>{{ durationLabel }}</strong>
+      </span>
+      <span class="hero__meta-item">
+        {{ total }} respondent{{ total === 1 ? '' : 's' }}
+      </span>
+      <span class="hero__meta-item hero__meta-item--live">Updates live</span>
+    </p>
+  </section>
+
   <ng-template #noVotesYet>
-    <div class="best-time-banner empty">
-      <span>No responses yet -- results will appear here as people submit their availability.</span>
-    </div>
+    <section class="hero hero--empty">
+      <p class="hero__eyebrow">Waiting on responses</p>
+      <p class="hero__headline hero__headline--muted">No availability yet</p>
+      <p class="hero__meta">
+        Results appear here as people submit their availability. This view updates live.
+      </p>
+    </section>
   </ng-template>
 
+  <!-- ── Legend ───────────────────────────────────────────────────── -->
+  <div class="legend" *ngIf="hasResponses">
+    <span class="legend__title">How many are free</span>
+    <span class="legend__scale">
+      <span class="legend__end">1 of {{ total }}</span>
+      <span class="legend__swatches" aria-hidden="true">
+        <i
+          class="legend__swatch"
+          *ngFor="let stop of legendStops"
+          [style.backgroundColor]="'rgba(var(--xf-heat-rgb), ' + stop.opacity + ')'"
+        ></i>
+      </span>
+      <span class="legend__end legend__end--max">{{ total }} of {{ total }}</span>
+    </span>
+    <span class="legend__keys">
+      <span class="legend__key">
+        <i class="legend__chip legend__chip--full"></i> Everyone free
+      </span>
+      <span class="legend__key">
+        <i class="legend__chip legend__chip--near"></i> 1–2 short
+      </span>
+    </span>
+  </div>
+
+  <!-- ── Density grid ─────────────────────────────────────────────── -->
   <div class="grid-scroll">
-    <div class="grid" [style.gridTemplateColumns]="'88px repeat(' + colDates.length + ', minmax(28px, 1fr))'">
+    <div
+      class="grid"
+      [style.gridTemplateColumns]="'88px repeat(' + colDates.length + ', minmax(40px, 1fr))'"
+    >
       <div class="cell label corner"></div>
-      <div class="cell label col-header" *ngFor="let date of colDates">{{ colHeaderLabel(date) }}</div>
+      <div class="cell label col-header" *ngFor="let date of colDates">
+        {{ colHeaderLabel(date) }}
+      </div>
 
       <ng-container *ngFor="let row of rows">
         <div class="cell label row-header">{{ row.label }}</div>
         <div
-          *ngFor="let block of row.cells"
+          *ngFor="let cell of row.cells"
           class="cell heat-cell"
-          [class.best]="isBest(block)"
-          [style.backgroundColor]="'rgba(var(--xf-heat-rgb), ' + cellOpacity(block) + ')'"
-          [title]="cellTitle(block)"
-          [attr.aria-label]="cellTitle(block)"
-        ></div>
+          [class.is-full]="cell.isFull"
+          [class.is-near]="cell.isNearMiss && !cell.isFull"
+          [class.in-window]="cell.inBestWindow"
+          [class.window-start]="cell.isWindowStart"
+          [style.backgroundColor]="'rgba(var(--xf-heat-rgb), ' + cellOpacity(cell) + ')'"
+          [title]="cellTitle(cell)"
+          [attr.aria-label]="cellTitle(cell)"
+          tabindex="0"
+        >
+          <span class="heat-count" *ngIf="hasResponses && cell.count > 0">{{ cell.count }}</span>
+          <span class="heat-star" *ngIf="cell.isFull" aria-hidden="true">★</span>
+        </div>
       </ng-container>
     </div>
   </div>
 
-  <p class="tz-note">Times shown in your local timezone ({{ viewerTz }}).</p>
+  <p class="tz-note">
+    Cells show how many of {{ total }} are free. Times in your local zone ({{ viewerTz }}).
+  </p>
 </div>
 
 <ng-template #emptyState>
