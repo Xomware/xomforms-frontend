@@ -6,7 +6,10 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
+import { LandingComponent } from './components/landing/landing.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { PollCreateComponent } from './components/poll-create/poll-create.component';
+import { FormResultsComponent } from './components/form-results/form-results.component';
 import { AvailabilityGridComponent } from './components/availability-grid/availability-grid.component';
 import { OverlapHeatmapComponent } from './components/overlap-heatmap/overlap-heatmap.component';
 import { PollViewComponent } from './components/poll-view/poll-view.component';
@@ -18,7 +21,10 @@ import { jwtInterceptor } from './interceptors/jwt.interceptor';
 @NgModule({
   declarations: [
     AppComponent,
+    LandingComponent,
+    DashboardComponent,
     PollCreateComponent,
+    FormResultsComponent,
     AvailabilityGridComponent,
     OverlapHeatmapComponent,
     PollViewComponent,

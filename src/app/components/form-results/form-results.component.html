@@ -1,0 +1,63 @@
+<div class="results-page">
+  <a routerLink="/dashboard" class="back-link">← My Forms</a>
+
+  <!-- Loading -->
+  <div class="results-state" *ngIf="state === 'loading'" role="status" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Loading form…</span>
+  </div>
+
+  <!-- Not found -->
+  <div class="results-state" *ngIf="state === 'not-found'">
+    <h1>Form not found</h1>
+    <p>This form doesn't exist, or you don't have access to it.</p>
+    <a routerLink="/dashboard" class="btn-back">Back to My Forms</a>
+  </div>
+
+  <!-- Error -->
+  <div class="results-state results-state--error" *ngIf="state === 'error'" role="alert">
+    <h1>Something went wrong</h1>
+    <p>We couldn't load this form right now. Please try again in a moment.</p>
+    <a routerLink="/dashboard" class="btn-back">Back to My Forms</a>
+  </div>
+
+  <!-- Ready -->
+  <ng-container *ngIf="state === 'ready' && poll">
+    <header class="results-header">
+      <div class="results-heading">
+        <h1 class="results-title">{{ poll.title }}</h1>
+        <span
+          class="status-badge"
+          [class.status-badge--open]="status === 'open'"
+          [class.status-badge--closed]="status === 'closed'"
+        >
+          {{ status === 'open' ? 'Open' : 'Closed' }}
+        </span>
+      </div>
+      <p class="results-desc" *ngIf="poll.description">{{ poll.description }}</p>
+    </header>
+
+    <section class="share-section" aria-label="Share link">
+      <label for="shareUrl" class="share-label">Share this form with respondents</label>
+      <div class="share-row">
+        <input
+          id="shareUrl"
+          type="text"
+          class="share-input"
+          [value]="shareUrl"
+          readonly
+          (click)="$any($event.target).select()"
+        />
+        <button type="button" class="btn-copy" (click)="copyShareLink()">
+          {{ copied ? 'Copied!' : 'Copy' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="live-section" aria-label="Live results">
+      <h2>Live results</h2>
+      <p class="results-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>
+      <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+    </section>
+  </ng-container>
+</div>

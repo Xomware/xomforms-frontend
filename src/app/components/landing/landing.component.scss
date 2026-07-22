@@ -1,0 +1,271 @@
+:host {
+  display: block;
+}
+
+.landing {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 56px) clamp(16px, 4vw, 28px) 64px;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  margin-bottom: clamp(28px, 5vw, 48px);
+}
+
+.hero-icon {
+  width: 72px;
+  height: 72px;
+  filter: drop-shadow(0 6px 18px var(--xf-purple-glow));
+  margin-bottom: 18px;
+}
+
+.hero-title {
+  font-size: clamp(1.7rem, 4.5vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 auto 12px;
+  max-width: 16ch;
+  background: linear-gradient(120deg, var(--xf-text) 40%, var(--xf-primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-subtitle {
+  font-size: clamp(0.95rem, 2vw, 1.08rem);
+  color: var(--xf-text-muted);
+  line-height: 1.6;
+  margin: 0 auto;
+  max-width: 46ch;
+}
+
+/* ── Two doors ────────────────────────────────────────────────────── */
+.doors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(16px, 3vw, 24px);
+  align-items: start;
+}
+
+.door {
+  background: var(--xf-surface);
+  border: 1px solid var(--xf-border);
+  border-radius: var(--xf-radius-lg);
+  box-shadow: var(--xf-shadow-card);
+  padding: clamp(22px, 4vw, 30px);
+}
+
+.door--respond {
+  /* Subtle yellow accent so the "no account" path reads as the alt door. */
+  border-color: var(--xf-border-strong);
+}
+
+.door-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.door-copy {
+  font-size: 0.92rem;
+  color: var(--xf-text-muted);
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.door-error {
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  color: var(--xf-danger-text);
+  background: var(--xf-danger-bg);
+  border: 1px solid var(--xf-danger-border);
+  border-radius: var(--xf-radius-sm);
+}
+
+.door-fineprint {
+  margin: 16px 0 0;
+  font-size: 0.78rem;
+  color: var(--xf-text-faint);
+}
+
+/* ── Sign-in actions ──────────────────────────────────────────────── */
+.door-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-google,
+.btn-ghost,
+.btn-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--xf-radius);
+  transition: transform var(--xf-transition), box-shadow var(--xf-transition),
+    background var(--xf-transition), border-color var(--xf-transition),
+    opacity var(--xf-transition);
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.btn-google {
+  padding: 12px 16px;
+  border: 1px solid var(--xf-border-strong);
+  background: #fff;
+  color: #23202b;
+  font-size: 0.96rem;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(32, 18, 56, 0.16);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+.btn-ghost {
+  padding: 11px 16px;
+  border: 1px solid var(--xf-border-strong);
+  background: var(--xf-surface-2);
+  color: var(--xf-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  &:hover:not(:disabled) {
+    background: var(--xf-surface-3);
+    border-color: var(--xf-primary);
+  }
+}
+
+.google-icon {
+  flex: none;
+}
+
+/* ── Open-by-key form ─────────────────────────────────────────────── */
+.key-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--xf-text-muted);
+  margin-bottom: 6px;
+}
+
+.key-row {
+  display: flex;
+  gap: 8px;
+}
+
+.key-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 11px 13px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--xf-text);
+  background: var(--xf-surface-2);
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius);
+  transition: border-color var(--xf-transition), box-shadow var(--xf-transition);
+
+  &::placeholder {
+    color: var(--xf-text-faint);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--xf-danger-border);
+  }
+}
+
+.btn-open {
+  flex: none;
+  padding: 11px 18px;
+  border: none;
+  color: var(--xf-on-primary);
+  background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
+  font-size: 0.9rem;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px var(--xf-purple-glow);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+/* ── Settling / loading ───────────────────────────────────────────── */
+.landing-settling {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: xfSpin 0.6s linear infinite;
+}
+
+.spinner--dark {
+  width: 26px;
+  height: 26px;
+  border-color: var(--xf-border-strong);
+  border-top-color: var(--xf-primary);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes xfSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 420px) {
+  .key-row {
+    flex-direction: column;
+  }
+
+  .btn-open {
+    width: 100%;
+  }
+}

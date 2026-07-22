@@ -1,0 +1,99 @@
+<div class="landing" *ngIf="!resolving; else settling">
+  <section class="hero">
+    <img
+      src="assets/xomforms-icon-256.png"
+      alt=""
+      class="hero-icon"
+      width="72"
+      height="72"
+      decoding="async"
+    />
+    <h1 class="hero-title">Find a time that works for everyone.</h1>
+    <p class="hero-subtitle">
+      Create an availability form, share the link, and watch the overlap light
+      up live. Respond in seconds — no account needed.
+    </p>
+  </section>
+
+  <div class="doors">
+    <!-- Door 1: sign in / sign up to create + manage forms -->
+    <section class="door" aria-labelledby="door-create">
+      <h2 id="door-create" class="door-title">Create &amp; manage forms</h2>
+      <p class="door-copy">
+        Sign in with your Xomware account to build forms and see who's free.
+      </p>
+
+      <p *ngIf="authError" class="door-error" role="alert">{{ authError }}</p>
+
+      <div class="door-actions">
+        <button
+          type="button"
+          class="btn-google"
+          (click)="onGoogleSignIn()"
+          [disabled]="loading"
+        >
+          <svg class="google-icon" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 8 29.3 6 24 6 14.1 6 6 14.1 6 24s8.1 18 18 18c9.9 0 18-8.1 18-18 0-1.2-.1-2.3-.4-3.5z"/>
+            <path fill="#FF3D00" d="M8.3 14.7l6.6 4.8C16.6 15.9 19.9 14 24 14c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 8 29.3 6 24 6 16.3 6 9.7 10.3 8.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 42c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.6 2.4-7.2 2.4-5.2 0-9.6-3.3-11.2-8l-6.5 5c1.4 4.5 8 11 17.7 11z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.4l6.2 5.2C41.9 34.7 44 29.9 44 24c0-1.2-.1-2.3-.4-3.5z"/>
+          </svg>
+          <span *ngIf="!loading">Continue with Google</span>
+          <span *ngIf="loading" class="spinner" aria-label="Redirecting"></span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-ghost"
+          (click)="onHostedUiSignIn()"
+          [disabled]="loading"
+        >
+          Sign in with email
+        </button>
+      </div>
+
+      <p class="door-fineprint">
+        New here? Continuing creates your account automatically.
+      </p>
+    </section>
+
+    <!-- Door 2: open a form by link/key — public, no account -->
+    <section class="door door--respond" aria-labelledby="door-respond">
+      <h2 id="door-respond" class="door-title">Have a form link?</h2>
+      <p class="door-copy">
+        Paste the link you were sent, or enter its key, to add your
+        availability.
+      </p>
+
+      <form class="key-form" (ngSubmit)="openForm()" novalidate>
+        <label for="formKey" class="key-label">Form link or key</label>
+        <div class="key-row">
+          <input
+            id="formKey"
+            type="text"
+            class="key-input"
+            name="formKey"
+            [(ngModel)]="formKey"
+            (input)="onKeyInput()"
+            placeholder="e.g. https://xomforms.xomware.com/f/abc123"
+            autocomplete="off"
+            spellcheck="false"
+            [attr.aria-invalid]="keyError ? 'true' : null"
+            aria-describedby="formKeyError"
+          />
+          <button type="submit" class="btn-open">Open form</button>
+        </div>
+        <p id="formKeyError" class="door-error" role="alert" *ngIf="keyError">
+          {{ keyError }}
+        </p>
+      </form>
+    </section>
+  </div>
+</div>
+
+<ng-template #settling>
+  <div class="landing-settling" role="status" aria-live="polite">
+    <span class="spinner spinner--dark" aria-hidden="true"></span>
+    <span class="sr-only">Loading…</span>
+  </div>
+</ng-template>
