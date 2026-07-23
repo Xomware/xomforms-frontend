@@ -49,12 +49,25 @@
       </p>
     </div>
 
-    <app-availability-grid [blocks]="grid" (selectionChange)="onSelectionChange($event)"></app-availability-grid>
+    <!-- Q&A form: render each typed field -->
+    <div class="qa-fields" *ngIf="isQa; else schedulerGrid">
+      <app-field-renderer
+        *ngFor="let field of fields"
+        [field]="field"
+        [value]="answerFor(field.fieldId)"
+        (valueChange)="onAnswerChange(field.fieldId, $event)"
+      ></app-field-renderer>
+    </div>
+
+    <!-- Scheduler: the availability grid (unchanged) -->
+    <ng-template #schedulerGrid>
+      <app-availability-grid [blocks]="grid" (selectionChange)="onSelectionChange($event)"></app-availability-grid>
+    </ng-template>
 
     <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
 
     <button type="button" class="submit-btn" [disabled]="!canSubmit()" (click)="onSubmit()">
-      {{ submitting ? 'Submitting…' : 'Submit availability' }}
+      {{ submitting ? 'Submitting…' : (isQa ? 'Submit response' : 'Submit availability') }}
     </button>
   </div>
 
@@ -64,7 +77,10 @@
 
     <ng-container *ngIf="poll?.showResultsToRespondents">
       <h2>Live results</h2>
-      <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+      <app-qa-results *ngIf="isQa; else schedulerResults" [result]="formResult"></app-qa-results>
+      <ng-template #schedulerResults>
+        <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+      </ng-template>
     </ng-container>
   </div>
 </div>

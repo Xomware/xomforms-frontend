@@ -1,117 +1,312 @@
-<div class="poll-create-page" *ngIf="!createdPoll; else createdView">
-  <h1>Create a poll</h1>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-    <div class="field">
-      <label for="title">Title</label>
-      <input id="title" type="text" formControlName="title" placeholder="Fantasy Draft Night" />
-      <p class="field-error" *ngIf="fieldInvalid('title')">Title is required.</p>
-    </div>
+<ng-container *ngIf="!createdPoll; else createdView">
+  <!-- ── Starter picker ─────────────────────────────────────────────── -->
+  <div class="starter-page" *ngIf="mode === 'picker'">
+    <a routerLink="/dashboard" class="back-link">← My Forms</a>
+    <h1>Create a form</h1>
+    <p class="starter-sub">Pick a starting point.</p>
 
-    <div class="field">
-      <label for="description">Description <span class="optional">(optional)</span></label>
-      <textarea id="description" formControlName="description" rows="3"></textarea>
-    </div>
+    <div class="starter-grid">
+      <button type="button" class="starter-card" (click)="chooseBlankForm()">
+        <span class="starter-card__icon" aria-hidden="true">✍️</span>
+        <span class="starter-card__title">Blank form</span>
+        <span class="starter-card__desc">
+          Build a Q&A form — multiple choice, checkboxes, dropdowns, and scales with
+          charted results.
+        </span>
+      </button>
 
-    <div class="field-row">
-      <div class="field">
-        <label for="startDate">Start date</label>
-        <input id="startDate" type="date" formControlName="startDate" />
-        <p class="field-error" *ngIf="fieldInvalid('startDate')">Start date is required.</p>
-      </div>
-      <div class="field">
-        <label for="endDate">End date</label>
-        <input id="endDate" type="date" formControlName="endDate" />
-        <p class="field-error" *ngIf="fieldInvalid('endDate')">End date is required.</p>
-      </div>
-    </div>
+      <button type="button" class="starter-card" (click)="chooseScheduler()">
+        <span class="starter-card__icon" aria-hidden="true">📅</span>
+        <span class="starter-card__title">Scheduler</span>
+        <span class="starter-card__desc">
+          Find when everyone's free — the classic availability grid and overlap
+          heatmap.
+        </span>
+      </button>
 
-    <div class="field-row">
-      <div class="field">
-        <label for="dayStartTime">Earliest time each day</label>
-        <input id="dayStartTime" type="time" formControlName="dayStartTime" />
-      </div>
-      <div class="field">
-        <label for="dayEndTime">Latest time each day</label>
-        <input id="dayEndTime" type="time" formControlName="dayEndTime" />
+      <div class="starter-card starter-card--soon" aria-disabled="true">
+        <span class="starter-card__icon" aria-hidden="true">📋</span>
+        <span class="starter-card__title">Templates</span>
+        <span class="starter-card__desc">
+          RSVP, feedback survey, sign-up sheet, and more — ready to customize.
+        </span>
+        <span class="starter-card__badge">Coming soon</span>
       </div>
     </div>
+  </div>
 
-    <div class="field-row">
+  <!-- ── Scheduler form (unchanged behavior) ────────────────────────── -->
+  <div class="poll-create-page" *ngIf="mode === 'scheduler'">
+    <button type="button" class="back-link back-link--btn" (click)="backToPicker()">← Starting point</button>
+    <h1>Create a scheduler poll</h1>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
       <div class="field">
-        <label for="granularityMinutes">Block size</label>
-        <select id="granularityMinutes" formControlName="granularityMinutes">
-          <option *ngFor="let g of granularityOptions" [value]="g">{{ g }} minutes</option>
+        <label for="title">Title</label>
+        <input id="title" type="text" formControlName="title" placeholder="Fantasy Draft Night" />
+        <p class="field-error" *ngIf="fieldInvalid('title')">Title is required.</p>
+      </div>
+
+      <div class="field">
+        <label for="description">Description <span class="optional">(optional)</span></label>
+        <textarea id="description" formControlName="description" rows="3"></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="startDate">Start date</label>
+          <input id="startDate" type="date" formControlName="startDate" />
+          <p class="field-error" *ngIf="fieldInvalid('startDate')">Start date is required.</p>
+        </div>
+        <div class="field">
+          <label for="endDate">End date</label>
+          <input id="endDate" type="date" formControlName="endDate" />
+          <p class="field-error" *ngIf="fieldInvalid('endDate')">End date is required.</p>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="dayStartTime">Earliest time each day</label>
+          <input id="dayStartTime" type="time" formControlName="dayStartTime" />
+        </div>
+        <div class="field">
+          <label for="dayEndTime">Latest time each day</label>
+          <input id="dayEndTime" type="time" formControlName="dayEndTime" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="granularityMinutes">Block size</label>
+          <select id="granularityMinutes" formControlName="granularityMinutes">
+            <option *ngFor="let g of granularityOptions" [value]="g">{{ g }} minutes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="timezone">Timezone</label>
+          <select id="timezone" formControlName="timezone">
+            <option *ngFor="let tz of commonTimezones" [value]="tz">{{ tz }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="eventDurationMinutes">How long is the event?</label>
+        <select id="eventDurationMinutes" formControlName="eventDurationMinutes">
+          <option *ngFor="let opt of eventLengthOptions" [ngValue]="opt.minutes">{{ opt.label }}</option>
         </select>
+        <p class="field-hint">
+          Results will highlight the best <em>start time</em> where the most people are free for
+          the whole event.
+        </p>
       </div>
+
+      <div class="field checkbox-field">
+        <label>
+          <input type="checkbox" formControlName="guestAllowed" />
+          Anyone with the link can respond <span class="checkbox-note">— no account needed (default)</span>
+        </label>
+      </div>
+
+      <div class="field checkbox-field">
+        <label>
+          <input type="checkbox" formControlName="showResultsToRespondents" />
+          Let respondents see the live results too
+        </label>
+      </div>
+
+      <div class="field checkbox-field">
+        <label>
+          <input type="checkbox" formControlName="addOwnAvailability" />
+          Add my own availability after creating
+        </label>
+      </div>
+
       <div class="field">
-        <label for="timezone">Timezone</label>
-        <select id="timezone" formControlName="timezone">
-          <option *ngFor="let tz of commonTimezones" [value]="tz">{{ tz }}</option>
-        </select>
+        <label for="closeAt">Close responses at <span class="optional">(optional)</span></label>
+        <input id="closeAt" type="datetime-local" formControlName="closeAt" />
       </div>
-    </div>
 
-    <div class="field">
-      <label for="eventDurationMinutes">How long is the event?</label>
-      <select id="eventDurationMinutes" formControlName="eventDurationMinutes">
-        <option *ngFor="let opt of eventLengthOptions" [ngValue]="opt.minutes">{{ opt.label }}</option>
-      </select>
-      <p class="field-hint">
-        Results will highlight the best <em>start time</em> where the most people are free for
-        the whole event.
-      </p>
-    </div>
+      <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
 
-    <div class="field checkbox-field">
-      <label>
-        <input type="checkbox" formControlName="guestAllowed" />
-        Anyone with the link can respond <span class="checkbox-note">— no account needed (default)</span>
-      </label>
-    </div>
+      <button type="submit" class="submit-btn" [disabled]="submitting">
+        {{ submitting ? 'Creating…' : 'Create poll' }}
+      </button>
+    </form>
+  </div>
 
-    <div class="field checkbox-field">
-      <label>
-        <input type="checkbox" formControlName="showResultsToRespondents" />
-        Let respondents see the live results too
-      </label>
-    </div>
+  <!-- ── Q&A builder ────────────────────────────────────────────────── -->
+  <div class="poll-create-page" *ngIf="mode === 'qa'">
+    <button type="button" class="back-link back-link--btn" (click)="backToPicker()">← Starting point</button>
+    <h1>Build a form</h1>
 
-    <div class="field checkbox-field">
-      <label>
-        <input type="checkbox" formControlName="addOwnAvailability" />
-        Add my own availability after creating
-      </label>
-    </div>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="field">
+        <label for="qaTitle">Form title</label>
+        <input id="qaTitle" type="text" formControlName="title" placeholder="Team RSVP" />
+        <p class="field-error" *ngIf="fieldInvalid('title')">Title is required.</p>
+      </div>
 
-    <div class="field">
-      <label for="closeAt">Close responses at <span class="optional">(optional)</span></label>
-      <input id="closeAt" type="datetime-local" formControlName="closeAt" />
-    </div>
+      <div class="field">
+        <label for="qaDescription">Description <span class="optional">(optional)</span></label>
+        <textarea id="qaDescription" formControlName="description" rows="2"></textarea>
+      </div>
 
-    <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+      <!-- Field list -->
+      <div class="builder">
+        <div class="builder-field" *ngFor="let field of qaFields; let i = index">
+          <div class="builder-field__bar">
+            <span class="builder-field__type">{{ fieldTypeLabels[field.type] }}</span>
+            <div class="builder-field__actions">
+              <button
+                type="button"
+                class="icon-btn"
+                (click)="moveField(i, -1)"
+                [disabled]="i === 0"
+                aria-label="Move field up"
+              >↑</button>
+              <button
+                type="button"
+                class="icon-btn"
+                (click)="moveField(i, 1)"
+                [disabled]="i === qaFields.length - 1"
+                aria-label="Move field down"
+              >↓</button>
+              <button
+                type="button"
+                class="icon-btn icon-btn--danger"
+                (click)="removeField(i)"
+                aria-label="Delete field"
+              >✕</button>
+            </div>
+          </div>
 
-    <button type="submit" class="submit-btn" [disabled]="submitting">
-      {{ submitting ? 'Creating…' : 'Create poll' }}
-    </button>
-  </form>
-</div>
+          <div class="field">
+            <label [for]="'qlabel-' + i">Question</label>
+            <input
+              [id]="'qlabel-' + i"
+              type="text"
+              [(ngModel)]="field.label"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="e.g. Will you attend?"
+            />
+          </div>
+
+          <!-- choice options -->
+          <div class="builder-options" *ngIf="isChoice(field)">
+            <div class="builder-option" *ngFor="let opt of field.options; let j = index">
+              <input
+                type="text"
+                [(ngModel)]="opt.label"
+                [ngModelOptions]="{ standalone: true }"
+                [attr.aria-label]="'Option ' + (j + 1)"
+                placeholder="Option label"
+              />
+              <button
+                type="button"
+                class="icon-btn icon-btn--danger"
+                (click)="removeOption(field, j)"
+                [disabled]="field.options.length <= 2"
+                aria-label="Remove option"
+              >✕</button>
+            </div>
+            <button type="button" class="add-option-btn" (click)="addOption(field)">+ Add option</button>
+          </div>
+
+          <!-- scale bounds -->
+          <div class="builder-scale" *ngIf="!isChoice(field)">
+            <div class="field-row">
+              <div class="field">
+                <label [for]="'smin-' + i">Min</label>
+                <input [id]="'smin-' + i" type="number" [(ngModel)]="field.min" [ngModelOptions]="{ standalone: true }" min="0" max="10" />
+              </div>
+              <div class="field">
+                <label [for]="'smax-' + i">Max</label>
+                <input [id]="'smax-' + i" type="number" [(ngModel)]="field.max" [ngModelOptions]="{ standalone: true }" min="1" max="10" />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label [for]="'sminl-' + i">Low label <span class="optional">(optional)</span></label>
+                <input [id]="'sminl-' + i" type="text" [(ngModel)]="field.minLabel" [ngModelOptions]="{ standalone: true }" placeholder="e.g. Meh" />
+              </div>
+              <div class="field">
+                <label [for]="'smaxl-' + i">High label <span class="optional">(optional)</span></label>
+                <input [id]="'smaxl-' + i" type="text" [(ngModel)]="field.maxLabel" [ngModelOptions]="{ standalone: true }" placeholder="e.g. Hyped" />
+              </div>
+            </div>
+            <p class="field-error" *ngIf="field.max <= field.min">Max must be greater than min.</p>
+          </div>
+
+          <label class="builder-required">
+            <input type="checkbox" [(ngModel)]="field.required" [ngModelOptions]="{ standalone: true }" />
+            Required
+          </label>
+        </div>
+
+        <p class="builder-empty" *ngIf="qaFields.length === 0">
+          No questions yet — add one below.
+        </p>
+      </div>
+
+      <!-- Add-field toolbar -->
+      <div class="add-field-bar">
+        <span class="add-field-bar__label">Add a question:</span>
+        <button
+          type="button"
+          class="add-field-btn"
+          *ngFor="let t of addableFieldTypes"
+          (click)="addField(t)"
+        >+ {{ fieldTypeLabels[t] }}</button>
+      </div>
+
+      <div class="field checkbox-field">
+        <label>
+          <input type="checkbox" formControlName="guestAllowed" />
+          Anyone with the link can respond <span class="checkbox-note">— no account needed (default)</span>
+        </label>
+      </div>
+
+      <div class="field checkbox-field">
+        <label>
+          <input type="checkbox" formControlName="showResultsToRespondents" />
+          Let respondents see the live results too
+        </label>
+      </div>
+
+      <div class="field">
+        <label for="qaCloseAt">Close responses at <span class="optional">(optional)</span></label>
+        <input id="qaCloseAt" type="datetime-local" formControlName="closeAt" />
+      </div>
+
+      <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+
+      <button type="submit" class="submit-btn" [disabled]="submitting || !qaFormValid">
+        {{ submitting ? 'Creating…' : 'Create form' }}
+      </button>
+    </form>
+  </div>
+</ng-container>
 
 <ng-template #createdView>
   <div class="poll-created-page">
     <a routerLink="/dashboard" class="back-link">← My Forms</a>
-    <h1>Poll created</h1>
+    <h1>{{ createdIsQa ? 'Form created' : 'Poll created' }}</h1>
     <p class="share-label">Share this link — <strong>anyone with the link can respond</strong>:</p>
     <div class="share-row">
       <input type="text" [value]="shareUrl" readonly (click)="$any($event.target).select()" />
       <button type="button" (click)="copyShareLink()">Copy</button>
     </div>
 
-    <a *ngIf="addOwnAvailability" [routerLink]="respondUrl" class="add-availability-cta">
+    <a *ngIf="addOwnAvailability && !createdIsQa" [routerLink]="respondUrl" class="add-availability-cta">
       Add your availability →
     </a>
 
     <h2>Live results</h2>
     <p class="form-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>
-    <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+    <app-qa-results *ngIf="createdIsQa; else schedulerResults" [result]="formResult"></app-qa-results>
+    <ng-template #schedulerResults>
+      <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+    </ng-template>
   </div>
 </ng-template>

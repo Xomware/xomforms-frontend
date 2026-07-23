@@ -3,8 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
 import { ResultsService } from '../../services/results.service';
-import { Poll, PollStatus, derivePollStatus } from '../../models/poll.model';
-import { OverlapResult } from '../../models/response.model';
+import { Poll, PollStatus, derivePollStatus, isQaPoll } from '../../models/poll.model';
+import { FormResult, OverlapResult } from '../../models/response.model';
 
 type ViewState = 'loading' | 'not-found' | 'error' | 'ready';
 
@@ -28,6 +28,8 @@ export class FormResultsComponent implements OnInit, OnDestroy {
   poll: Poll | null = null;
   status: PollStatus = 'open';
   results: OverlapResult | null = null;
+  formResult: FormResult | null = null;
+  isQa = false;
   resultsError = '';
   copied = false;
 
@@ -77,6 +79,7 @@ export class FormResultsComponent implements OnInit, OnDestroy {
     this.pollsService.get(this.pollId).subscribe({
       next: (poll) => {
         this.poll = poll;
+        this.isQa = isQaPoll(poll);
         this.status = derivePollStatus(poll);
         this.state = 'ready';
         this.startResultsPolling();
@@ -88,6 +91,18 @@ export class FormResultsComponent implements OnInit, OnDestroy {
   }
 
   private startResultsPolling(): void {
+    if (this.isQa) {
+      this.resultsSub = this.resultsService.pollFormForCreator(this.pollId).subscribe({
+        next: (result) => {
+          this.resultsError = '';
+          this.formResult = result;
+        },
+        error: (err) => {
+          this.resultsError = this.friendlyError(err);
+        },
+      });
+      return;
+    }
     this.resultsSub = this.resultsService.pollForCreator(this.pollId).subscribe({
       next: (result) => {
         this.resultsError = '';

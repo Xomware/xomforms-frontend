@@ -67,6 +67,12 @@ h2 {
   gap: 18px;
 }
 
+.qa-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .field {
   display: flex;
   flex-direction: column;

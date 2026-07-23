@@ -12,6 +12,9 @@ import { PollCreateComponent } from './components/poll-create/poll-create.compon
 import { FormResultsComponent } from './components/form-results/form-results.component';
 import { AvailabilityGridComponent } from './components/availability-grid/availability-grid.component';
 import { OverlapHeatmapComponent } from './components/overlap-heatmap/overlap-heatmap.component';
+import { FieldRendererComponent } from './components/field-renderer/field-renderer.component';
+import { FieldResultsComponent } from './components/field-results/field-results.component';
+import { QaResultsComponent } from './components/qa-results/qa-results.component';
 import { PollViewComponent } from './components/poll-view/poll-view.component';
 import { SignInComponent } from './components/auth/sign-in/sign-in.component';
 import { CallbackComponent } from './components/auth/callback/callback.component';
@@ -27,6 +30,9 @@ import { jwtInterceptor } from './interceptors/jwt.interceptor';
     FormResultsComponent,
     AvailabilityGridComponent,
     OverlapHeatmapComponent,
+    FieldRendererComponent,
+    FieldResultsComponent,
+    QaResultsComponent,
     PollViewComponent,
     SignInComponent,
     CallbackComponent,

@@ -1,0 +1,42 @@
+:host {
+  display: block;
+}
+
+.qa-results__header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.qa-results__count {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--xf-primary);
+  line-height: 1;
+}
+
+.qa-results__count-label {
+  font-size: 0.9rem;
+  color: var(--xf-text-muted);
+}
+
+.qa-results__live {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--xf-accent);
+}
+
+.qa-results__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.qa-results__empty {
+  font-size: 0.9rem;
+  color: var(--xf-text-faint);
+}
