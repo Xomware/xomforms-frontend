@@ -119,3 +119,34 @@
   font-size: 0.85rem;
   color: var(--xf-text-faint);
 }
+
+/* On phones a 26%-wide label column truncates option text ("Cooking cl…").
+   Give choice labels their own full-width line above the bar; keep the compact
+   numeric scale rows inline (single digits never truncate). */
+@media (max-width: 560px) {
+  .field-result {
+    padding: 16px 15px;
+  }
+
+  .bar-row:not(.bar-row--scale) {
+    grid-template-columns: 1fr auto;
+    column-gap: 10px;
+    row-gap: 5px;
+
+    .bar-row__label {
+      grid-column: 1 / -1;
+      white-space: normal;
+      font-size: 0.88rem;
+      line-height: 1.3;
+    }
+
+    .bar-row__track {
+      grid-column: 1;
+    }
+
+    .bar-row__value {
+      grid-column: 2;
+      min-width: 0;
+    }
+  }
+}
