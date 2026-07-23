@@ -38,4 +38,16 @@ export interface OverlapResult {
   blocks: BlockTally[];
   /** All blocks tied at the max count, chronological (earliest first). */
   bestBlockIds: string[];
+  /**
+   * Event-length window fields (additive -- may be absent when talking to a
+   * backend deployed before this change; the heatmap guards for that).
+   * eventDurationMinutes is the poll's configured event length; slotCount is
+   * how many contiguous grid blocks it spans. bestWindowStartIds are the
+   * start blockIds of the contiguous same-day window(s) where the most
+   * respondents are free for the WHOLE window, bestWindowCount that headcount.
+   */
+  eventDurationMinutes?: number;
+  slotCount?: number;
+  bestWindowStartIds?: string[];
+  bestWindowCount?: number;
 }

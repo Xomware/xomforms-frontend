@@ -26,13 +26,27 @@
     <h1>{{ poll.title }}</h1>
     <p class="description" *ngIf="poll.description">{{ poll.description }}</p>
 
-    <div class="field" *ngIf="!cognito.isAuthenticated()">
-      <label for="displayName">Your name</label>
-      <input id="displayName" type="text" [(ngModel)]="displayName" placeholder="Enter your name" />
+    <!-- Signed in: show identity clearly, name is just the label on results -->
+    <div class="identity identity--authed" *ngIf="cognito.isAuthenticated()">
+      <p class="identity__badge">
+        <span class="identity__dot" aria-hidden="true"></span>
+        Signed in as <strong>{{ cognito.currentUser?.email }}</strong>
+      </p>
+      <div class="field">
+        <label for="displayNameAuthed">Display name <span class="optional">(shown on results)</span></label>
+        <input id="displayNameAuthed" type="text" [(ngModel)]="displayName" placeholder="Your name" autocomplete="name" />
+      </div>
     </div>
-    <div class="field" *ngIf="cognito.isAuthenticated()">
-      <label for="displayNameAuthed">Your name</label>
-      <input id="displayNameAuthed" type="text" [(ngModel)]="displayName" [placeholder]="cognito.currentUser?.email ?? 'Enter your name'" />
+
+    <!-- True guest: name only, no email prefill -->
+    <div class="identity identity--guest" *ngIf="!cognito.isAuthenticated()">
+      <div class="field">
+        <label for="displayNameGuest">Continue as guest — just your name</label>
+        <input id="displayNameGuest" type="text" [(ngModel)]="displayName" placeholder="Your name" autocomplete="name" />
+      </div>
+      <p class="identity__note">
+        No account needed. <a [href]="signInUrl">Sign in instead</a> to tie this to your email.
+      </p>
     </div>
 
     <app-availability-grid [blocks]="grid" (selectionChange)="onSelectionChange($event)"></app-availability-grid>

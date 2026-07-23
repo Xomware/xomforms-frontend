@@ -1,4 +1,4 @@
-import { generateGrid } from './grid.util';
+import { formatDuration, generateGrid } from './grid.util';
 
 describe('generateGrid', () => {
   it('matches the backend test fixture: America/New_York August 08:00 -> 12:00 UTC (EDT, UTC-4)', () => {
@@ -70,5 +70,21 @@ describe('generateGrid', () => {
     const ny = generateGrid({ ...config, timezone: 'America/New_York' });
     const la = generateGrid({ ...config, timezone: 'America/Los_Angeles' });
     expect(ny[0].utcInstant).not.toBe(la[0].utcInstant);
+  });
+});
+
+describe('formatDuration', () => {
+  it('formats sub-hour durations in minutes', () => {
+    expect(formatDuration(30)).toBe('30 minutes');
+    expect(formatDuration(1)).toBe('1 minute');
+  });
+
+  it('formats whole-hour durations without a decimal', () => {
+    expect(formatDuration(60)).toBe('1 hour');
+    expect(formatDuration(300)).toBe('5 hours');
+  });
+
+  it('formats fractional-hour durations to one decimal', () => {
+    expect(formatDuration(90)).toBe('1.5 hours');
   });
 });

@@ -105,6 +105,54 @@ input[type='text'] {
   }
 }
 
+/* ── Identity (guest vs signed-in) ─────────────────────────────────── */
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.identity__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin: 0;
+  padding: 7px 13px;
+  font-size: 0.82rem;
+  color: var(--xf-text);
+  background: var(--xf-surface-2);
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-pill);
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.identity__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1b7a43;
+  box-shadow: 0 0 0 3px rgba(27, 122, 67, 0.18);
+}
+
+.identity__note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--xf-text-muted);
+
+  a {
+    font-weight: 600;
+  }
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--xf-text-faint);
+}
+
 .form-error {
   color: var(--xf-danger-text);
   font-size: 0.9rem;

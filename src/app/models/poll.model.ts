@@ -17,6 +17,12 @@ export interface CreatePollRequest {
   guestAllowed?: boolean; // default false
   showResultsToRespondents?: boolean; // default false
   closeAt?: string | null; // ISO 8601 UTC datetime
+  /**
+   * How long the scheduled event actually runs, in minutes. Omit for a
+   * single-slot event -- the backend defaults it to granularityMinutes.
+   * Drives the results "best contiguous start window" only.
+   */
+  eventDurationMinutes?: number | null;
 }
 
 export interface Poll {
@@ -33,6 +39,8 @@ export interface Poll {
   guestAllowed: boolean;
   showResultsToRespondents: boolean;
   closeAt?: string | null;
+  /** Event length in minutes; may be absent on polls created before this field. */
+  eventDurationMinutes?: number | null;
   createdAt: string;
 }
 
