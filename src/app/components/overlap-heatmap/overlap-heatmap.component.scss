@@ -241,11 +241,32 @@
   border: 1px solid var(--xf-border);
   border-radius: var(--xf-radius);
   background: var(--xf-surface);
+  /* Momentum scrolling + soft edge vignettes that signal the grid pans
+     sideways on narrow screens (7-day polls don't fit a phone width). */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  box-shadow:
+    inset -14px 0 12px -12px rgba(20, 15, 34, 0.5),
+    inset 14px 0 12px -12px rgba(20, 15, 34, 0.5);
+}
+
+/* Mobile-only affordance: tell the user the grid pans to reveal more days. */
+.scroll-hint {
+  display: none;
+  margin: -6px 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--xf-primary);
 }
 
 .grid {
   display: grid;
   width: max-content;
+  /* Column widths are driven by CSS vars so media queries can slim the time
+     column + cells on phones without the component needing to know the count. */
+  grid-template-columns:
+    var(--xf-label-w, 88px)
+    repeat(var(--xf-cols, 1), minmax(var(--xf-cell-w, 40px), 1fr));
 }
 
 .cell {
@@ -369,12 +390,55 @@
   text-align: center;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 560px) {
+  .scroll-hint {
+    display: block;
+  }
+
   .legend {
     font-size: 0.72rem;
+    gap: 8px 14px;
+    padding: 10px 12px;
   }
 
   .hero {
     padding: 16px 16px;
+  }
+
+  .hero__headline {
+    font-size: 1.4rem;
+  }
+
+  .hero__dot {
+    margin: 0 7px;
+  }
+
+  /* Slimmer time column + tighter cells so more days fit before scrolling.
+     These cells are display-only (not tap targets), so sub-44px is fine. */
+  .grid {
+    --xf-label-w: 58px;
+    --xf-cell-w: 34px;
+  }
+
+  .cell {
+    min-height: 30px;
+    font-size: 0.72rem;
+  }
+
+  .label {
+    padding: 4px 5px;
+  }
+
+  .row-header {
+    font-size: 0.66rem;
+  }
+
+  .col-header {
+    font-size: 0.64rem;
+    padding: 4px 2px;
+  }
+
+  .heat-count {
+    font-size: 0.68rem;
   }
 }

@@ -55,11 +55,31 @@
   border: 1px solid var(--xf-border);
   border-radius: var(--xf-radius);
   background: var(--xf-surface);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  // Soft edge vignettes that signal the grid pans sideways on narrow screens.
+  box-shadow:
+    inset -14px 0 12px -12px rgba(20, 15, 34, 0.5),
+    inset 14px 0 12px -12px rgba(20, 15, 34, 0.5);
+}
+
+// Mobile-only "there's more to the right" hint.
+.scroll-hint {
+  display: none;
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--xf-primary);
 }
 
 .grid {
   display: grid;
   width: max-content;
+  // Column widths via CSS vars so media queries can slim the time column on
+  // phones while keeping the paint cells at a ~44px tap target.
+  grid-template-columns:
+    var(--xf-label-w, 88px)
+    repeat(var(--xf-cols, 1), minmax(var(--xf-cell-w, 44px), 1fr));
   // Critical for mobile Safari: stop the browser from hijacking the
   // gesture as a page-scroll before our pointer handlers run.
   touch-action: none;
@@ -144,7 +164,18 @@
 }
 
 // Grow touch targets toward the ~44px recommendation on narrow viewports.
+@media (max-width: 560px) {
+  .scroll-hint {
+    display: block;
+  }
+}
+
 @media (max-width: 480px) {
+  // Slim the time column (but NOT the cells — these are drag/tap targets).
+  .grid {
+    --xf-label-w: 64px;
+  }
+
   .cell {
     min-height: 44px;
   }

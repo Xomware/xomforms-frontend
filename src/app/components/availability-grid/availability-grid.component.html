@@ -6,8 +6,11 @@
     </button>
   </div>
 
+  <p class="scroll-hint" *ngIf="colDates.length > 3" aria-hidden="true">
+    Swipe the grid sideways to see every day →
+  </p>
   <div class="grid-scroll">
-    <div #gridEl class="grid" [style.gridTemplateColumns]="'88px repeat(' + colDates.length + ', minmax(44px, 1fr))'">
+    <div #gridEl class="grid" [style.--xf-cols]="colDates.length">
       <div class="cell label corner"></div>
       <div class="cell label col-header" *ngFor="let date of colDates">{{ colHeaderLabel(date) }}</div>
 

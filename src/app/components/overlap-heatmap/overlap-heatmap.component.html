@@ -69,11 +69,11 @@
   </div>
 
   <!-- ── Density grid ─────────────────────────────────────────────── -->
+  <p class="scroll-hint" *ngIf="hasResponses && colDates.length > 3" aria-hidden="true">
+    Swipe the grid sideways to see every day →
+  </p>
   <div class="grid-scroll">
-    <div
-      class="grid"
-      [style.gridTemplateColumns]="'88px repeat(' + colDates.length + ', minmax(40px, 1fr))'"
-    >
+    <div class="grid" [style.--xf-cols]="colDates.length">
       <div class="cell label corner"></div>
       <div class="cell label col-header" *ngFor="let date of colDates">
         {{ colHeaderLabel(date) }}
