@@ -2,7 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { SubmitAvailabilityRequest, SubmitAvailabilityResult } from '../models/response.model';
+import {
+  AnswerValue,
+  SubmitAnswersRequest,
+  SubmitAnswersResult,
+  SubmitAvailabilityRequest,
+  SubmitAvailabilityResult,
+} from '../models/response.model';
 import { CognitoService } from './cognito.service';
 
 const GUEST_ID_STORAGE_KEY = 'xomforms_guest_id';
@@ -47,6 +53,27 @@ export class ResponsesService {
 
     body.guestId = this.getOrCreateGuestId();
     return this.http.post<SubmitAvailabilityResult>(`${this.baseUrl}/submit-guest`, body);
+  }
+
+  /**
+   * Submits Q&A answers for a form-type poll. Same authed/guest routing as
+   * submit() -- the backend branches on the poll's formType and validates
+   * each answer against the poll's declared fields.
+   */
+  submitAnswers(
+    pollId: string,
+    displayName: string,
+    answers: Record<string, AnswerValue>,
+  ): Observable<SubmitAnswersResult> {
+    const isAuthed = this.cognito.isAuthenticated();
+    const body: SubmitAnswersRequest = { pollId, displayName, answers };
+
+    if (isAuthed) {
+      return this.http.post<SubmitAnswersResult>(`${this.baseUrl}/submit`, body);
+    }
+
+    body.guestId = this.getOrCreateGuestId();
+    return this.http.post<SubmitAnswersResult>(`${this.baseUrl}/submit-guest`, body);
   }
 
   /**

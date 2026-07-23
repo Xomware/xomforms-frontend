@@ -1,0 +1,20 @@
+<div class="qa-results" *ngIf="hasResult; else emptyState">
+  <div class="qa-results__header" aria-live="polite">
+    <span class="qa-results__count">{{ total }}</span>
+    <span class="qa-results__count-label">
+      response{{ total === 1 ? '' : 's' }} so far
+    </span>
+    <span class="qa-results__live">Updates live</span>
+  </div>
+
+  <div class="qa-results__fields">
+    <app-field-results
+      *ngFor="let field of result!.fields"
+      [result]="field"
+    ></app-field-results>
+  </div>
+</div>
+
+<ng-template #emptyState>
+  <p class="qa-results__empty">No results to show yet.</p>
+</ng-template>

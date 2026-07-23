@@ -57,7 +57,10 @@
     <section class="live-section" aria-label="Live results">
       <h2>Live results</h2>
       <p class="results-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>
-      <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+      <app-qa-results *ngIf="isQa; else schedulerResults" [result]="formResult"></app-qa-results>
+      <ng-template #schedulerResults>
+        <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
+      </ng-template>
     </section>
   </ng-container>
 </div>

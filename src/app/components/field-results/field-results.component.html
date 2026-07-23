@@ -1,0 +1,51 @@
+<div class="field-result">
+  <div class="field-result__head">
+    <h3 class="field-result__label">{{ result.label }}</h3>
+    <span class="field-result__count">
+      {{ answered }} response{{ answered === 1 ? '' : 's' }}
+    </span>
+  </div>
+
+  <p class="field-result__note" *ngIf="isMulti">Respondents could pick more than one.</p>
+
+  <!-- Scale summary line: the "Google Forms can't show you this at a glance" stat. -->
+  <p class="field-result__summary" *ngIf="isScale && hasResponses">
+    <span class="field-result__stat"><strong>{{ meanLabel }}</strong> avg</span>
+    <span class="field-result__stat">low {{ result.min }}</span>
+    <span class="field-result__stat">high {{ result.max }}</span>
+  </p>
+
+  <div class="bars" *ngIf="hasResponses; else noResponses">
+    <ng-container *ngIf="!isScale">
+      <div class="bar-row" *ngFor="let bar of optionBars" [class.bar-row--top]="bar.isTop">
+        <span class="bar-row__label" [title]="bar.label">{{ bar.label }}</span>
+        <div class="bar-row__track">
+          <div
+            class="bar-row__fill"
+            [style.width]="bar.width"
+            [style.backgroundColor]="'rgba(var(--xf-heat-rgb), ' + (0.35 + bar.ratio * 0.6) + ')'"
+          ></div>
+        </div>
+        <span class="bar-row__value">{{ bar.count }} · {{ bar.pct }}</span>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="isScale">
+      <div class="bar-row bar-row--scale" *ngFor="let bar of scaleBars" [class.bar-row--top]="bar.isTop">
+        <span class="bar-row__label bar-row__label--scale">{{ bar.label }}</span>
+        <div class="bar-row__track">
+          <div
+            class="bar-row__fill"
+            [style.width]="bar.width"
+            [style.backgroundColor]="'rgba(var(--xf-heat-rgb), ' + (0.35 + bar.ratio * 0.6) + ')'"
+          ></div>
+        </div>
+        <span class="bar-row__value">{{ bar.count }} · {{ bar.pct }}</span>
+      </div>
+    </ng-container>
+  </div>
+
+  <ng-template #noResponses>
+    <p class="field-result__empty">No answers yet.</p>
+  </ng-template>
+</div>

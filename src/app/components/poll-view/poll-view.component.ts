@@ -5,9 +5,9 @@ import { PollsService } from '../../services/polls.service';
 import { ResponsesService } from '../../services/responses.service';
 import { ResultsService } from '../../services/results.service';
 import { CognitoService } from '../../services/cognito.service';
-import { Poll, GridBlock } from '../../models/poll.model';
-import { OverlapResult } from '../../models/response.model';
-import { generateGrid } from '../../models/grid.util';
+import { Poll, GridBlock, FormField, isChoiceField, isQaPoll } from '../../models/poll.model';
+import { AnswerValue, FormResult, OverlapResult } from '../../models/response.model';
+import { generateGrid, PollGridConfig } from '../../models/grid.util';
 
 type ViewState = 'loading' | 'not-found' | 'closed' | 'needs-signin' | 'ready' | 'submitted' | 'error';
 
@@ -32,7 +32,11 @@ export class PollViewComponent implements OnInit, OnDestroy {
   submitting = false;
   errorMessage = '';
 
+  // Q&A answer state (fieldId -> typed value).
+  answers: Record<string, AnswerValue> = {};
+
   results: OverlapResult | null = null;
+  formResult: FormResult | null = null;
   private resultsSub?: Subscription;
 
   private pollId = '';
@@ -62,7 +66,9 @@ export class PollViewComponent implements OnInit, OnDestroy {
     this.pollsService.get(this.pollId).subscribe({
       next: (poll) => {
         this.poll = poll;
-        this.grid = generateGrid(poll);
+        // Only scheduler polls have a grid; a Q&A poll has none. A scheduler
+        // poll always carries the grid scalars, so the cast is safe here.
+        this.grid = isQaPoll(poll) ? [] : generateGrid(poll as PollGridConfig);
 
         if (poll.closeAt && new Date(poll.closeAt).getTime() < Date.now()) {
           this.state = 'closed';
@@ -96,8 +102,36 @@ export class PollViewComponent implements OnInit, OnDestroy {
     this.selectedBlocks = blocks;
   }
 
+  // ── Q&A helpers ────────────────────────────────────────────────────
+  get isQa(): boolean {
+    return !!this.poll && isQaPoll(this.poll);
+  }
+
+  get fields(): FormField[] {
+    return this.poll?.fields ?? [];
+  }
+
+  answerFor(fieldId: string): AnswerValue | null {
+    return this.answers[fieldId] ?? null;
+  }
+
+  onAnswerChange(fieldId: string, value: AnswerValue): void {
+    this.answers = { ...this.answers, [fieldId]: value };
+  }
+
+  private requiredFieldsAnswered(): boolean {
+    return this.fields.every((f) => {
+      if (!f.required) return true;
+      const v = this.answers[f.fieldId];
+      if (isChoiceField(f)) return Array.isArray(v) && v.length > 0;
+      return typeof v === 'number';
+    });
+  }
+
   canSubmit(): boolean {
-    return this.displayName.trim().length > 0 && !this.submitting;
+    if (this.displayName.trim().length === 0 || this.submitting) return false;
+    if (this.isQa) return this.requiredFieldsAnswered();
+    return true;
   }
 
   onSubmit(): void {
@@ -106,22 +140,40 @@ export class PollViewComponent implements OnInit, OnDestroy {
     this.submitting = true;
     this.errorMessage = '';
 
-    this.responsesService.submit(this.poll.pollId, this.displayName.trim(), this.selectedBlocks).subscribe({
-      next: () => {
-        this.submitting = false;
-        this.state = 'submitted';
-        if (this.poll?.showResultsToRespondents) {
-          this.startResultsPolling();
-        }
-      },
-      error: (err) => {
-        this.submitting = false;
-        this.errorMessage = this.friendlyError(err);
-      },
-    });
+    const onSuccess = () => {
+      this.submitting = false;
+      this.state = 'submitted';
+      if (this.poll?.showResultsToRespondents) {
+        this.startResultsPolling();
+      }
+    };
+    const onError = (err: unknown) => {
+      this.submitting = false;
+      this.errorMessage = this.friendlyError(err);
+    };
+
+    if (this.isQa) {
+      this.responsesService
+        .submitAnswers(this.poll.pollId, this.displayName.trim(), this.answers)
+        .subscribe({ next: onSuccess, error: onError });
+      return;
+    }
+
+    this.responsesService
+      .submit(this.poll.pollId, this.displayName.trim(), this.selectedBlocks)
+      .subscribe({ next: onSuccess, error: onError });
   }
 
   private startResultsPolling(): void {
+    if (this.isQa) {
+      this.resultsSub = this.resultsService.pollFormPublic(this.pollId).subscribe({
+        next: (result) => (this.formResult = result),
+        error: () => {
+          /* bonus view -- fail silently */
+        },
+      });
+      return;
+    }
     this.resultsSub = this.resultsService.pollPublic(this.pollId).subscribe({
       next: (result) => (this.results = result),
       error: () => {

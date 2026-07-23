@@ -1,0 +1,91 @@
+<fieldset class="fr" *ngIf="isChoice && !isDropdown">
+  <legend class="fr__legend">
+    {{ field.label }}
+    <span class="fr__required" *ngIf="field.required" aria-hidden="true">*</span>
+  </legend>
+
+  <!-- single_choice: radios -->
+  <ng-container *ngIf="isSingle">
+    <label
+      class="fr__option"
+      *ngFor="let opt of options"
+      [class.fr__option--checked]="isSelected(opt.optionId)"
+      [for]="controlId(opt.optionId)"
+    >
+      <input
+        type="radio"
+        [id]="controlId(opt.optionId)"
+        [name]="controlId('radio')"
+        [checked]="isSelected(opt.optionId)"
+        (change)="selectSingle(opt.optionId)"
+      />
+      <span class="fr__option-label">{{ opt.label }}</span>
+    </label>
+  </ng-container>
+
+  <!-- multi_choice: checkboxes -->
+  <ng-container *ngIf="isMulti">
+    <label
+      class="fr__option"
+      *ngFor="let opt of options"
+      [class.fr__option--checked]="isSelected(opt.optionId)"
+      [for]="controlId(opt.optionId)"
+    >
+      <input
+        type="checkbox"
+        [id]="controlId(opt.optionId)"
+        [checked]="isSelected(opt.optionId)"
+        (change)="toggleMulti(opt.optionId, $any($event.target).checked)"
+      />
+      <span class="fr__option-label">{{ opt.label }}</span>
+    </label>
+  </ng-container>
+</fieldset>
+
+<!-- dropdown -->
+<div class="fr" *ngIf="isDropdown">
+  <label class="fr__legend" [for]="controlId('select')">
+    {{ field.label }}
+    <span class="fr__required" *ngIf="field.required" aria-hidden="true">*</span>
+  </label>
+  <select
+    class="fr__select"
+    [id]="controlId('select')"
+    (change)="onDropdownChange($any($event.target).value)"
+  >
+    <option value="" [selected]="!value">Choose…</option>
+    <option
+      *ngFor="let opt of options"
+      [value]="opt.optionId"
+      [selected]="isSelected(opt.optionId)"
+    >
+      {{ opt.label }}
+    </option>
+  </select>
+</div>
+
+<!-- scale -->
+<fieldset class="fr" *ngIf="isScale">
+  <legend class="fr__legend">
+    {{ field.label }}
+    <span class="fr__required" *ngIf="field.required" aria-hidden="true">*</span>
+  </legend>
+
+  <div class="fr__scale" role="radiogroup" [attr.aria-label]="field.label">
+    <button
+      type="button"
+      class="fr__scale-btn"
+      *ngFor="let v of scaleValues"
+      role="radio"
+      [attr.aria-checked]="isScaleSelected(v)"
+      [class.fr__scale-btn--checked]="isScaleSelected(v)"
+      (click)="selectScale(v)"
+    >
+      {{ v }}
+    </button>
+  </div>
+  <div class="fr__scale-ends" *ngIf="scaleMinLabel || scaleMaxLabel">
+    <span>{{ scaleMinLabel }}</span>
+    <span>{{ scaleMaxLabel }}</span>
+  </div>
+</fieldset>
