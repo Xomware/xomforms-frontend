@@ -47,6 +47,11 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
   @Input() blocks: GridBlock[] = [];
   /** Pre-selected blockIds, e.g. when a respondent is editing a prior submission. */
   @Input() initialSelected: string[] = [];
+  /**
+   * Read-only sample mode: no painting, no toolbar/presets. Used by the
+   * creator's pre-publish preview to show the derived grid layout + times.
+   */
+  @Input() readOnly = false;
   @Output() selectionChange = new EventEmitter<string[]>();
 
   @ViewChild('gridEl', { static: false }) gridEl?: ElementRef<HTMLDivElement>;
@@ -85,6 +90,8 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
   }
 
   private attachListeners(): void {
+    // Preview/read-only grids never paint -- skip all pointer wiring.
+    if (this.readOnly) return;
     const el = this.gridEl?.nativeElement;
     if (!el || this.listenersAttached) return;
     el.addEventListener('pointerdown', this.onPointerDown, { passive: false });
@@ -128,6 +135,7 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
    * mechanism was Phase 0's top cross-browser risk area).
    */
   onCellClick(blockId: string): void {
+    if (this.readOnly) return;
     if (this.pointerJustHandled) {
       this.pointerJustHandled = false;
       return;
@@ -153,6 +161,48 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
   clear(): void {
     this.selected.clear();
     this.emitSelection();
+  }
+
+  // ── Quick-fill presets ─────────────────────────────────────────────
+  // Additive to the current drag-paint selection: each preset UNIONs its
+  // matching blocks into `selected`. Weekday is derived from the blockId's
+  // date prefix; time-of-day from the "THH:MM" portion.
+  private addMatching(predicate: (date: string, time: string) => boolean): void {
+    for (const block of this.blocks) {
+      const [date, time] = block.blockId.split('T');
+      if (predicate(date, time)) this.selected.add(block.blockId);
+    }
+    this.emitSelection();
+  }
+
+  private static weekdayOf(date: string): number {
+    // getDay() on the poll's calendar date (parsed at local midnight) -- 0=Sun.
+    return new Date(`${date}T00:00:00`).getDay();
+  }
+
+  selectAll(): void {
+    this.addMatching(() => true);
+  }
+
+  selectWeekdays(): void {
+    this.addMatching((date) => {
+      const dow = AvailabilityGridComponent.weekdayOf(date);
+      return dow >= 1 && dow <= 5;
+    });
+  }
+
+  selectWeekends(): void {
+    this.addMatching((date) => {
+      const dow = AvailabilityGridComponent.weekdayOf(date);
+      return dow === 0 || dow === 6;
+    });
+  }
+
+  selectAfterWork(): void {
+    // "THH:MM" is zero-padded, so a lexical compare against "17:00" is a valid
+    // >= 5 PM test. Overnight tail blocks (e.g. 00:15) sort below it and are
+    // correctly excluded.
+    this.addMatching((_date, time) => time >= '17:00');
   }
 
   private emitSelection(): void {

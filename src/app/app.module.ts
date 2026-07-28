@@ -16,6 +16,7 @@ import { FieldRendererComponent } from './components/field-renderer/field-render
 import { FieldResultsComponent } from './components/field-results/field-results.component';
 import { QaResultsComponent } from './components/qa-results/qa-results.component';
 import { PollViewComponent } from './components/poll-view/poll-view.component';
+import { StyledSelectComponent } from './components/styled-select/styled-select.component';
 import { SignInComponent } from './components/auth/sign-in/sign-in.component';
 import { CallbackComponent } from './components/auth/callback/callback.component';
 
@@ -34,6 +35,7 @@ import { jwtInterceptor } from './interceptors/jwt.interceptor';
     FieldResultsComponent,
     QaResultsComponent,
     PollViewComponent,
+    StyledSelectComponent,
     SignInComponent,
     CallbackComponent,
   ],

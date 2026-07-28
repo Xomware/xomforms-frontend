@@ -24,12 +24,46 @@ describe('PollCreateComponent — starter picker + builder', () => {
     expect(component.mode).toBe('picker');
   });
 
-  it('choosing Scheduler drops into the existing scheduler form', () => {
+  it('choosing Scheduler drops into the duration + start-range form', () => {
     component.chooseScheduler();
     expect(component.mode).toBe('scheduler');
-    // The original scheduler controls are intact and untouched.
+    // Duration + start-range controls (block size removed).
     expect(component.form.get('startDate')).toBeTruthy();
-    expect(component.form.get('granularityMinutes')?.value).toBe(30);
+    expect(component.form.get('granularityMinutes')).toBeNull();
+    expect(component.form.get('eventDurationMinutes')?.value).toBe(120);
+    expect(component.form.get('earliestStartTime')?.value).toBe('18:00');
+    expect(component.form.get('latestStartTime')?.value).toBe('21:00');
+  });
+
+  it('warns that the latest start crosses midnight when the event runs overnight', () => {
+    component.chooseScheduler();
+    component.form.get('latestStartTime')?.setValue('22:00');
+    component.form.get('eventDurationMinutes')?.setValue(180); // 3h -> ends 1:00 AM next day
+    const summary = component.latestEndSummary;
+    expect(summary?.label).toBe('1:00 AM');
+    expect(summary?.nextDay).toBeTrue();
+  });
+
+  it('flags an out-of-order start range', () => {
+    component.chooseScheduler();
+    component.form.get('earliestStartTime')?.setValue('21:00');
+    component.form.get('latestStartTime')?.setValue('18:00');
+    expect(component.startRangeValid).toBeFalse();
+  });
+
+  it('builds a responder preview grid from the current settings', () => {
+    component.chooseScheduler();
+    component.form.patchValue({
+      startDate: '2026-08-03',
+      endDate: '2026-08-03',
+      earliestStartTime: '18:00',
+      latestStartTime: '21:00',
+      eventDurationMinutes: 120,
+    });
+    expect(component.hasPreview).toBeTrue();
+    // Window 18:00 -> 21:00 + 2h = 23:00, 15-min steps.
+    expect(component.previewBlocks[0].blockId).toBe('2026-08-03T18:00');
+    expect(component.previewBlocks.some((b) => b.blockId === '2026-08-03T22:45')).toBeTrue();
   });
 
   it('choosing Blank opens the Q&A builder and seeds one field', () => {

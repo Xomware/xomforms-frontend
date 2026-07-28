@@ -59,17 +59,25 @@ export interface CreatePollRequest {
   // Scheduler scalars -- required for a scheduler poll, omitted for a Q&A form.
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
-  dayStartMinute?: number; // minutes since local midnight
-  dayEndMinute?: number; // exclusive
-  granularityMinutes?: number; // one of 15 | 30 | 60
+  /**
+   * Duration + start-range model. The frontend sends the START range
+   * (earliest/latest allowed start) + eventDurationMinutes; the backend DERIVES
+   * and persists the paint window (dayStart = earliest, dayEnd = latest +
+   * duration, granularity = 15). dayEnd may exceed 1440 (overnight).
+   */
+  earliestStartMinute?: number; // minutes since local midnight
+  latestStartMinute?: number; // minutes since local midnight
+  dayStartMinute?: number; // minutes since local midnight (legacy / derived echo)
+  dayEndMinute?: number; // exclusive; may exceed 1440 for overnight
+  granularityMinutes?: number; // fixed at 15 for windowed polls; legacy: 15|30|60
   timezone?: string; // IANA tz name, e.g. "America/New_York"
   guestAllowed?: boolean; // default false
   showResultsToRespondents?: boolean; // default false
   closeAt?: string | null; // ISO 8601 UTC datetime
   /**
-   * How long the scheduled event actually runs, in minutes. Omit for a
-   * single-slot event -- the backend defaults it to granularityMinutes.
-   * Drives the results "best contiguous start window" only.
+   * Event length in minutes (15-min steps, 15..360). Required for the windowed
+   * scheduler shape; drives both the derived grid end and the results "best
+   * contiguous start window".
    */
   eventDurationMinutes?: number | null;
 }
@@ -84,6 +92,9 @@ export interface Poll {
   fields?: FormField[] | null;
   startDate?: string;
   endDate?: string;
+  /** Creator's start-range inputs (may be absent on legacy polls). */
+  earliestStartMinute?: number;
+  latestStartMinute?: number;
   dayStartMinute?: number;
   dayEndMinute?: number;
   granularityMinutes?: number;
