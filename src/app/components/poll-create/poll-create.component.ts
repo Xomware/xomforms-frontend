@@ -3,9 +3,38 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
 import { ResultsService } from '../../services/results.service';
-import { CreatePollRequest, FieldType, FormField, Poll } from '../../models/poll.model';
+import { CreatePollRequest, FieldType, FormField, GridBlock, Poll } from '../../models/poll.model';
 import { FormResult, OverlapResult } from '../../models/response.model';
-import { viewerTimeZone } from '../../models/grid.util';
+import {
+  EndTimeSummary,
+  eventEndSummary,
+  formatDuration,
+  generateGrid,
+  minutesToClockLabel,
+  timeStringToMinutes,
+  viewerTimeZone,
+} from '../../models/grid.util';
+import { SelectOption } from '../styled-select/styled-select.component';
+
+/** Fixed grid resolution -- "block size" is no longer a user control. */
+const GRID_GRANULARITY_MINUTES = 15;
+/** Preview caps how many days of the range it renders so it stays lightweight. */
+const PREVIEW_MAX_DAYS = 3;
+
+/** A curated shortlist surfaced above the full ~400-entry IANA list. */
+const COMMON_TIMEZONES = [
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Anchorage',
+  'Pacific/Honolulu',
+  'UTC',
+  'Europe/London',
+  'Europe/Paris',
+  'Asia/Tokyo',
+  'Australia/Sydney',
+];
 
 /**
  * The mode a creator is in. `picker` is the create-time starter chooser
@@ -48,22 +77,17 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
 })
 export class PollCreateComponent implements OnInit, OnDestroy {
   readonly form: FormGroup;
-  readonly granularityOptions = [15, 30, 60];
-  readonly commonTimezones = Intl.supportedValuesOf
-    ? Intl.supportedValuesOf('timeZone')
-    : [viewerTimeZone()];
 
-  readonly eventLengthOptions: { label: string; minutes: number | null }[] = [
-    { label: 'One time slot (default)', minutes: null },
-    { label: '30 minutes', minutes: 30 },
-    { label: '1 hour', minutes: 60 },
-    { label: '1.5 hours', minutes: 90 },
-    { label: '2 hours', minutes: 120 },
-    { label: '3 hours', minutes: 180 },
-    { label: '4 hours', minutes: 240 },
-    { label: '5 hours', minutes: 300 },
-    { label: '6 hours', minutes: 360 },
-  ];
+  /** Event length options: every 15 minutes from 15 up to 360 (6h). */
+  readonly durationOptions: SelectOption[] = this.buildDurationOptions();
+  /** Timezone picker: detected zone pinned, curated common zones, then all. */
+  readonly timezoneOptions: SelectOption[] = this.buildTimezoneOptions();
+
+  // ── Live preview state (recomputed as the time config changes) ──────
+  previewBlocks: GridBlock[] = [];
+  previewTruncated = false;
+  previewDaysShown = 0;
+  private valueSub?: Subscription;
 
   readonly fieldTypeLabels = FIELD_TYPE_LABELS;
   readonly addableFieldTypes: FieldType[] = ['single_choice', 'multi_choice', 'dropdown', 'scale'];
@@ -91,10 +115,12 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       description: ['', [Validators.maxLength(2000)]],
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
-      dayStartTime: ['08:00', Validators.required],
-      dayEndTime: ['20:00', Validators.required],
-      granularityMinutes: [30, Validators.required],
-      eventDurationMinutes: [null],
+      // Duration + start-range model: the creator sets an event length and the
+      // range of allowed START times. The paint grid runs earliest ->
+      // (latest + duration); "block size" is gone (fixed 15-min resolution).
+      eventDurationMinutes: [120, Validators.required],
+      earliestStartTime: ['18:00', Validators.required],
+      latestStartTime: ['21:00', Validators.required],
       timezone: [viewerTimeZone(), Validators.required],
       // "Anyone with the link can respond" is the default -- most polls are
       // shared openly; requiring an account is the exception.
@@ -105,10 +131,16 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Keep the responder preview in sync with the time config. startWith(null)
+    // primes it from the initial defaults.
+    this.valueSub = this.form.valueChanges.subscribe(() => this.rebuildPreview());
+    this.rebuildPreview();
+  }
 
   ngOnDestroy(): void {
     this.resultsSub?.unsubscribe();
+    this.valueSub?.unsubscribe();
   }
 
   // ── Starter picker ────────────────────────────────────────────────
@@ -233,8 +265,11 @@ export class PollCreateComponent implements OnInit, OnDestroy {
   }
 
   private submitScheduler(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || !this.startRangeValid) {
       this.form.markAllAsTouched();
+      if (!this.startRangeValid) {
+        this.errorMessage = 'Latest start must be at or after the earliest start.';
+      }
       return;
     }
 
@@ -243,17 +278,17 @@ export class PollCreateComponent implements OnInit, OnDestroy {
 
     const value = this.form.value;
     this.addOwnAvailability = !!value.addOwnAvailability;
-    const eventDuration = value.eventDurationMinutes ? Number(value.eventDurationMinutes) : null;
+    // Send the start-range shape; the backend derives + persists the grid
+    // window (dayStart = earliest, dayEnd = latest + duration, granularity = 15).
     const req: CreatePollRequest = {
       title: value.title.trim(),
       description: value.description?.trim() || null,
       formType: 'scheduler',
       startDate: value.startDate,
       endDate: value.endDate,
-      dayStartMinute: this.timeToMinutes(value.dayStartTime),
-      dayEndMinute: this.timeToMinutes(value.dayEndTime),
-      granularityMinutes: Number(value.granularityMinutes),
-      eventDurationMinutes: eventDuration,
+      earliestStartMinute: this.timeToMinutes(value.earliestStartTime),
+      latestStartMinute: this.timeToMinutes(value.latestStartTime),
+      eventDurationMinutes: Number(value.eventDurationMinutes),
       timezone: value.timezone,
       guestAllowed: !!value.guestAllowed,
       showResultsToRespondents: !!value.showResultsToRespondents,
@@ -361,6 +396,140 @@ export class PollCreateComponent implements OnInit, OnDestroy {
         ? crypto.randomUUID().slice(0, 8)
         : Math.random().toString(36).slice(2, 10);
     return `${prefix}_${rand}`;
+  }
+
+  // ── Time config: derived state for the UI ──────────────────────────
+  get durationMinutes(): number {
+    return Number(this.form.get('eventDurationMinutes')?.value) || 0;
+  }
+
+  get durationLabel(): string {
+    return this.durationMinutes ? formatDuration(this.durationMinutes) : '';
+  }
+
+  get earliestStartMinutes(): number | null {
+    return timeStringToMinutes(this.form.get('earliestStartTime')?.value);
+  }
+
+  get latestStartMinutes(): number | null {
+    return timeStringToMinutes(this.form.get('latestStartTime')?.value);
+  }
+
+  /** Latest start must be at or after earliest start. */
+  get startRangeValid(): boolean {
+    const e = this.earliestStartMinutes;
+    const l = this.latestStartMinutes;
+    if (e == null || l == null) return true; // required-validators handle blanks
+    return l >= e;
+  }
+
+  /** When does the event END for the LATEST allowed start (with next-day note)? */
+  get latestEndSummary(): EndTimeSummary | null {
+    const start = this.latestStartMinutes;
+    if (start == null || !this.durationMinutes) return null;
+    return eventEndSummary(start, this.durationMinutes);
+  }
+
+  /** End time for the EARLIEST start (informational). */
+  get earliestEndSummary(): EndTimeSummary | null {
+    const start = this.earliestStartMinutes;
+    if (start == null || !this.durationMinutes) return null;
+    return eventEndSummary(start, this.durationMinutes);
+  }
+
+  get latestStartLabel(): string {
+    const start = this.latestStartMinutes;
+    return start == null ? '' : minutesToClockLabel(start);
+  }
+
+  get hasPreview(): boolean {
+    return this.previewBlocks.length > 0;
+  }
+
+  private buildDurationOptions(): SelectOption[] {
+    const options: SelectOption[] = [];
+    for (let m = 15; m <= 360; m += 15) {
+      options.push({ value: m, label: formatDuration(m) });
+    }
+    return options;
+  }
+
+  private buildTimezoneOptions(): SelectOption[] {
+    const all = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] })
+      .supportedValuesOf
+      ? Intl.supportedValuesOf('timeZone')
+      : [];
+    const detected = viewerTimeZone();
+    const options: SelectOption[] = [];
+    const seen = new Set<string>();
+
+    const push = (tz: string, group: string) => {
+      if (!tz || seen.has(tz)) return;
+      seen.add(tz);
+      options.push({ value: tz, label: tz.replace(/_/g, ' '), group });
+    };
+
+    push(detected, 'Your timezone');
+    for (const tz of COMMON_TIMEZONES) push(tz, 'Common');
+    for (const tz of all) push(tz, 'All timezones');
+    // Fallback if the browser can't enumerate zones.
+    if (options.length === 0) push(detected || 'UTC', 'Your timezone');
+    return options;
+  }
+
+  /**
+   * Rebuild the responder preview grid from the current time config. Renders at
+   * most PREVIEW_MAX_DAYS days so a wide range stays lightweight; the derived
+   * window (earliest -> latest + duration) matches exactly what a responder
+   * gets, including an overnight roll past midnight.
+   */
+  private rebuildPreview(): void {
+    const value = this.form.value;
+    const startDate: string = value.startDate;
+    const endDate: string = value.endDate;
+    const earliest = this.earliestStartMinutes;
+    const latest = this.latestStartMinutes;
+    const duration = this.durationMinutes;
+    const timezone: string = value.timezone;
+
+    if (
+      !startDate ||
+      earliest == null ||
+      latest == null ||
+      !duration ||
+      !timezone ||
+      !this.startRangeValid
+    ) {
+      this.previewBlocks = [];
+      this.previewTruncated = false;
+      this.previewDaysShown = 0;
+      return;
+    }
+
+    // Cap the preview to the first few days of the range.
+    const start = new Date(`${startDate}T00:00:00`);
+    const rangeEnd = endDate ? new Date(`${endDate}T00:00:00`) : start;
+    const capEnd = new Date(start);
+    capEnd.setDate(capEnd.getDate() + PREVIEW_MAX_DAYS - 1);
+    const previewEnd = rangeEnd.getTime() < capEnd.getTime() ? rangeEnd : capEnd;
+    this.previewTruncated = previewEnd.getTime() < rangeEnd.getTime();
+
+    const pad2 = (n: number) => n.toString().padStart(2, '0');
+    const previewEndStr = `${previewEnd.getFullYear()}-${pad2(previewEnd.getMonth() + 1)}-${pad2(
+      previewEnd.getDate(),
+    )}`;
+
+    this.previewBlocks = generateGrid({
+      startDate,
+      endDate: previewEndStr,
+      dayStartMinute: earliest,
+      dayEndMinute: latest + duration,
+      granularityMinutes: GRID_GRANULARITY_MINUTES,
+      timezone,
+    });
+
+    const days = new Set(this.previewBlocks.map((b) => b.blockId.split('T')[0]));
+    this.previewDaysShown = days.size;
   }
 
   private timeToMinutes(hhmm: string): number {

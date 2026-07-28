@@ -161,6 +161,100 @@ textarea {
   color: var(--xf-text-faint);
 }
 
+/* ── Time config + end-time warning + preview ────────────────────── */
+.time-config {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid var(--xf-border);
+  border-radius: var(--xf-radius);
+  background: var(--xf-surface-2);
+
+  legend {
+    padding: 0 8px;
+    margin-left: -4px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--xf-text);
+  }
+}
+
+.end-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface);
+  font-size: 0.85rem;
+  color: var(--xf-text-muted);
+
+  strong {
+    color: var(--xf-text);
+    font-weight: 700;
+  }
+}
+
+.end-warning__icon {
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+// Amber wash via a translucent accent tint -- adapts to light + dark.
+.end-warning--overnight {
+  border-color: var(--xf-accent);
+  background: rgba(255, 210, 63, 0.16);
+  color: var(--xf-text);
+}
+
+.end-warning__nextday {
+  font-weight: 700;
+  color: var(--xf-accent);
+}
+
+.end-warning__overnight-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px dashed var(--xf-border-strong);
+  border-radius: var(--xf-radius);
+  background: var(--xf-surface);
+}
+
+.preview__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--xf-text);
+}
+
+.preview__summary {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--xf-text-muted);
+
+  strong {
+    color: var(--xf-text);
+    font-weight: 700;
+  }
+
+  .preview__truncated {
+    display: block;
+    margin-top: 3px;
+    color: var(--xf-text-faint);
+  }
+}
+
 .add-availability-cta {
   display: inline-flex;
   align-items: center;

@@ -1,9 +1,15 @@
-<div class="grid-wrap">
-  <div class="toolbar">
+<div class="grid-wrap" [class.grid-wrap--readonly]="readOnly">
+  <div class="toolbar" *ngIf="!readOnly">
     <span class="selected-count">{{ selected.size }} block{{ selected.size === 1 ? '' : 's' }} selected</span>
-    <button type="button" class="clear-btn" (click)="clear()" [disabled]="selected.size === 0">
-      Clear all
-    </button>
+    <div class="presets" role="group" aria-label="Quick fill">
+      <button type="button" class="preset-btn" (click)="selectWeekdays()">Weekdays</button>
+      <button type="button" class="preset-btn" (click)="selectWeekends()">Weekends</button>
+      <button type="button" class="preset-btn" (click)="selectAfterWork()">After 5 PM</button>
+      <button type="button" class="preset-btn" (click)="selectAll()">Select all</button>
+      <button type="button" class="clear-btn" (click)="clear()" [disabled]="selected.size === 0">
+        Clear all
+      </button>
+    </div>
   </div>
 
   <p class="scroll-hint" *ngIf="colDates.length > 3" aria-hidden="true">
@@ -31,5 +37,6 @@
     </div>
   </div>
 
-  <p class="tz-note">Times shown in your local timezone ({{ viewerTz }}). Drag to paint availability, drag again over painted cells to erase.</p>
+  <p class="tz-note" *ngIf="!readOnly">Times shown in your local timezone ({{ viewerTz }}). Drag to paint availability, drag again over painted cells to erase.</p>
+  <p class="tz-note" *ngIf="readOnly">Sample grid · times shown in your local timezone ({{ viewerTz }}).</p>
 </div>

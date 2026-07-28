@@ -1,0 +1,45 @@
+<div class="xf-select" [class.xf-select--open]="open">
+  <button
+    type="button"
+    class="xf-select__control"
+    (click)="toggle()"
+    [disabled]="disabled"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="open"
+    [attr.aria-label]="ariaLabel || placeholder"
+  >
+    <span class="xf-select__value" [class.is-placeholder]="!hasValue">{{ selectedLabel }}</span>
+    <span class="xf-select__chevron" aria-hidden="true">▾</span>
+  </button>
+
+  <div class="xf-select__panel" *ngIf="open" role="listbox">
+    <div class="xf-select__search" *ngIf="searchable">
+      <input
+        type="text"
+        [(ngModel)]="search"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="Search…"
+        aria-label="Search options"
+        autocomplete="off"
+        (click)="$event.stopPropagation()"
+      />
+    </div>
+    <div class="xf-select__list">
+      <ng-container *ngFor="let g of filteredGroups">
+        <div class="xf-select__group" *ngIf="g.name">{{ g.name }}</div>
+        <button
+          type="button"
+          class="xf-select__option"
+          *ngFor="let opt of g.options"
+          [class.is-selected]="opt.value === value"
+          role="option"
+          [attr.aria-selected]="opt.value === value"
+          (click)="select(opt)"
+        >
+          {{ opt.label }}
+        </button>
+      </ng-container>
+      <p class="xf-select__empty" *ngIf="filteredGroups.length === 0">No matches</p>
+    </div>
+  </div>
+</div>

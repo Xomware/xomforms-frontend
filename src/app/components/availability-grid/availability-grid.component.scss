@@ -10,13 +10,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 10px 16px;
   font-size: 0.88rem;
 }
 
 .selected-count {
   font-weight: 600;
   color: var(--xf-text);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-btn {
+  padding: 7px 13px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-pill);
+  background: var(--xf-surface);
+  color: var(--xf-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background var(--xf-transition), border-color var(--xf-transition),
+    color var(--xf-transition);
+
+  &:hover {
+    background: var(--xf-purple-100);
+    border-color: var(--xf-primary);
+    color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
+  }
 }
 
 .clear-btn {
@@ -161,6 +193,21 @@
   font-size: 0.75rem;
   color: var(--xf-text-faint);
   margin: 0;
+}
+
+// Read-only preview: cells are illustrative, not interactive.
+.grid-wrap--readonly {
+  .grid {
+    touch-action: auto;
+  }
+
+  .paint-cell {
+    cursor: default;
+
+    &:hover {
+      background: var(--xf-surface);
+    }
+  }
 }
 
 // Grow touch targets toward the ~44px recommendation on narrow viewports.

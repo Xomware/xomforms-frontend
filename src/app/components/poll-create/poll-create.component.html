@@ -64,42 +64,80 @@
         </div>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label for="dayStartTime">Earliest time each day</label>
-          <input id="dayStartTime" type="time" formControlName="dayStartTime" />
-        </div>
-        <div class="field">
-          <label for="dayEndTime">Latest time each day</label>
-          <input id="dayEndTime" type="time" formControlName="dayEndTime" />
-        </div>
-      </div>
+      <fieldset class="time-config">
+        <legend>When can it happen?</legend>
 
-      <div class="field-row">
         <div class="field">
-          <label for="granularityMinutes">Block size</label>
-          <select id="granularityMinutes" formControlName="granularityMinutes">
-            <option *ngFor="let g of granularityOptions" [value]="g">{{ g }} minutes</option>
-          </select>
+          <label for="eventDurationMinutes">Event length</label>
+          <xf-select
+            [options]="durationOptions"
+            formControlName="eventDurationMinutes"
+            ariaLabel="Event length"
+          ></xf-select>
+          <p class="field-hint">How long the event runs, in 15-minute steps up to 6 hours.</p>
         </div>
-        <div class="field">
-          <label for="timezone">Timezone</label>
-          <select id="timezone" formControlName="timezone">
-            <option *ngFor="let tz of commonTimezones" [value]="tz">{{ tz }}</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="field">
-        <label for="eventDurationMinutes">How long is the event?</label>
-        <select id="eventDurationMinutes" formControlName="eventDurationMinutes">
-          <option *ngFor="let opt of eventLengthOptions" [ngValue]="opt.minutes">{{ opt.label }}</option>
-        </select>
-        <p class="field-hint">
-          Results will highlight the best <em>start time</em> where the most people are free for
-          the whole event.
+        <div class="field-row">
+          <div class="field">
+            <label for="earliestStartTime">Earliest start</label>
+            <input id="earliestStartTime" type="time" formControlName="earliestStartTime" />
+          </div>
+          <div class="field">
+            <label for="latestStartTime">Latest start</label>
+            <input id="latestStartTime" type="time" formControlName="latestStartTime" />
+          </div>
+        </div>
+        <p class="field-error" *ngIf="!startRangeValid">
+          Latest start must be at or after the earliest start.
         </p>
-      </div>
+        <p class="field-hint">
+          The range of allowed <em>start times</em>. Responders paint availability from the earliest
+          start through the end of the latest possible event.
+        </p>
+
+        <!-- Live end-time warning -->
+        <div class="end-warning" *ngIf="latestEndSummary" [class.end-warning--overnight]="latestEndSummary.nextDay">
+          <span class="end-warning__icon" aria-hidden="true">{{ latestEndSummary.nextDay ? '🌙' : '🕒' }}</span>
+          <span class="end-warning__text">
+            Latest start {{ latestStartLabel }} + {{ durationLabel }} → ends
+            <strong>{{ latestEndSummary.label }}</strong>
+            <span class="end-warning__nextday" *ngIf="latestEndSummary.nextDay">(next day)</span>.
+            <span class="end-warning__overnight-note" *ngIf="latestEndSummary.nextDay">
+              This event runs overnight — the grid continues past midnight.
+            </span>
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="timezone">Event timezone</label>
+          <xf-select
+            [options]="timezoneOptions"
+            formControlName="timezone"
+            [searchable]="true"
+            ariaLabel="Event timezone"
+          ></xf-select>
+          <p class="field-hint">
+            The event's home timezone. Responders always see times in <em>their own</em> local zone.
+          </p>
+        </div>
+      </fieldset>
+
+      <!-- Responder preview -->
+      <section class="preview" *ngIf="hasPreview">
+        <h2 class="preview__title">Preview — what responders will see</h2>
+        <p class="preview__summary">
+          {{ durationLabel }} event · latest start <strong>{{ latestStartLabel }}</strong>
+          <span *ngIf="latestEndSummary">
+            (ends <strong>{{ latestEndSummary.label }}</strong
+            ><span *ngIf="latestEndSummary.nextDay"> next day</span>)</span
+          >.
+          <span class="preview__truncated" *ngIf="previewTruncated">
+            Showing the first {{ previewDaysShown }} day{{ previewDaysShown === 1 ? '' : 's' }} of your
+            range.
+          </span>
+        </p>
+        <app-availability-grid [blocks]="previewBlocks" [readOnly]="true"></app-availability-grid>
+      </section>
 
       <div class="field checkbox-field">
         <label>

@@ -123,20 +123,43 @@ export class OverlapHeatmapComponent implements OnChanges {
     const startId = this.bestStartIds[0];
     const start = this.startTally(startId);
     if (!start) return '';
-    if (!this.isMultiSlot) return formatTime(start.utcInstant, this.viewerTz);
+
+    const endInstant = this.bestWindowEndInstant(startId);
+    if (!endInstant) return formatTime(start.utcInstant, this.viewerTz);
+
+    const startLabel = formatTime(start.utcInstant, this.viewerTz);
+    const endLabel = formatTime(endInstant.toISOString(), this.viewerTz);
+    const nextDay = this.crossesMidnight(start.utcInstant, endInstant.toISOString());
+    return `${startLabel} – ${endLabel}${nextDay ? ' (next day)' : ''}`;
+  }
+
+  /**
+   * End instant of the best window = start + eventDuration (for a multi-slot
+   * window, the end of its final slot; for a single-slot event, one slot after
+   * the start). Returns null when the start block can't be resolved.
+   */
+  private bestWindowEndInstant(startId: string): Date | null {
+    const start = this.startTally(startId);
+    if (!start) return null;
+
+    if (!this.isMultiSlot) {
+      const end = new Date(start.utcInstant);
+      end.setMinutes(end.getMinutes() + this.slotMinutes());
+      return end;
+    }
 
     const members = this.windowMemberIds(startId);
     const lastId = members[members.length - 1];
     const last = this.result?.blocks.find((b) => b.blockId === lastId);
-    if (!last) return formatTime(start.utcInstant, this.viewerTz);
+    if (!last) return null;
+    const end = new Date(last.utcInstant);
+    end.setMinutes(end.getMinutes() + this.slotMinutes());
+    return end;
+  }
 
-    // End of the window = end of its final slot.
-    const endInstant = new Date(last.utcInstant);
-    endInstant.setMinutes(endInstant.getMinutes() + this.slotMinutes());
-    return `${formatTime(start.utcInstant, this.viewerTz)} – ${formatTime(
-      endInstant.toISOString(),
-      this.viewerTz,
-    )}`;
+  /** True when start and end fall on different calendar days in the viewer tz. */
+  private crossesMidnight(startInstant: string, endInstant: string): boolean {
+    return formatDayLong(startInstant, this.viewerTz) !== formatDayLong(endInstant, this.viewerTz);
   }
 
   get bestAvailabilityLabel(): string {

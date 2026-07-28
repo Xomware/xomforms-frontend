@@ -19,7 +19,7 @@ export interface PollGridConfig {
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   dayStartMinute: number;
-  dayEndMinute: number; // exclusive
+  dayEndMinute: number; // exclusive; MAY exceed 1440 for an overnight window
   granularityMinutes: number;
   timezone: string; // IANA tz name
 }
@@ -61,13 +61,26 @@ export function generateGrid(config: PollGridConfig): GridBlock[] {
     const year = current.getFullYear();
     const month = current.getMonth() + 1;
     const day = current.getDate();
-    const dateStr = `${year}-${pad2(month)}-${pad2(day)}`;
 
     for (let minute = config.dayStartMinute; minute < config.dayEndMinute; minute += config.granularityMinutes) {
-      const h = Math.floor(minute / 60);
-      const m = minute % 60;
+      // Overnight support: a minute offset >= 1440 belongs to the NEXT
+      // calendar day. Rolling the date via a Date constructor handles
+      // month/year rollover, and each block is still localized independently
+      // (DST-safe) -- mirrors the backend's generate_grid exactly so blockIds
+      // match. e.g. 22:00 + 3h yields blocks through <next-date>T00:45.
+      const dayOffset = Math.floor(minute / 1440);
+      const dayMinute = minute % 1440;
+      const h = Math.floor(dayMinute / 60);
+      const m = dayMinute % 60;
+
+      const blockDate = new Date(year, month - 1, day + dayOffset);
+      const by = blockDate.getFullYear();
+      const bm = blockDate.getMonth() + 1;
+      const bd = blockDate.getDate();
+      const dateStr = `${by}-${pad2(bm)}-${pad2(bd)}`;
+
       const blockId = `${dateStr}T${pad2(h)}:${pad2(m)}`;
-      const utcInstant = zonedWallTimeToUtc(year, month, day, h, m, config.timezone).toISOString();
+      const utcInstant = zonedWallTimeToUtc(by, bm, bd, h, m, config.timezone).toISOString();
       blocks.push({ blockId, utcInstant });
     }
   }
@@ -124,4 +137,47 @@ export function formatDuration(minutes: number): string {
   const hours = minutes / 60;
   const rounded = Number.isInteger(hours) ? hours : Math.round(hours * 10) / 10;
   return `${rounded} hour${rounded === 1 ? '' : 's'}`;
+}
+
+/**
+ * "HH:MM" (24h, e.g. an <input type=time> value) -> minutes since midnight.
+ * Returns null for a blank/malformed value.
+ */
+export function timeStringToMinutes(hhmm: string | null | undefined): number | null {
+  if (!hhmm) return null;
+  const [h, m] = hhmm.split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+/**
+ * Minutes-since-midnight -> a friendly 12-hour clock label, e.g. 1320 ->
+ * "10:00 PM". Wraps modulo 24h so an overnight end time (e.g. 1500 = 25:00)
+ * renders as its next-day wall clock ("1:00 AM").
+ */
+export function minutesToClockLabel(minutes: number): string {
+  const total = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  let h = Math.floor(total / 60);
+  const m = total % 60;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${m.toString().padStart(2, '0')} ${ampm}`;
+}
+
+export interface EndTimeSummary {
+  /** The end-time clock label, e.g. "1:00 AM". */
+  label: string;
+  /** True when start + duration crosses midnight (end lands on the next day). */
+  nextDay: boolean;
+}
+
+/**
+ * Given a start time (minutes since midnight) and an event duration, compute
+ * the end-time label and whether it crosses into the next day. Used for the
+ * create-form "Latest start … ends …" warning and the results end-time label.
+ */
+export function eventEndSummary(startMinutes: number, durationMinutes: number): EndTimeSummary {
+  const end = startMinutes + durationMinutes;
+  return { label: minutesToClockLabel(end), nextDay: end >= 1440 };
 }
