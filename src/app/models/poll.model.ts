@@ -49,6 +49,24 @@ export function isScaleField(field: FormField): field is ScaleFormField {
   return field.type === 'scale';
 }
 
+/**
+ * Who may see a form's results. Supersedes the older
+ * `showResultsToRespondents` boolean, which the backend keeps in sync.
+ *   hidden          -- creator only
+ *   after_response  -- respondents see results once they've submitted
+ *   always          -- anyone with the link
+ */
+export type ResultsVisibility = 'hidden' | 'after_response' | 'always';
+
+/** One invited recipient plus the outcome of the send. */
+export interface FormInvite {
+  email: string;
+  name?: string | null;
+  sentAt?: string;
+  status: 'sent' | 'failed';
+  error?: string;
+}
+
 export interface CreatePollRequest {
   title: string;
   description?: string | null;
@@ -72,7 +90,9 @@ export interface CreatePollRequest {
   granularityMinutes?: number; // fixed at 15 for windowed polls; legacy: 15|30|60
   timezone?: string; // IANA tz name, e.g. "America/New_York"
   guestAllowed?: boolean; // default false
-  showResultsToRespondents?: boolean; // default false
+  showResultsToRespondents?: boolean; // legacy; kept in sync by the backend
+  resultsVisibility?: ResultsVisibility; // default after_response
+  allowResponseEdits?: boolean; // default true
   closeAt?: string | null; // ISO 8601 UTC datetime
   /**
    * Event length in minutes (15-min steps, 15..360). Required for the windowed
@@ -101,6 +121,10 @@ export interface Poll {
   timezone?: string;
   guestAllowed: boolean;
   showResultsToRespondents: boolean;
+  /** Absent on polls created before the setting existed -- see effectiveVisibility. */
+  resultsVisibility?: ResultsVisibility;
+  allowResponseEdits?: boolean;
+  invites?: FormInvite[] | null;
   closeAt?: string | null;
   /** Event length in minutes; may be absent on polls created before this field. */
   eventDurationMinutes?: number | null;
@@ -144,4 +168,56 @@ export function derivePollStatus(poll: Pick<Poll, 'closeAt'>, now: number = Date
 export interface GridBlock {
   blockId: string;
   utcInstant: string; // ISO 8601 UTC instant
+}
+
+/**
+ * A poll's effective results visibility. Mirrors the backend's read-time shim
+ * for polls created before the setting existed: the old boolean maps to
+ * always/hidden. The backend is the enforcement point -- this only decides
+ * what the UI offers.
+ */
+export function effectiveVisibility(
+  poll: Pick<Poll, 'resultsVisibility' | 'showResultsToRespondents'>,
+): ResultsVisibility {
+  if (
+    poll.resultsVisibility === 'hidden' ||
+    poll.resultsVisibility === 'after_response' ||
+    poll.resultsVisibility === 'always'
+  ) {
+    return poll.resultsVisibility;
+  }
+  return poll.showResultsToRespondents ? 'always' : 'hidden';
+}
+
+/** Whether respondents may change their answer. Absent means yes (see backend). */
+export function allowsResponseEdits(poll: Pick<Poll, 'allowResponseEdits'>): boolean {
+  return poll.allowResponseEdits !== false;
+}
+
+/** A form the caller has responded to, as returned by GET /responses/mine. */
+export interface RespondedForm {
+  pollId: string;
+  title?: string;
+  formType?: FormType;
+  creatorEmail?: string;
+  closeAt?: string | null;
+  timezone?: string;
+  createdAt?: string;
+  allowResponseEdits: boolean;
+  submittedAt?: string;
+  displayName?: string;
+  blocks?: string[];
+  answers?: Record<string, unknown>;
+}
+
+export interface RespondedFormsResponse {
+  responses: RespondedForm[];
+}
+
+/** Result of linking this browser's guest responses to the signed-in account. */
+export interface ClaimResult {
+  claimed: string[];
+  skippedExisting: string[];
+  skippedStale: string[];
+  windowHours: number;
 }

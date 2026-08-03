@@ -9,21 +9,45 @@
     </a>
   </header>
 
+  <p class="claim-notice" *ngIf="claimNotice" role="status">
+    <span>{{ claimNotice }}</span>
+    <button type="button" class="claim-notice__dismiss" (click)="dismissClaimNotice()" aria-label="Dismiss">✕</button>
+  </p>
+
+  <div class="source-tabs" role="tablist" aria-label="Which forms">
+    <button
+      type="button"
+      class="source-tab"
+      role="tab"
+      [class.source-tab--active]="sourceTab === 'created'"
+      [attr.aria-selected]="sourceTab === 'created'"
+      (click)="setSourceTab('created')"
+    >I created</button>
+    <button
+      type="button"
+      class="source-tab"
+      role="tab"
+      [class.source-tab--active]="sourceTab === 'responded'"
+      [attr.aria-selected]="sourceTab === 'responded'"
+      (click)="setSourceTab('responded')"
+    >I filled out</button>
+  </div>
+
   <!-- Loading -->
-  <div class="dash-state" *ngIf="state === 'loading'" role="status" aria-live="polite">
+  <div class="dash-state" *ngIf="sourceTab === 'created' && state === 'loading'" role="status" aria-live="polite">
     <span class="spinner" aria-hidden="true"></span>
     <span>Loading your forms…</span>
   </div>
 
   <!-- Error -->
-  <div class="dash-state dash-state--error" *ngIf="state === 'error'" role="alert">
+  <div class="dash-state dash-state--error" *ngIf="sourceTab === 'created' && state === 'error'" role="alert">
     <h2>Couldn't load your forms</h2>
     <p>Something went wrong reaching the server.</p>
     <button type="button" class="btn-retry" (click)="load()">Try again</button>
   </div>
 
   <!-- Empty (no forms at all) -->
-  <div class="dash-state dash-empty" *ngIf="state === 'empty'">
+  <div class="dash-state dash-empty" *ngIf="sourceTab === 'created' && state === 'empty'">
     <img src="assets/xomforms-icon-256.png" alt="" width="56" height="56" />
     <h2>No forms yet</h2>
     <p>Create your first availability form to start collecting responses.</p>
@@ -33,7 +57,7 @@
   </div>
 
   <!-- Ready -->
-  <ng-container *ngIf="state === 'ready'">
+  <ng-container *ngIf="sourceTab === 'created' && state === 'ready'">
     <div class="dash-toolbar">
       <div class="search-wrap">
         <label for="formSearch" class="sr-only">Search forms</label>
@@ -197,6 +221,71 @@
         </div>
       </li>
     </ul>
+  </ng-container>
+
+  <!-- Responded: forms someone else created that you answered. Read-only --
+       you are not the creator, so there is no close/delete/bulk here. -->
+  <ng-container *ngIf="sourceTab === 'responded'">
+    <div class="dash-state" *ngIf="respondedState === 'loading'" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading your responses…</span>
+    </div>
+
+    <div class="dash-state dash-state--error" *ngIf="respondedState === 'error'" role="alert">
+      <h2>Couldn't load your responses</h2>
+      <button type="button" class="btn-retry" (click)="loadResponded()">Try again</button>
+    </div>
+
+    <div class="dash-state dash-empty" *ngIf="respondedState === 'empty'">
+      <h2>You haven't filled out any forms yet</h2>
+      <p>Forms you respond to will show up here so you can find them again.</p>
+    </div>
+
+    <ng-container *ngIf="respondedState === 'ready'">
+      <div class="dash-toolbar">
+        <div class="search-wrap">
+          <label for="respondedSearch" class="sr-only">Search forms you filled out</label>
+          <input
+            id="respondedSearch"
+            type="search"
+            class="search-input"
+            [(ngModel)]="search"
+            placeholder="Search by title…"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <div class="dash-state no-matches" *ngIf="visibleResponded.length === 0">
+        <p>No forms match your search.</p>
+      </div>
+
+      <ul class="form-list" *ngIf="visibleResponded.length > 0">
+        <li class="form-card" *ngFor="let row of visibleResponded; trackBy: trackByRespondedId">
+          <div class="form-card-main">
+            <div class="form-card-heading">
+              <h2 class="form-card-title">{{ row.title || 'Untitled form' }}</h2>
+              <span
+                class="status-badge"
+                [class.status-badge--open]="respondedStatus(row) === 'open'"
+                [class.status-badge--closed]="respondedStatus(row) === 'closed'"
+              >{{ respondedStatus(row) === 'open' ? 'Open' : 'Closed' }}</span>
+            </div>
+            <p class="form-card-meta">
+              You responded {{ submittedLabel(row) }}
+              <span class="dot" aria-hidden="true">•</span>
+              by {{ row.creatorEmail }}
+            </p>
+          </div>
+
+          <div class="form-card-actions">
+            <a [routerLink]="['/f', row.pollId]" class="btn-open-form">
+              {{ row.allowResponseEdits && respondedStatus(row) === 'open' ? 'Edit response' : 'View form' }}
+            </a>
+          </div>
+        </li>
+      </ul>
+    </ng-container>
   </ng-container>
 
   <!-- Confirm dialog -- every close/reopen/delete routes through here -->

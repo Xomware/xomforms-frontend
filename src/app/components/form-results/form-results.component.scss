@@ -236,3 +236,42 @@
     width: 100%;
   }
 }
+
+/* ── Results / Admin tabs ─────────────────────────────────────────── */
+.form-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 0 18px;
+  padding: 4px;
+  border: 1px solid var(--xf-border);
+  border-radius: var(--xf-radius-pill);
+  background: var(--xf-surface-2);
+}
+
+.form-tab {
+  padding: 7px 18px;
+  border: none;
+  border-radius: var(--xf-radius-pill);
+  background: transparent;
+  color: var(--xf-text-muted);
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--xf-transition), color var(--xf-transition);
+
+  &:hover {
+    color: var(--xf-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 1px;
+  }
+}
+
+.form-tab--active {
+  background: var(--xf-surface);
+  color: var(--xf-primary);
+  box-shadow: var(--xf-shadow-sm);
+}

@@ -2,9 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { PollsService } from '../../services/polls.service';
-import { Poll, PollStatus, derivePollStatus } from '../../models/poll.model';
+import { ResponsesService } from '../../services/responses.service';
+import {
+  ClaimResult,
+  Poll,
+  PollStatus,
+  RespondedForm,
+  derivePollStatus,
+} from '../../models/poll.model';
 
 type LoadState = 'loading' | 'ready' | 'empty' | 'error';
+
+/** Which half of My Forms is showing: what you made, or what you answered. */
+type SourceTab = 'created' | 'responded';
 
 /** Which bulk action the confirm dialog is currently asking about. */
 type PendingAction = { kind: 'delete' | 'close' | 'reopen'; pollIds: string[] } | null;
@@ -31,6 +41,15 @@ interface FormRow {
 export class DashboardComponent implements OnInit {
   state: LoadState = 'loading';
   rows: FormRow[] = [];
+
+  /** Forms the caller responded to. Read-only -- they aren't the creator. */
+  sourceTab: SourceTab = 'created';
+  respondedRows: RespondedForm[] = [];
+  respondedState: LoadState = 'loading';
+
+  /** Set when signing in just linked guest responses to this account. */
+  claimNotice = '';
+
   search = '';
   statusFilter: 'all' | PollStatus = 'all';
 
@@ -49,10 +68,95 @@ export class DashboardComponent implements OnInit {
     day: 'numeric',
   });
 
-  constructor(private pollsService: PollsService) {}
+  constructor(
+    private pollsService: PollsService,
+    private responsesService: ResponsesService,
+  ) {}
 
   ngOnInit(): void {
     this.load();
+    this.loadResponded();
+    this.claimGuestResponses();
+  }
+
+  /**
+   * Link anything answered as a guest on this browser to the account.
+   *
+   * Runs on dashboard load rather than inside the auth callback so it also
+   * catches a session that was already signed in when the guest responses
+   * were made. It's idempotent server-side, so repeating it is free.
+   */
+  private claimGuestResponses(): void {
+    this.responsesService.claimGuestResponses().subscribe({
+      next: (result) => {
+        if (!result) return;
+        this.claimNotice = this.describeClaim(result);
+        // Only re-read when something actually moved.
+        if (result.claimed.length) this.loadResponded();
+      },
+      // Claiming is a convenience -- a failure must not break the dashboard.
+      error: () => {},
+    });
+  }
+
+  /**
+   * Say what was linked rather than doing it silently: a guest id identifies a
+   * browser, so the user is the only one who can tell whether these were
+   * really theirs.
+   */
+  private describeClaim(result: ClaimResult): string {
+    const n = result.claimed.length;
+    if (!n) return '';
+    const noun = n === 1 ? 'form you filled out' : 'forms you filled out';
+    return `Linked ${n} ${noun} on this device to your account.`;
+  }
+
+  dismissClaimNotice(): void {
+    this.claimNotice = '';
+  }
+
+  loadResponded(): void {
+    this.respondedState = 'loading';
+    this.responsesService.mine().subscribe({
+      next: (res) => {
+        this.respondedRows = res.responses ?? [];
+        this.respondedState = this.respondedRows.length ? 'ready' : 'empty';
+      },
+      error: () => {
+        this.respondedState = 'error';
+      },
+    });
+  }
+
+  /** Text search applies to both tabs; the status filter is creator-only. */
+  get visibleResponded(): RespondedForm[] {
+    const q = this.search.trim().toLowerCase();
+    if (!q) return this.respondedRows;
+    return this.respondedRows.filter((r) => (r.title ?? '').toLowerCase().includes(q));
+  }
+
+  respondedStatus(row: RespondedForm): PollStatus {
+    return derivePollStatus(row);
+  }
+
+  submittedLabel(row: RespondedForm): string {
+    return row.submittedAt ? this.formatDate(row.submittedAt) : '—';
+  }
+
+  trackByRespondedId(_index: number, row: RespondedForm): string {
+    return row.pollId;
+  }
+
+  /**
+   * Switching tabs clears the selection. Bulk actions only exist on the
+   * created tab, and carrying a selection across would leave the action bar
+   * referring to rows that are no longer on screen.
+   */
+  setSourceTab(tab: SourceTab): void {
+    if (this.sourceTab === tab) return;
+    this.sourceTab = tab;
+    this.selected.clear();
+    this.openMenuId = null;
   }
 
   load(): void {

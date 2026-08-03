@@ -1,0 +1,108 @@
+<div class="admin-panel">
+  <!-- ── Share link ─────────────────────────────────────────────── -->
+  <section class="admin-section">
+    <h2 class="admin-section__title">Share link</h2>
+    <p class="admin-section__hint">Anyone with this link can open the form.</p>
+    <div class="share-row">
+      <input type="text" [value]="shareUrl" readonly (click)="$any($event.target).select()" />
+      <button type="button" class="admin-btn" (click)="copyShareLink()">
+        {{ copied ? 'Copied' : 'Copy' }}
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Invites ────────────────────────────────────────────────── -->
+  <section class="admin-section">
+    <h2 class="admin-section__title">Invite by email</h2>
+    <p class="admin-section__hint">
+      One address per line, or separated by commas. Each person gets their own email — no one
+      sees who else was invited.
+    </p>
+
+    <textarea
+      class="invite-input"
+      rows="3"
+      [(ngModel)]="recipientsRaw"
+      placeholder="sam@example.com, alex@example.com"
+      aria-label="Email addresses to invite"
+    ></textarea>
+
+    <div class="invite-actions">
+      <span class="invite-count" *ngIf="recipientCount > 0">
+        {{ recipientCount }} recipient{{ recipientCount === 1 ? '' : 's' }}
+      </span>
+      <button type="button" class="admin-btn admin-btn--primary" [disabled]="!canSend" (click)="sendInvites()">
+        {{ sending ? 'Sending…' : 'Send invites' }}
+      </button>
+    </div>
+
+    <p class="admin-error" *ngIf="inviteError" role="alert">{{ inviteError }}</p>
+    <p class="admin-success" *ngIf="inviteSummary" role="status">{{ inviteSummary }}</p>
+
+    <div class="invite-list" *ngIf="invites.length > 0">
+      <h3 class="invite-list__title">Invited</h3>
+      <ul>
+        <li *ngFor="let invite of invites" class="invite-row">
+          <span class="invite-row__email">{{ invite.email }}</span>
+          <span
+            class="invite-badge"
+            [class.invite-badge--sent]="invite.status === 'sent'"
+            [class.invite-badge--failed]="invite.status === 'failed'"
+            [title]="invite.error || ''"
+          >{{ invite.status === 'sent' ? 'Sent' : 'Failed' }}</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── Settings ───────────────────────────────────────────────── -->
+  <section class="admin-section">
+    <h2 class="admin-section__title">Settings</h2>
+    <p class="admin-error" *ngIf="settingsError" role="alert">{{ settingsError }}</p>
+
+    <div class="setting">
+      <span class="setting__label">Who can see results</span>
+      <div class="visibility-group" role="radiogroup" aria-label="Who can see results">
+        <button
+          *ngFor="let choice of visibilityChoices"
+          type="button"
+          class="visibility-option"
+          role="radio"
+          [class.visibility-option--active]="visibility === choice.value"
+          [attr.aria-checked]="visibility === choice.value"
+          [disabled]="savingSetting === 'visibility'"
+          (click)="setVisibility(choice.value)"
+        >
+          <span class="visibility-option__label">{{ choice.label }}</span>
+          <span class="visibility-option__hint">{{ choice.hint }}</span>
+        </button>
+      </div>
+    </div>
+
+    <label class="setting setting--toggle">
+      <input
+        type="checkbox"
+        [checked]="editsAllowed"
+        [disabled]="savingSetting === 'edits'"
+        (change)="toggleEdits()"
+      />
+      <span>
+        <span class="setting__label">Let people edit their response</span>
+        <span class="setting__hint">They can come back and change their answer while the form is open.</span>
+      </span>
+    </label>
+
+    <label class="setting setting--toggle">
+      <input
+        type="checkbox"
+        [checked]="poll.guestAllowed"
+        [disabled]="savingSetting === 'guest'"
+        (change)="toggleGuestAllowed()"
+      />
+      <span>
+        <span class="setting__label">Anyone with the link can respond</span>
+        <span class="setting__hint">Turn off to require a Xomware account.</span>
+      </span>
+    </label>
+  </section>
+</div>
