@@ -1,15 +1,43 @@
 .app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px clamp(16px, 4vw, 28px);
   /* Always dark: the neon banner is designed to sit on a dark backdrop. */
-  background: var(--xf-header-bg);
+  background: color-mix(in srgb, var(--xf-header-bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--xf-header-border);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+/* Matches the widest page container (860px) plus its gutters, so the brand
+   and nav align with the content beneath instead of hugging the viewport. */
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 908px;
+  margin: 0 auto;
+  padding: 8px clamp(16px, 4vw, 24px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  min-width: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .brand {
@@ -32,53 +60,34 @@
   object-fit: contain;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-/* A single nav destination, styled as a real tab with an active underline
-   rather than a bare link lost among buttons. */
+/* Pill tab -- the current app-shell idiom (soft filled background on the
+   active item) rather than a bare underlined link. */
 .header-tab {
-  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: var(--xf-radius-pill);
   color: var(--xf-header-muted);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
-  padding: 8px 2px;
-  transition: color var(--xf-transition);
-
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -2px;
-    height: 2px;
-    border-radius: 2px;
-    background: transparent;
-    transition: background var(--xf-transition);
-  }
+  white-space: nowrap;
+  transition: color var(--xf-transition), background var(--xf-transition);
 
   &:hover {
     color: var(--xf-header-text);
+    background: rgba(255, 255, 255, 0.06);
   }
 
   &:focus-visible {
     outline: 2px solid var(--xf-yellow);
-    outline-offset: 4px;
-    border-radius: 2px;
+    outline-offset: 2px;
   }
 }
 
 .header-tab--active {
-  color: var(--xf-header-text);
-
-  &::after {
-    background: var(--xf-yellow);
-  }
+  color: #fff;
+  background: rgba(255, 255, 255, 0.11);
 }
 
 .header-btn {
@@ -125,13 +134,18 @@
 
 @media (max-width: 560px) {
   .brand-banner {
-    height: 36px;
-    max-width: 52vw;
+    height: 34px;
+    max-width: 46vw;
   }
 
   /* The tab stays -- it's the only nav item, and the avatar alone would leave
-     no way to get back to the list. */
-  .header-actions {
+     no way back to the list. */
+  .header-left {
     gap: 10px;
+  }
+
+  .header-tab {
+    padding: 6px 10px;
+    font-size: 13px;
   }
 }
