@@ -92,6 +92,25 @@
       </span>
     </label>
 
+    <div class="setting">
+      <span class="setting__label">Quick filters respondents can use</span>
+      <span class="setting__hint">
+        Shortcut pills on the grid. They combine — Weekdays plus After 5 PM selects weekday
+        evenings. Choose none to use the defaults.
+      </span>
+      <div class="filter-choices">
+        <button
+          *ngFor="let choice of quickFilterChoices"
+          type="button"
+          class="filter-chip"
+          [class.filter-chip--active]="isQuickFilterOn(choice.id)"
+          [attr.aria-pressed]="isQuickFilterOn(choice.id)"
+          [disabled]="savingSetting === 'filters'"
+          (click)="toggleQuickFilter(choice.id)"
+        >{{ choice.label }}</button>
+      </div>
+    </div>
+
     <label class="setting setting--toggle">
       <input
         type="checkbox"

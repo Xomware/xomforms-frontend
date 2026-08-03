@@ -1,10 +1,38 @@
 <div class="grid-wrap" [class.grid-wrap--readonly]="readOnly">
   <div class="toolbar" *ngIf="!readOnly">
     <span class="selected-count">{{ selected.size }} block{{ selected.size === 1 ? '' : 's' }} selected</span>
+    <!-- Toggles that combine: day filters union with each other, then
+         intersect with the time filter, so Weekdays + After 5 PM means
+         weekday evenings. -->
     <div class="presets" role="group" aria-label="Quick fill">
-      <button type="button" class="preset-btn" (click)="selectWeekdays()">Weekdays</button>
-      <button type="button" class="preset-btn" (click)="selectWeekends()">Weekends</button>
-      <button type="button" class="preset-btn" (click)="selectAfterWork()">After 5 PM</button>
+      <button
+        type="button"
+        class="preset-btn"
+        [class.preset-btn--active]="isDayFilterActive('weekdays')"
+        [attr.aria-pressed]="isDayFilterActive('weekdays')"
+        (click)="toggleDayFilter('weekdays')"
+      >Weekdays</button>
+      <button
+        type="button"
+        class="preset-btn"
+        [class.preset-btn--active]="isDayFilterActive('weekends')"
+        [attr.aria-pressed]="isDayFilterActive('weekends')"
+        (click)="toggleDayFilter('weekends')"
+      >Weekends</button>
+
+      <span class="preset-divider" aria-hidden="true"></span>
+
+      <button
+        *ngFor="let filter of timeFilters"
+        type="button"
+        class="preset-btn"
+        [class.preset-btn--active]="isTimeFilterActive(filter.id)"
+        [attr.aria-pressed]="isTimeFilterActive(filter.id)"
+        (click)="toggleTimeFilter(filter.id)"
+      >{{ filter.label }}</button>
+
+      <span class="preset-divider" aria-hidden="true"></span>
+
       <button type="button" class="preset-btn" (click)="selectAll()">Select all</button>
       <button type="button" class="clear-btn" (click)="clear()" [disabled]="selected.size === 0">
         Clear all

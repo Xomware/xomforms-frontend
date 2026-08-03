@@ -62,9 +62,13 @@ describe('PollCreateComponent — starter picker + builder', () => {
       eventDurationMinutes: 120,
     });
     expect(component.hasPreview).toBeTrue();
-    // Window 18:00 -> 21:00 + 2h = 23:00, 30-min steps (the default).
+    // The grid offers candidate START TIMES: 18:00 through 21:00 inclusive,
+    // in 30-min steps. It must NOT run to latest + duration -- that used to
+    // draw rows for starts well past the latest the creator allowed.
     expect(component.previewBlocks[0].blockId).toBe('2026-08-03T18:00');
-    expect(component.previewBlocks.some((b) => b.blockId === '2026-08-03T22:30')).toBeTrue();
+    expect(component.previewBlocks.some((b) => b.blockId === '2026-08-03T21:00')).toBeTrue();
+    expect(component.previewBlocks.some((b) => b.blockId === '2026-08-03T21:30')).toBeFalse();
+    expect(component.previewBlocks.some((b) => b.blockId === '2026-08-03T22:30')).toBeFalse();
     // Nothing lands off the interval.
     expect(component.previewBlocks.some((b) => b.blockId.endsWith(':15'))).toBeFalse();
     expect(component.previewBlocks.some((b) => b.blockId.endsWith(':45'))).toBeFalse();

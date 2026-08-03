@@ -37,6 +37,35 @@ interface GridRow {
   cells: GridBlock[];
 }
 
+export type DayFilterId = 'weekdays' | 'weekends';
+export type TimeFilterId = 'after4' | 'after5' | 'after6' | 'after7' | 'after8' | 'morning';
+
+export interface TimeFilterOption {
+  id: TimeFilterId;
+  label: string;
+  /** Inclusive lower bound as a zero-padded "HH:MM". */
+  fromTime: string;
+  /** Blocks at or after this are excluded (used by the morning filter). */
+  untilTime?: string;
+}
+
+/**
+ * The full menu a creator can choose from. Offering several thresholds rather
+ * than a single "After 5 PM" matters because the useful cutoff depends
+ * entirely on the group -- a work team and a 8pm league are not the same.
+ */
+export const TIME_FILTERS: TimeFilterOption[] = [
+  { id: 'morning', label: 'Mornings', fromTime: '00:00', untilTime: '12:00' },
+  { id: 'after4', label: 'After 4 PM', fromTime: '16:00' },
+  { id: 'after5', label: 'After 5 PM', fromTime: '17:00' },
+  { id: 'after6', label: 'After 6 PM', fromTime: '18:00' },
+  { id: 'after7', label: 'After 7 PM', fromTime: '19:00' },
+  { id: 'after8', label: 'After 8 PM', fromTime: '20:00' },
+];
+
+/** Shown when a creator hasn't picked a set -- the broadly useful ones. */
+export const DEFAULT_TIME_FILTER_IDS: TimeFilterId[] = ['after5', 'after7'];
+
 @Component({
   selector: 'app-availability-grid',
   templateUrl: './availability-grid.component.html',
@@ -73,6 +102,8 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
     }
     if (changes['initialSelected']) {
       this.selected = new Set(this.initialSelected ?? []);
+      // A prefilled answer counts as hand-picked: filters must not erase it.
+      this.manualSelected = new Set(this.initialSelected ?? []);
     }
   }
 
@@ -142,8 +173,10 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
     }
     if (this.selected.has(blockId)) {
       this.selected.delete(blockId);
+      this.manualSelected.delete(blockId);
     } else {
       this.selected.add(blockId);
+      this.manualSelected.add(blockId);
     }
     this.emitSelection();
   }
@@ -160,13 +193,109 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
 
   clear(): void {
     this.selected.clear();
+    this.manualSelected.clear();
+    this.clearFilters();
     this.emitSelection();
   }
 
-  // ── Quick-fill presets ─────────────────────────────────────────────
-  // Additive to the current drag-paint selection: each preset UNIONs its
-  // matching blocks into `selected`. Weekday is derived from the blockId's
-  // date prefix; time-of-day from the "THH:MM" portion.
+  // ── Quick filters ──────────────────────────────────────────────────
+  // Toggles rather than one-shot buttons, and they COMBINE across categories:
+  // "Weekdays" + "After 5 PM" means weekday evenings, not weekdays plus every
+  // evening. Within a category they're a union (Weekdays + Weekends = all
+  // days), across categories an intersection -- which is how people read a
+  // pair of filters, and the reason a plain union felt wrong.
+  //
+  // Applying a combination ADDS the matching blocks to the current selection,
+  // so hand-painted cells are never wiped out by using a filter.
+  /** Which time filters this form offers. Creator-configurable. */
+  @Input() set timeFilterIds(ids: TimeFilterId[] | null | undefined) {
+    const wanted = ids?.length ? ids : DEFAULT_TIME_FILTER_IDS;
+    this.enabledTimeFilters = TIME_FILTERS.filter((f) => wanted.includes(f.id));
+  }
+  private enabledTimeFilters: TimeFilterOption[] = TIME_FILTERS.filter((f) =>
+    DEFAULT_TIME_FILTER_IDS.includes(f.id),
+  );
+
+  activeDayFilters = new Set<DayFilterId>();
+  activeTimeFilterId: TimeFilterId | null = null;
+  /** Cells chosen by hand. Survives filters being toggled on and off. */
+  private manualSelected = new Set<string>();
+
+  get timeFilters(): TimeFilterOption[] {
+    return this.enabledTimeFilters;
+  }
+
+  isDayFilterActive(id: DayFilterId): boolean {
+    return this.activeDayFilters.has(id);
+  }
+
+  isTimeFilterActive(id: TimeFilterId): boolean {
+    return this.activeTimeFilterId === id;
+  }
+
+  toggleDayFilter(id: DayFilterId): void {
+    if (this.activeDayFilters.has(id)) this.activeDayFilters.delete(id);
+    else this.activeDayFilters.add(id);
+    this.applyFilters();
+  }
+
+  /**
+   * Time filters are mutually exclusive -- "after 5" and "after 7" combined
+   * would just mean "after 5", so offering them as independent toggles would
+   * be a control that silently does nothing.
+   */
+  toggleTimeFilter(id: TimeFilterId): void {
+    this.activeTimeFilterId = this.activeTimeFilterId === id ? null : id;
+    this.applyFilters();
+  }
+
+  get hasActiveFilters(): boolean {
+    return this.activeDayFilters.size > 0 || this.activeTimeFilterId !== null;
+  }
+
+  clearFilters(): void {
+    this.activeDayFilters.clear();
+    this.activeTimeFilterId = null;
+  }
+
+  /**
+   * Recompute the selection as (hand-painted cells) UNION (filter matches).
+   *
+   * Filters are a derived layer, not a one-shot fill. If they merely added to
+   * the selection, toggling one OFF would visibly do nothing -- which is the
+   * opposite of what a toggle means. Keeping the manual set separate means a
+   * filter can be removed cleanly without discarding anything painted by hand.
+   */
+  private applyFilters(): void {
+    this.selected = new Set(this.manualSelected);
+    if (!this.hasActiveFilters) {
+      this.emitSelection();
+      return;
+    }
+    const timeFilter = this.activeTimeFilterId
+      ? TIME_FILTERS.find((f) => f.id === this.activeTimeFilterId)
+      : null;
+
+    this.addMatching((date, time) => {
+      if (this.activeDayFilters.size > 0) {
+        const dow = AvailabilityGridComponent.weekdayOf(date);
+        const isWeekend = dow === 0 || dow === 6;
+        const dayOk =
+          (this.activeDayFilters.has('weekdays') && !isWeekend) ||
+          (this.activeDayFilters.has('weekends') && isWeekend);
+        if (!dayOk) return false;
+      }
+      // "THH:MM" is zero-padded, so a lexical compare is a valid time test.
+      // Overnight tail blocks (00:15) sort below any evening threshold and are
+      // correctly excluded.
+      if (timeFilter) {
+        if (time < timeFilter.fromTime) return false;
+        if (timeFilter.untilTime && time >= timeFilter.untilTime) return false;
+      }
+      return true;
+    });
+  }
+
   private addMatching(predicate: (date: string, time: string) => boolean): void {
     for (const block of this.blocks) {
       const [date, time] = block.blockId.split('T');
@@ -181,29 +310,10 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
   }
 
   selectAll(): void {
-    this.addMatching(() => true);
+    for (const b of this.blocks) this.manualSelected.add(b.blockId);
+    this.applyFilters();
   }
 
-  selectWeekdays(): void {
-    this.addMatching((date) => {
-      const dow = AvailabilityGridComponent.weekdayOf(date);
-      return dow >= 1 && dow <= 5;
-    });
-  }
-
-  selectWeekends(): void {
-    this.addMatching((date) => {
-      const dow = AvailabilityGridComponent.weekdayOf(date);
-      return dow === 0 || dow === 6;
-    });
-  }
-
-  selectAfterWork(): void {
-    // "THH:MM" is zero-padded, so a lexical compare against "17:00" is a valid
-    // >= 5 PM test. Overnight tail blocks (e.g. 00:15) sort below it and are
-    // correctly excluded.
-    this.addMatching((_date, time) => time >= '17:00');
-  }
 
   private emitSelection(): void {
     this.selectionChange.emit(Array.from(this.selected));
@@ -221,8 +331,10 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
 
     if (this.paintMode === 'select') {
       this.selected.add(blockId);
+      this.manualSelected.add(blockId);
     } else if (this.paintMode === 'deselect') {
       this.selected.delete(blockId);
+      this.manualSelected.delete(blockId);
     }
     this.emitSelection();
   }

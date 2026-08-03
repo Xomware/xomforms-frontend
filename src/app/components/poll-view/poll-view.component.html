@@ -61,7 +61,8 @@
 
     <!-- Scheduler: the availability grid (unchanged) -->
     <ng-template #schedulerGrid>
-      <app-availability-grid [blocks]="grid" (selectionChange)="onSelectionChange($event)"></app-availability-grid>
+      <app-availability-grid
+      [timeFilterIds]="$any(poll).quickFilters" [blocks]="grid" (selectionChange)="onSelectionChange($event)"></app-availability-grid>
     </ng-template>
 
     <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>

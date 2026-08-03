@@ -93,6 +93,8 @@ export interface CreatePollRequest {
   showResultsToRespondents?: boolean; // legacy; kept in sync by the backend
   resultsVisibility?: ResultsVisibility; // default after_response
   allowResponseEdits?: boolean; // default true
+  /** Which quick time filters the respondent grid offers. Empty = defaults. */
+  quickFilters?: string[];
   closeAt?: string | null; // ISO 8601 UTC datetime
   /**
    * Event length in minutes (15-min steps, 15..360). Required for the windowed
@@ -124,6 +126,7 @@ export interface Poll {
   /** Absent on polls created before the setting existed -- see effectiveVisibility. */
   resultsVisibility?: ResultsVisibility;
   allowResponseEdits?: boolean;
+  quickFilters?: string[] | null;
   invites?: FormInvite[] | null;
   closeAt?: string | null;
   /** Event length in minutes; may be absent on polls created before this field. */
