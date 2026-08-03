@@ -243,3 +243,18 @@
     background: rgba(154, 107, 255, 0.18);
   }
 }
+
+/* Active quick-filter toggle. Filters combine, so several can read as on. */
+.preset-btn--active {
+  border-color: var(--xf-primary);
+  background: var(--xf-purple-100);
+  color: var(--xf-primary);
+  font-weight: 700;
+}
+
+.preset-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 2px;
+  background: var(--xf-border);
+}

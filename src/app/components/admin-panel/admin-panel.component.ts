@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { InvitesService } from '../../services/invites.service';
 import { PollsService, UpdatePollSettings } from '../../services/polls.service';
+import { TIME_FILTERS, TimeFilterId } from '../availability-grid/availability-grid.component';
 import {
   FormInvite,
   Poll,
@@ -52,6 +53,8 @@ export class AdminPanelComponent implements OnInit {
   @Output() pollChange = new EventEmitter<Poll>();
 
   readonly visibilityChoices = VISIBILITY_CHOICES;
+  /** Every quick filter a creator can offer respondents. */
+  readonly quickFilterChoices = TIME_FILTERS;
 
   // ── Invites ────────────────────────────────────────────────────────
   recipientsRaw = '';
@@ -160,6 +163,26 @@ export class AdminPanelComponent implements OnInit {
 
   get editsAllowed(): boolean {
     return allowsResponseEdits(this.poll);
+  }
+
+  /**
+   * Which quick filters this form shows. Empty means the respondent grid falls
+   * back to its defaults, so an untouched form still offers something useful.
+   */
+  isQuickFilterOn(id: TimeFilterId): boolean {
+    const chosen = this.poll.quickFilters;
+    if (!chosen || chosen.length === 0) return false;
+    return chosen.includes(id);
+  }
+
+  toggleQuickFilter(id: TimeFilterId): void {
+    const current = new Set((this.poll.quickFilters ?? []) as TimeFilterId[]);
+    if (current.has(id)) current.delete(id);
+    else current.add(id);
+    // Preserve the menu's order rather than click order, so the pills don't
+    // rearrange themselves as the creator toggles them.
+    const ordered = TIME_FILTERS.filter((f) => current.has(f.id)).map((f) => f.id);
+    this.save({ quickFilters: ordered }, 'filters');
   }
 
   setVisibility(value: ResultsVisibility): void {

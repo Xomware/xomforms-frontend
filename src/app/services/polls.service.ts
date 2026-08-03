@@ -16,6 +16,7 @@ export interface UpdatePollSettings {
   guestAllowed?: boolean;
   resultsVisibility?: ResultsVisibility;
   allowResponseEdits?: boolean;
+  quickFilters?: string[];
 }
 
 /**

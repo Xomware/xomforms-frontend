@@ -403,6 +403,10 @@
       Add your availability →
     </a>
 
+    <button type="button" class="manage-cta" (click)="goToForm()">
+      Manage this form — invites, settings, results →
+    </button>
+
     <h2>Live results</h2>
     <p class="form-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>
     <app-qa-results *ngIf="createdIsQa; else schedulerResults" [result]="formResult"></app-qa-results>

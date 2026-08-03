@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
@@ -162,6 +163,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     private pollsService: PollsService,
     private resultsService: ResultsService,
     private location: Location,
+    private router: Router,
   ) {
     this.form = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(200)]],
@@ -514,6 +516,18 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     this.location.replaceState(`/forms/${pollId}`);
   }
 
+  /**
+   * Send the creator to the form's own page after creating it.
+   *
+   * replaceState alone left this component rendering its inline "created"
+   * view under a /forms/<id> URL -- so the address bar was right but the
+   * Results/Admin tabs (share link, invites, settings) were nowhere to be
+   * seen. Navigating properly lands on the real page instead.
+   */
+  goToForm(): void {
+    if (this.createdPoll) this.router.navigate(['/forms', this.createdPoll.pollId]);
+  }
+
   private genId(prefix: string): string {
     const rand =
       typeof crypto !== 'undefined' && crypto.randomUUID
@@ -701,7 +715,11 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       startDate,
       endDate: previewEndStr,
       dayStartMinute: earliest,
-      dayEndMinute: latest + duration,
+      // The grid offers candidate START TIMES, so it stops one interval past
+      // the latest allowed start -- NOT latest + duration, which would draw
+      // rows for starts the creator never allowed. Mirrors the backend's
+      // derivation exactly so the preview matches what responders get.
+      dayEndMinute: latest + this.granularityMinutes,
       granularityMinutes: this.granularityMinutes,
       timezone,
     });
