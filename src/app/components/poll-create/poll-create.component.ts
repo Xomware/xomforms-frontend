@@ -11,15 +11,54 @@ import {
   formatDuration,
   generateGrid,
   minutesToClockLabel,
-  timeStringToMinutes,
+  snapDurationToStep,
+  snapMinutesToStep,
   viewerTimeZone,
 } from '../../models/grid.util';
 import { SelectOption } from '../styled-select/styled-select.component';
 
-/** Fixed grid resolution -- "block size" is no longer a user control. */
-const GRID_GRANULARITY_MINUTES = 15;
 /** Preview caps how many days of the range it renders so it stays lightweight. */
 const PREVIEW_MAX_DAYS = 3;
+
+/** Longest event the backend accepts (MAX_EVENT_DURATION_MINUTES). */
+const MAX_EVENT_DURATION_MINUTES = 360;
+
+/**
+ * The creator's "start interval": which start times responders are offered,
+ * and therefore the resolution of the paint grid itself. Mirrors the backend's
+ * ALLOWED_GRANULARITY_MINUTES. 30 is the default -- 15 is usually more
+ * granularity than a group actually needs.
+ */
+interface GranularityChoice {
+  value: number;
+  label: string;
+  hint: string;
+}
+
+const GRANULARITY_CHOICES: GranularityChoice[] = [
+  { value: 60, label: 'On the hour', hint: '7:00, 8:00, 9:00' },
+  { value: 30, label: 'Every 30 min', hint: '7:00, 7:30, 8:00' },
+  { value: 15, label: 'Every 15 min', hint: '7:00, 7:15, 7:30' },
+];
+
+const DEFAULT_GRANULARITY_MINUTES = 30;
+
+/**
+ * The "close responses at" time-of-day list is deliberately INDEPENDENT of the
+ * event's start interval — when a form stops accepting answers has nothing to
+ * do with the resolution of its grid. Fixed 30-minute steps, defaulting to
+ * 11:30 PM so picking just a date reads as "end of that day".
+ */
+const CLOSE_TIME_STEP_MINUTES = 30;
+const DEFAULT_CLOSE_TIME_MINUTES = 23 * 60 + 30;
+
+/** Buckets the ~48-96 entry time list into scannable headings. */
+function timeOfDayGroup(minutes: number): string {
+  if (minutes < 12 * 60) return 'Morning';
+  if (minutes < 17 * 60) return 'Afternoon';
+  if (minutes < 21 * 60) return 'Evening';
+  return 'Late night';
+}
 
 /** A curated shortlist surfaced above the full ~400-entry IANA list. */
 const COMMON_TIMEZONES = [
@@ -78,16 +117,28 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
 export class PollCreateComponent implements OnInit, OnDestroy {
   readonly form: FormGroup;
 
-  /** Event length options: every 15 minutes from 15 up to 360 (6h). */
-  readonly durationOptions: SelectOption[] = this.buildDurationOptions();
+  readonly granularityChoices = GRANULARITY_CHOICES;
+
+  /**
+   * Event length + start time options are REBUILT whenever the start interval
+   * changes, so every offered value lands on the grid. The backend rejects a
+   * start range or duration that isn't a multiple of granularityMinutes, so
+   * these lists are the first line of that same rule.
+   */
+  durationOptions: SelectOption[] = [];
+  timeOptions: SelectOption[] = [];
+
   /** Timezone picker: detected zone pinned, curated common zones, then all. */
   readonly timezoneOptions: SelectOption[] = this.buildTimezoneOptions();
+  /** Fixed 30-minute list for the "close responses at" time. */
+  readonly closeTimeOptions: SelectOption[] = this.buildTimeOptions(CLOSE_TIME_STEP_MINUTES);
 
   // ── Live preview state (recomputed as the time config changes) ──────
   previewBlocks: GridBlock[] = [];
   previewTruncated = false;
   previewDaysShown = 0;
   private valueSub?: Subscription;
+  private granularitySub?: Subscription;
 
   readonly fieldTypeLabels = FIELD_TYPE_LABELS;
   readonly addableFieldTypes: FieldType[] = ['single_choice', 'multi_choice', 'dropdown', 'scale'];
@@ -117,30 +168,83 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       endDate: ['', Validators.required],
       // Duration + start-range model: the creator sets an event length and the
       // range of allowed START times. The paint grid runs earliest ->
-      // (latest + duration); "block size" is gone (fixed 15-min resolution).
+      // (latest + duration), stepped by the chosen start interval.
       eventDurationMinutes: [120, Validators.required],
-      earliestStartTime: ['18:00', Validators.required],
-      latestStartTime: ['21:00', Validators.required],
+      // Start times are held as MINUTES since midnight, not "HH:MM" strings --
+      // the picker only offers on-grid values, so there's no free-text time to
+      // parse and nothing to round-trip through a string.
+      granularityMinutes: [DEFAULT_GRANULARITY_MINUTES, Validators.required],
+      earliestStartMinute: [18 * 60, Validators.required],
+      latestStartMinute: [21 * 60, Validators.required],
       timezone: [viewerTimeZone(), Validators.required],
       // "Anyone with the link can respond" is the default -- most polls are
       // shared openly; requiring an account is the exception.
       guestAllowed: [true],
       showResultsToRespondents: [false],
       addOwnAvailability: [false],
-      closeAt: [''],
+      // closeAt is split into a date + a time-of-day so both halves can use the
+      // styled pickers. Recombined into one ISO instant at submit; a blank date
+      // means "never closes", whatever the time says.
+      closeAtDate: [''],
+      closeAtTime: [DEFAULT_CLOSE_TIME_MINUTES],
     });
   }
 
   ngOnInit(): void {
-    // Keep the responder preview in sync with the time config. startWith(null)
-    // primes it from the initial defaults.
+    // Prime the interval-dependent option lists from the default granularity
+    // before anything renders.
+    this.rebuildIntervalOptions(this.granularityMinutes);
+
+    // Keep the responder preview in sync with the time config.
     this.valueSub = this.form.valueChanges.subscribe(() => this.rebuildPreview());
+    // Changing the start interval cascades into the other three time controls,
+    // so it needs its own handler rather than riding the generic subscription.
+    this.granularitySub = this.form
+      .get('granularityMinutes')!
+      .valueChanges.subscribe((step) => this.applyGranularity(Number(step)));
+
     this.rebuildPreview();
   }
 
   ngOnDestroy(): void {
     this.resultsSub?.unsubscribe();
     this.valueSub?.unsubscribe();
+    this.granularitySub?.unsubscribe();
+  }
+
+  /**
+   * Re-snap everything that depends on the start interval, in one pass.
+   *
+   * Widening the interval can strand already-picked values off the grid (18:15
+   * is meaningless once starts are hourly), and the backend rejects any start
+   * range or duration that isn't a multiple of granularityMinutes. So on every
+   * change we rebuild the option lists and pull the current values onto the
+   * nearest valid slot.
+   *
+   * The three setValue calls use `emitEvent: false` so they don't each retrigger
+   * the generic valueChanges subscription (and, via it, three redundant preview
+   * rebuilds); the preview is rebuilt once explicitly at the end instead.
+   */
+  private applyGranularity(step: number): void {
+    if (!step) return;
+    this.rebuildIntervalOptions(step);
+
+    const earliest = this.form.get('earliestStartMinute');
+    const latest = this.form.get('latestStartMinute');
+    const duration = this.form.get('eventDurationMinutes');
+
+    earliest?.setValue(snapMinutesToStep(Number(earliest.value) || 0, step), { emitEvent: false });
+    latest?.setValue(snapMinutesToStep(Number(latest.value) || 0, step), { emitEvent: false });
+    duration?.setValue(snapDurationToStep(Number(duration.value) || step, step), {
+      emitEvent: false,
+    });
+
+    this.rebuildPreview();
+  }
+
+  private rebuildIntervalOptions(step: number): void {
+    this.timeOptions = this.buildTimeOptions(step);
+    this.durationOptions = this.buildDurationOptions(step);
   }
 
   // ── Starter picker ────────────────────────────────────────────────
@@ -286,13 +390,15 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       formType: 'scheduler',
       startDate: value.startDate,
       endDate: value.endDate,
-      earliestStartMinute: this.timeToMinutes(value.earliestStartTime),
-      latestStartMinute: this.timeToMinutes(value.latestStartTime),
+      earliestStartMinute: Number(value.earliestStartMinute),
+      latestStartMinute: Number(value.latestStartMinute),
       eventDurationMinutes: Number(value.eventDurationMinutes),
+      // The creator's start interval IS the grid resolution.
+      granularityMinutes: Number(value.granularityMinutes),
       timezone: value.timezone,
       guestAllowed: !!value.guestAllowed,
       showResultsToRespondents: !!value.showResultsToRespondents,
-      closeAt: value.closeAt ? new Date(value.closeAt).toISOString() : null,
+      closeAt: this.closeAtIso(),
     };
 
     this.pollsService.create(req).subscribe({
@@ -325,7 +431,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       fields: this.buildFields(),
       guestAllowed: !!value.guestAllowed,
       showResultsToRespondents: !!value.showResultsToRespondents,
-      closeAt: value.closeAt ? new Date(value.closeAt).toISOString() : null,
+      closeAt: this.closeAtIso(),
     };
 
     this.pollsService.create(req).subscribe({
@@ -407,12 +513,56 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     return this.durationMinutes ? formatDuration(this.durationMinutes) : '';
   }
 
+  get granularityMinutes(): number {
+    return Number(this.form.get('granularityMinutes')?.value) || DEFAULT_GRANULARITY_MINUTES;
+  }
+
   get earliestStartMinutes(): number | null {
-    return timeStringToMinutes(this.form.get('earliestStartTime')?.value);
+    const v = this.form.get('earliestStartMinute')?.value;
+    return v == null || v === '' ? null : Number(v);
   }
 
   get latestStartMinutes(): number | null {
-    return timeStringToMinutes(this.form.get('latestStartTime')?.value);
+    const v = this.form.get('latestStartMinute')?.value;
+    return v == null || v === '' ? null : Number(v);
+  }
+
+  get earliestStartLabel(): string {
+    const start = this.earliestStartMinutes;
+    return start == null ? '' : minutesToClockLabel(start);
+  }
+
+  /** Human-readable interval, for the preview summary line. */
+  get granularityLabel(): string {
+    const found = GRANULARITY_CHOICES.find((c) => c.value === this.granularityMinutes);
+    return found ? found.label.toLowerCase() : `every ${this.granularityMinutes} min`;
+  }
+
+  setGranularity(step: number): void {
+    this.form.get('granularityMinutes')?.setValue(step);
+  }
+
+  /** The end date can never precede the start date. */
+  get endDateMin(): string | null {
+    return this.form.get('startDate')?.value || null;
+  }
+
+  /**
+   * Recombine the split close date + time-of-day into one UTC instant.
+   * Returns null when no date is set — the time alone never closes a form.
+   * Built via the local-time Date constructor (not string parsing) so the
+   * instant is anchored to the creator's own clock.
+   */
+  private closeAtIso(): string | null {
+    const dateStr: string = this.form.get('closeAtDate')?.value;
+    if (!dateStr) return null;
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+    if (!match) return null;
+
+    const minutes = Number(this.form.get('closeAtTime')?.value) || 0;
+    const [, y, m, d] = match;
+    const at = new Date(Number(y), Number(m) - 1, Number(d), Math.floor(minutes / 60), minutes % 60);
+    return at.toISOString();
   }
 
   /** Latest start must be at or after earliest start. */
@@ -446,10 +596,20 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     return this.previewBlocks.length > 0;
   }
 
-  private buildDurationOptions(): SelectOption[] {
+  /** Event lengths on the interval, e.g. hourly starts -> 1h, 2h, ... 6h. */
+  private buildDurationOptions(step: number): SelectOption[] {
     const options: SelectOption[] = [];
-    for (let m = 15; m <= 360; m += 15) {
+    for (let m = step; m <= MAX_EVENT_DURATION_MINUTES; m += step) {
       options.push({ value: m, label: formatDuration(m) });
+    }
+    return options;
+  }
+
+  /** Every start time on the interval across a full day, grouped by daypart. */
+  private buildTimeOptions(step: number): SelectOption[] {
+    const options: SelectOption[] = [];
+    for (let m = 0; m < 1440; m += step) {
+      options.push({ value: m, label: minutesToClockLabel(m), group: timeOfDayGroup(m) });
     }
     return options;
   }
@@ -524,17 +684,12 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       endDate: previewEndStr,
       dayStartMinute: earliest,
       dayEndMinute: latest + duration,
-      granularityMinutes: GRID_GRANULARITY_MINUTES,
+      granularityMinutes: this.granularityMinutes,
       timezone,
     });
 
     const days = new Set(this.previewBlocks.map((b) => b.blockId.split('T')[0]));
     this.previewDaysShown = days.size;
-  }
-
-  private timeToMinutes(hhmm: string): number {
-    const [h, m] = hhmm.split(':').map(Number);
-    return h * 60 + m;
   }
 
   private friendlyError(err: unknown): string {

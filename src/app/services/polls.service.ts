@@ -29,4 +29,26 @@ export class PollsService {
   list(): Observable<PollListResponse> {
     return this.http.get<PollListResponse>(`${this.baseUrl}/list`);
   }
+
+  /**
+   * POST /polls/delete -- authed, creator only. Irreversible: removes the poll
+   * AND every response submitted to it. POST (not DELETE) to match the rest of
+   * the mutating routes.
+   */
+  delete(pollId: string): Observable<{ pollId: string; deletedResponses: number }> {
+    return this.http.post<{ pollId: string; deletedResponses: number }>(
+      `${this.baseUrl}/delete`,
+      { pollId },
+    );
+  }
+
+  /** POST /polls/close -- authed, creator only. Stops new responses, keeps existing. */
+  close(pollId: string): Observable<Poll> {
+    return this.http.post<Poll>(`${this.baseUrl}/close`, { pollId });
+  }
+
+  /** POST /polls/close with reopen -- clears closeAt so the form accepts responses again. */
+  reopen(pollId: string): Observable<Poll> {
+    return this.http.post<Poll>(`${this.baseUrl}/close`, { pollId, reopen: true });
+  }
 }

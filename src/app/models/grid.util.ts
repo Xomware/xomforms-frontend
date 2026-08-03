@@ -165,6 +165,30 @@ export function minutesToClockLabel(minutes: number): string {
   return `${h}:${m.toString().padStart(2, '0')} ${ampm}`;
 }
 
+/**
+ * Snap a minutes-since-midnight value onto the nearest valid slot for a given
+ * start interval, clamped so the result is always a real time of day. Used when
+ * the creator changes the interval and an already-picked time (say 18:15) no
+ * longer lands on the grid (hourly -> 18:00).
+ */
+export function snapMinutesToStep(minutes: number, step: number): number {
+  const snapped = Math.round(minutes / step) * step;
+  const maxStart = Math.floor(1439 / step) * step;
+  return Math.min(Math.max(snapped, 0), maxStart);
+}
+
+/**
+ * Snap an event length onto the start interval. Rounds UP rather than to the
+ * nearest -- shrinking someone's event because they widened the interval is a
+ * worse surprise than lengthening it. Clamped to the backend's accepted range
+ * (MIN_EVENT_DURATION_MINUTES..MAX_EVENT_DURATION_MINUTES = 15..360).
+ */
+export function snapDurationToStep(minutes: number, step: number): number {
+  const snapped = Math.ceil(minutes / step) * step;
+  const maxDuration = Math.floor(360 / step) * step;
+  return Math.min(Math.max(snapped, step), maxDuration);
+}
+
 export interface EndTimeSummary {
   /** The end-time clock label, e.g. "1:00 AM". */
   label: string;

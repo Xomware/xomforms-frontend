@@ -78,6 +78,29 @@
       </div>
     </div>
 
+    <p class="action-error" *ngIf="actionError" role="alert">{{ actionError }}</p>
+
+    <!-- Bulk action bar -- only appears once something is selected -->
+    <div class="bulk-bar" *ngIf="selectedCount > 0">
+      <span class="bulk-bar__count">{{ selectedCount }} selected</span>
+      <div class="bulk-bar__actions">
+        <button type="button" class="bulk-btn" (click)="askCloseSelected()" [disabled]="busy">
+          Close
+        </button>
+        <button
+          type="button"
+          class="bulk-btn bulk-btn--danger"
+          (click)="askDeleteSelected()"
+          [disabled]="busy"
+        >
+          Delete
+        </button>
+        <button type="button" class="bulk-btn bulk-btn--ghost" (click)="clearSelection()">
+          Cancel
+        </button>
+      </div>
+    </div>
+
     <!-- No matches for the current filter -->
     <div class="dash-state no-matches" *ngIf="visibleRows.length === 0">
       <p>No forms match your filters.</p>
@@ -86,8 +109,32 @@
       </button>
     </div>
 
+    <div class="select-all-row" *ngIf="visibleRows.length > 0">
+      <label class="select-all">
+        <input
+          type="checkbox"
+          [checked]="allVisibleSelected"
+          (change)="toggleSelectAllVisible()"
+        />
+        Select all {{ visibleRows.length }} shown
+      </label>
+    </div>
+
     <ul class="form-list" *ngIf="visibleRows.length > 0">
-      <li class="form-card" *ngFor="let row of visibleRows; trackBy: trackByPollId">
+      <li
+        class="form-card"
+        *ngFor="let row of visibleRows; trackBy: trackByPollId"
+        [class.form-card--selected]="isSelected(row.poll.pollId)"
+      >
+        <label class="form-card-select">
+          <input
+            type="checkbox"
+            [checked]="isSelected(row.poll.pollId)"
+            (change)="toggleSelected(row.poll.pollId)"
+            [attr.aria-label]="'Select ' + row.poll.title"
+          />
+        </label>
+
         <div class="form-card-main">
           <div class="form-card-heading">
             <h2 class="form-card-title">{{ row.poll.title }}</h2>
@@ -113,8 +160,71 @@
           <a [routerLink]="['/f', row.poll.pollId]" class="btn-open-form">
             Open form
           </a>
+
+          <div class="row-menu">
+            <button
+              type="button"
+              class="row-menu__trigger"
+              (click)="toggleMenu(row.poll.pollId)"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="openMenuId === row.poll.pollId"
+              [attr.aria-label]="'More actions for ' + row.poll.title"
+            >⋯</button>
+
+            <div class="row-menu__panel" *ngIf="openMenuId === row.poll.pollId" role="menu">
+              <button
+                *ngIf="row.status === 'open'"
+                type="button"
+                class="row-menu__item"
+                role="menuitem"
+                (click)="askClose([row.poll.pollId])"
+              >Close form</button>
+              <button
+                *ngIf="row.status === 'closed'"
+                type="button"
+                class="row-menu__item"
+                role="menuitem"
+                (click)="askReopen([row.poll.pollId])"
+              >Reopen form</button>
+              <button
+                type="button"
+                class="row-menu__item row-menu__item--danger"
+                role="menuitem"
+                (click)="askDelete([row.poll.pollId])"
+              >Delete form</button>
+            </div>
+          </div>
         </div>
       </li>
     </ul>
   </ng-container>
+
+  <!-- Confirm dialog -- every close/reopen/delete routes through here -->
+  <div class="confirm-backdrop" *ngIf="pending" (click)="cancelPending()">
+    <div
+      class="confirm-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirmTitle"
+      aria-describedby="confirmBody"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 class="confirm-dialog__title" id="confirmTitle">{{ pendingTitle }}</h2>
+      <p class="confirm-dialog__body" id="confirmBody">{{ pendingBody }}</p>
+      <div class="confirm-dialog__actions">
+        <button type="button" class="confirm-btn" (click)="cancelPending()" [disabled]="busy">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="confirm-btn confirm-btn--primary"
+          [class.confirm-btn--danger]="pendingIsDestructive"
+          (click)="confirmPending()"
+          [disabled]="busy"
+        >
+          {{ busy ? 'Working…' : pendingConfirmLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

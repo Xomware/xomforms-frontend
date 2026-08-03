@@ -39,35 +39,45 @@
   min-width: 0;
 }
 
-.account-email {
-  color: var(--xf-header-muted);
-  font-size: 13px;
-  max-width: 42vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.header-link {
+/* A single nav destination, styled as a real tab with an active underline
+   rather than a bare link lost among buttons. */
+.header-tab {
+  position: relative;
   color: var(--xf-header-muted);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
-  padding: 6px 4px;
-  border-radius: var(--xf-radius-sm);
+  padding: 8px 2px;
   transition: color var(--xf-transition);
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background var(--xf-transition);
+  }
 
   &:hover {
     color: var(--xf-header-text);
   }
 
-  &--active {
-    color: var(--xf-yellow);
-  }
-
   &:focus-visible {
     outline: 2px solid var(--xf-yellow);
-    outline-offset: 2px;
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+}
+
+.header-tab--active {
+  color: var(--xf-header-text);
+
+  &::after {
+    background: var(--xf-yellow);
   }
 }
 
@@ -119,8 +129,9 @@
     max-width: 52vw;
   }
 
-  .account-email,
-  .header-link {
-    display: none;
+  /* The tab stays -- it's the only nav item, and the avatar alone would leave
+     no way to get back to the list. */
+  .header-actions {
+    gap: 10px;
   }
 }

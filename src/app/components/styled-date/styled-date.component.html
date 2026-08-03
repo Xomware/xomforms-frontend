@@ -1,0 +1,67 @@
+<div class="xf-date" [class.xf-date--open]="open">
+  <button
+    type="button"
+    class="xf-date__control"
+    (click)="toggle()"
+    [disabled]="disabled"
+    aria-haspopup="dialog"
+    [attr.aria-expanded]="open"
+    [attr.aria-label]="ariaLabel || placeholder"
+  >
+    <span class="xf-date__value" [class.is-placeholder]="!hasValue">{{ selectedLabel }}</span>
+    <span class="xf-date__icon" aria-hidden="true">📅</span>
+  </button>
+
+  <div class="xf-date__panel" *ngIf="open" role="dialog" [attr.aria-label]="ariaLabel || 'Choose a date'">
+    <div class="xf-date__header">
+      <button
+        type="button"
+        class="xf-date__nav"
+        (click)="prevMonth()"
+        aria-label="Previous month"
+      >‹</button>
+      <span class="xf-date__month" aria-live="polite">{{ monthLabel }}</span>
+      <button
+        type="button"
+        class="xf-date__nav"
+        (click)="nextMonth()"
+        aria-label="Next month"
+      >›</button>
+    </div>
+
+    <table class="xf-date__grid">
+      <thead>
+        <tr>
+          <th *ngFor="let w of weekdayLabels" scope="col" class="xf-date__weekday">{{ w }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let week of weeks">
+          <td *ngFor="let cell of week; trackBy: trackByDate" class="xf-date__cell">
+            <button
+              *ngIf="cell.date; else emptyCell"
+              type="button"
+              class="xf-date__day"
+              [class.is-selected]="cell.selected"
+              [class.is-today]="cell.today"
+              [disabled]="cell.disabled"
+              [attr.aria-current]="cell.today ? 'date' : null"
+              [attr.aria-pressed]="cell.selected"
+              (click)="selectDay(cell)"
+            >{{ cell.day }}</button>
+            <ng-template #emptyCell><span class="xf-date__day-empty" aria-hidden="true"></span></ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="xf-date__footer">
+      <button
+        type="button"
+        class="xf-date__today"
+        (click)="selectToday()"
+        [disabled]="todayDisabled"
+      >Today</button>
+    </div>
+  </div>
+</div>

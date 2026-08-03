@@ -54,12 +54,17 @@
       <div class="field-row">
         <div class="field">
           <label for="startDate">Start date</label>
-          <input id="startDate" type="date" formControlName="startDate" />
+          <xf-date formControlName="startDate" ariaLabel="Start date" placeholder="Pick a start date"></xf-date>
           <p class="field-error" *ngIf="fieldInvalid('startDate')">Start date is required.</p>
         </div>
         <div class="field">
           <label for="endDate">End date</label>
-          <input id="endDate" type="date" formControlName="endDate" />
+          <xf-date
+            formControlName="endDate"
+            [min]="endDateMin"
+            ariaLabel="End date"
+            placeholder="Pick an end date"
+          ></xf-date>
           <p class="field-error" *ngIf="fieldInvalid('endDate')">End date is required.</p>
         </div>
       </div>
@@ -68,23 +73,55 @@
         <legend>When can it happen?</legend>
 
         <div class="field">
+          <span class="field-label">Offer start times</span>
+          <div class="granularity-group" role="radiogroup" aria-label="Start time interval">
+            <button
+              *ngFor="let choice of granularityChoices"
+              type="button"
+              class="granularity-option"
+              role="radio"
+              [class.granularity-option--active]="granularityMinutes === choice.value"
+              [attr.aria-checked]="granularityMinutes === choice.value"
+              (click)="setGranularity(choice.value)"
+            >
+              <span class="granularity-option__label">{{ choice.label }}</span>
+              <span class="granularity-option__hint">{{ choice.hint }}</span>
+            </button>
+          </div>
+          <p class="field-hint">
+            How precise the start times are. Coarser intervals give responders far less to
+            paint — <em>every 30 min</em> suits most groups.
+          </p>
+        </div>
+
+        <div class="field">
           <label for="eventDurationMinutes">Event length</label>
           <xf-select
             [options]="durationOptions"
             formControlName="eventDurationMinutes"
             ariaLabel="Event length"
           ></xf-select>
-          <p class="field-hint">How long the event runs, in 15-minute steps up to 6 hours.</p>
+          <p class="field-hint">How long the event runs, up to 6 hours.</p>
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label for="earliestStartTime">Earliest start</label>
-            <input id="earliestStartTime" type="time" formControlName="earliestStartTime" />
+            <label for="earliestStartMinute">Earliest start</label>
+            <xf-select
+              [options]="timeOptions"
+              formControlName="earliestStartMinute"
+              [searchable]="true"
+              ariaLabel="Earliest start"
+            ></xf-select>
           </div>
           <div class="field">
-            <label for="latestStartTime">Latest start</label>
-            <input id="latestStartTime" type="time" formControlName="latestStartTime" />
+            <label for="latestStartMinute">Latest start</label>
+            <xf-select
+              [options]="timeOptions"
+              formControlName="latestStartMinute"
+              [searchable]="true"
+              ariaLabel="Latest start"
+            ></xf-select>
           </div>
         </div>
         <p class="field-error" *ngIf="!startRangeValid">
@@ -126,7 +163,9 @@
       <section class="preview" *ngIf="hasPreview">
         <h2 class="preview__title">Preview — what responders will see</h2>
         <p class="preview__summary">
-          {{ durationLabel }} event · latest start <strong>{{ latestStartLabel }}</strong>
+          {{ durationLabel }} event · starts {{ granularityLabel }} from
+          <strong>{{ earliestStartLabel }}</strong> · latest start
+          <strong>{{ latestStartLabel }}</strong>
           <span *ngIf="latestEndSummary">
             (ends <strong>{{ latestEndSummary.label }}</strong
             ><span *ngIf="latestEndSummary.nextDay"> next day</span>)</span
@@ -161,8 +200,20 @@
       </div>
 
       <div class="field">
-        <label for="closeAt">Close responses at <span class="optional">(optional)</span></label>
-        <input id="closeAt" type="datetime-local" formControlName="closeAt" />
+        <label for="closeAtDate">Close responses at <span class="optional">(optional)</span></label>
+        <div class="field-row">
+          <xf-date
+            formControlName="closeAtDate"
+            ariaLabel="Close responses on"
+            placeholder="Never closes"
+          ></xf-date>
+          <xf-select
+            [options]="closeTimeOptions"
+            formControlName="closeAtTime"
+            [searchable]="true"
+            ariaLabel="Close responses at time"
+          ></xf-select>
+        </div>
       </div>
 
       <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
@@ -313,8 +364,20 @@
       </div>
 
       <div class="field">
-        <label for="qaCloseAt">Close responses at <span class="optional">(optional)</span></label>
-        <input id="qaCloseAt" type="datetime-local" formControlName="closeAt" />
+        <label for="qaCloseAtDate">Close responses at <span class="optional">(optional)</span></label>
+        <div class="field-row">
+          <xf-date
+            formControlName="closeAtDate"
+            ariaLabel="Close responses on"
+            placeholder="Never closes"
+          ></xf-date>
+          <xf-select
+            [options]="closeTimeOptions"
+            formControlName="closeAtTime"
+            [searchable]="true"
+            ariaLabel="Close responses at time"
+          ></xf-select>
+        </div>
       </div>
 
       <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>

@@ -1,0 +1,38 @@
+<div class="user-menu" [class.user-menu--open]="open">
+  <button
+    type="button"
+    class="user-menu__trigger"
+    (click)="toggle()"
+    aria-haspopup="menu"
+    [attr.aria-expanded]="open"
+    [attr.aria-label]="'Account menu for ' + displayName"
+  >
+    <img
+      *ngIf="avatarUrl; else initialsAvatar"
+      class="user-menu__avatar"
+      [src]="avatarUrl"
+      alt=""
+      referrerpolicy="no-referrer"
+      (error)="onAvatarError()"
+    />
+    <ng-template #initialsAvatar>
+      <span class="user-menu__avatar user-menu__avatar--initials" aria-hidden="true">{{ initials }}</span>
+    </ng-template>
+  </button>
+
+  <div class="user-menu__panel" *ngIf="open" role="menu">
+    <div class="user-menu__identity">
+      <p class="user-menu__name" *ngIf="hasDistinctName">{{ displayName }}</p>
+      <p class="user-menu__email" [title]="email">{{ email }}</p>
+    </div>
+
+    <div class="user-menu__divider" role="separator"></div>
+
+    <a routerLink="/account" class="user-menu__item" role="menuitem" (click)="close()">
+      Account
+    </a>
+    <button type="button" class="user-menu__item" role="menuitem" (click)="onSignOut()">
+      Sign out
+    </button>
+  </div>
+</div>

@@ -12,6 +12,14 @@ export interface XomUser {
   userId: string;
   username: string;
   email?: string;
+  /**
+   * Display name and avatar from the ID token. Both are OPTIONAL and routinely
+   * absent: they only arrive if the shared `xomware_users` pool maps Google's
+   * `name`/`picture` claims onto this app client. Every consumer must degrade
+   * gracefully (name -> email, picture -> initials) rather than assume them.
+   */
+  name?: string;
+  picture?: string;
 }
 
 /**
@@ -136,6 +144,10 @@ export class CognitoService implements OnDestroy {
         userId: current.userId,
         username: current.username,
         email: claims['email'] as string | undefined,
+        // `given_name` is the fallback when the pool maps only the split name
+        // attributes rather than the composite one.
+        name: (claims['name'] || claims['given_name']) as string | undefined,
+        picture: claims['picture'] as string | undefined,
       };
       this.userSubject.next(user);
       return user;

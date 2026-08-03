@@ -1,0 +1,226 @@
+/* Chrome deliberately mirrors styled-select.component.scss so the date and
+   dropdown fields read as one system. */
+:host {
+  display: block;
+  position: relative;
+}
+
+.xf-date {
+  position: relative;
+}
+
+.xf-date__control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface);
+  color: var(--xf-text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--xf-transition), box-shadow var(--xf-transition);
+
+  &:hover:not(:disabled) {
+    border-color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+
+  &:disabled {
+    background: var(--xf-surface-2);
+    color: var(--xf-text-faint);
+    cursor: not-allowed;
+  }
+}
+
+.xf-date__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.is-placeholder {
+    color: var(--xf-text-faint);
+  }
+}
+
+.xf-date__icon {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+/* Floating panel */
+.xf-date__panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 268px;
+  padding: 10px;
+  background: var(--xf-surface);
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  box-shadow: var(--xf-shadow-card);
+}
+
+.xf-date__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.xf-date__month {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--xf-text);
+}
+
+.xf-date__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--xf-border);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface);
+  color: var(--xf-text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--xf-transition), color var(--xf-transition),
+    background var(--xf-transition);
+
+  &:hover {
+    border-color: var(--xf-primary);
+    color: var(--xf-primary);
+    background: var(--xf-surface-2);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+}
+
+.xf-date__grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.xf-date__weekday {
+  padding: 4px 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--xf-text-muted);
+}
+
+.xf-date__cell {
+  padding: 1px;
+  text-align: center;
+}
+
+.xf-date__day,
+.xf-date__day-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--xf-radius-sm);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.xf-date__day {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--xf-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--xf-transition), color var(--xf-transition),
+    border-color var(--xf-transition);
+
+  &:hover:not(:disabled) {
+    background: var(--xf-surface-2);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--xf-text-faint);
+    cursor: not-allowed;
+  }
+}
+
+.xf-date__day.is-today:not(.is-selected) {
+  border-color: var(--xf-border-strong);
+  font-weight: 700;
+  color: var(--xf-primary);
+}
+
+.xf-date__day.is-selected {
+  background: var(--xf-primary);
+  border-color: var(--xf-primary);
+  color: var(--xf-on-primary);
+  font-weight: 700;
+}
+
+.xf-date__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--xf-border);
+}
+
+.xf-date__today {
+  padding: 6px 12px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface);
+  color: var(--xf-text);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--xf-transition), color var(--xf-transition);
+
+  &:hover:not(:disabled) {
+    border-color: var(--xf-primary);
+    color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--xf-text-faint);
+    cursor: not-allowed;
+  }
+}

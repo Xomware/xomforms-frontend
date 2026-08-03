@@ -1,0 +1,31 @@
+<div class="account-page">
+  <a routerLink="/dashboard" class="back-link">← My Forms</a>
+  <h1>Account</h1>
+
+  <ng-container *ngIf="cognito.user$ | async as user">
+    <section class="profile-card">
+      <img
+        *ngIf="user.picture; else initialsAvatar"
+        class="profile-avatar"
+        [src]="user.picture"
+        alt=""
+        referrerpolicy="no-referrer"
+      />
+      <ng-template #initialsAvatar>
+        <span class="profile-avatar profile-avatar--initials" aria-hidden="true">
+          {{ initials(user.name, user.email) }}
+        </span>
+      </ng-template>
+
+      <div class="profile-details">
+        <h2 class="profile-name">{{ displayName(user.name, user.email) }}</h2>
+        <p class="profile-email">{{ user.email }}</p>
+        <p class="profile-provider">Signed in through your Xomware account</p>
+      </div>
+    </section>
+
+    <section class="account-actions">
+      <button type="button" class="signout-btn" (click)="signOut()">Sign out</button>
+    </section>
+  </ng-container>
+</div>
