@@ -5,6 +5,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
 import { DashboardComponent } from './dashboard.component';
 import { PollsService } from '../../services/polls.service';
+import { ResponsesService } from '../../services/responses.service';
 import { Poll } from '../../models/poll.model';
 
 function makePoll(pollId: string, title: string, closeAt: string | null = null): Poll {
@@ -24,6 +25,7 @@ describe('DashboardComponent — close/delete', () => {
   let fixture: ComponentFixture<DashboardComponent>;
   let component: DashboardComponent;
   let pollsService: jasmine.SpyObj<PollsService>;
+  let responsesService: jasmine.SpyObj<ResponsesService>;
 
   const polls = [
     makePoll('p1', 'Draft night'),
@@ -36,10 +38,17 @@ describe('DashboardComponent — close/delete', () => {
     pollsService = jasmine.createSpyObj('PollsService', ['list', 'delete', 'close', 'reopen']);
     pollsService.list.and.returnValue(of({ polls }));
 
+    responsesService = jasmine.createSpyObj('ResponsesService', ['mine', 'claimGuestResponses']);
+    responsesService.mine.and.returnValue(of({ responses: [] }));
+    responsesService.claimGuestResponses.and.returnValue(of(null));
+
     await TestBed.configureTestingModule({
       declarations: [DashboardComponent],
       imports: [FormsModule, RouterTestingModule],
-      providers: [{ provide: PollsService, useValue: pollsService }],
+      providers: [
+        { provide: PollsService, useValue: pollsService },
+        { provide: ResponsesService, useValue: responsesService },
+      ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
@@ -183,6 +192,52 @@ describe('DashboardComponent — close/delete', () => {
   it('ignores an action with nothing selected', () => {
     component.askDeleteSelected();
     expect(component.pending).toBeNull();
+  });
+
+  // ── Responded tab ─────────────────────────────────────────────────
+  it('loads the forms the caller filled out', () => {
+    expect(responsesService.mine).toHaveBeenCalled();
+    expect(component.respondedState).toBe('empty');
+  });
+
+  it('switching tabs clears the selection', () => {
+    component.toggleSelected('p1');
+    component.setSourceTab('responded');
+    expect(component.selectedCount).toBe(0);
+    expect(component.sourceTab).toBe('responded');
+  });
+
+  it('search filters the responded list too', () => {
+    component.respondedRows = [
+      { pollId: 'r1', title: 'Book club', allowResponseEdits: true },
+      { pollId: 'r2', title: 'Standup', allowResponseEdits: false },
+    ];
+    component.search = 'book';
+    expect(component.visibleResponded.map((r) => r.pollId)).toEqual(['r1']);
+  });
+
+  it('tells the user when guest responses were linked', () => {
+    responsesService.claimGuestResponses.and.returnValue(
+      of({ claimed: ['p9'], skippedExisting: [], skippedStale: [], windowHours: 24 }),
+    );
+    component.ngOnInit();
+    // Linking someone's answers must be visible, not silent -- a guest id is a
+    // browser, so only the user can tell whether they were really theirs.
+    expect(component.claimNotice).toContain('1 form you filled out');
+  });
+
+  it('says nothing when there was nothing to claim', () => {
+    responsesService.claimGuestResponses.and.returnValue(
+      of({ claimed: [], skippedExisting: [], skippedStale: ['old'], windowHours: 24 }),
+    );
+    component.ngOnInit();
+    expect(component.claimNotice).toBe('');
+  });
+
+  it('a failed claim does not break the dashboard', () => {
+    responsesService.claimGuestResponses.and.returnValue(throwError(() => new Error('nope')));
+    component.ngOnInit();
+    expect(component.state).toBe('ready');
   });
 
   it('a reload clears any stale selection', () => {

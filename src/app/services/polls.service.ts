@@ -2,7 +2,21 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { CreatePollRequest, Poll, PollListResponse } from '../models/poll.model';
+import {
+  CreatePollRequest,
+  Poll,
+  PollListResponse,
+  ResultsVisibility,
+} from '../models/poll.model';
+
+/** Creator-editable settings. Every field optional -- omitted means unchanged. */
+export interface UpdatePollSettings {
+  title?: string;
+  description?: string;
+  guestAllowed?: boolean;
+  resultsVisibility?: ResultsVisibility;
+  allowResponseEdits?: boolean;
+}
 
 /**
  * Poll create/get/list. Maps to xomforms-backend's polls_create (authed),
@@ -50,5 +64,17 @@ export class PollsService {
   /** POST /polls/close with reopen -- clears closeAt so the form accepts responses again. */
   reopen(pollId: string): Observable<Poll> {
     return this.http.post<Poll>(`${this.baseUrl}/close`, { pollId, reopen: true });
+  }
+
+  /**
+   * POST /polls/update -- authed, creator only. Partial: only the supplied
+   * settings are written, so toggling one can't clobber another.
+   *
+   * Settings only. The grid config (dates, window, granularity, fields) is
+   * deliberately not editable -- changing it under respondents who already
+   * answered would invalidate their submissions.
+   */
+  update(pollId: string, changes: UpdatePollSettings): Observable<Poll> {
+    return this.http.post<Poll>(`${this.baseUrl}/update`, { pollId, ...changes });
   }
 }

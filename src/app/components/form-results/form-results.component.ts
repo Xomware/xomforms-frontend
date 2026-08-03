@@ -33,6 +33,9 @@ export class FormResultsComponent implements OnInit, OnDestroy {
   resultsError = '';
   copied = false;
 
+  /** Results reads the answers; Admin runs the form. Both creator-only. */
+  tab: 'results' | 'admin' = 'results';
+
   private pollId = '';
   private resultsSub?: Subscription;
   private copyTimer?: ReturnType<typeof setTimeout>;
@@ -42,6 +45,12 @@ export class FormResultsComponent implements OnInit, OnDestroy {
     private pollsService: PollsService,
     private resultsService: ResultsService,
   ) {}
+
+  /** Keep the local copy in step after a settings change. */
+  onPollUpdated(poll: Poll): void {
+    this.poll = poll;
+    this.status = derivePollStatus(poll);
+  }
 
   ngOnInit(): void {
     this.pollId = this.route.snapshot.paramMap.get('id') ?? '';

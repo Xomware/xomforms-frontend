@@ -71,16 +71,31 @@
     </button>
   </div>
 
+  <p class="editing-banner" *ngIf="state === 'ready' && editingExisting && canEditResponse" role="status">
+    You've already answered this form — your previous response is filled in below. Submitting
+    again replaces it.
+  </p>
+
+  <p class="editing-banner editing-banner--locked" *ngIf="state === 'ready' && editingExisting && !canEditResponse" role="status">
+    You've already answered this form, and the organizer has turned off edits.
+  </p>
+
   <div class="submitted-view" *ngIf="state === 'submitted'">
     <h1>Thanks{{ displayName ? ', ' + displayName : '' }}!</h1>
-    <p>Your availability has been recorded.</p>
+    <p>Your response has been recorded.</p>
 
-    <ng-container *ngIf="poll?.showResultsToRespondents">
+    <p class="edit-hint" *ngIf="canEditResponse">
+      Changed your mind? Reopen this link any time to update your answer.
+    </p>
+
+    <ng-container *ngIf="showResults">
       <h2>Live results</h2>
       <app-qa-results *ngIf="isQa; else schedulerResults" [result]="formResult"></app-qa-results>
       <ng-template #schedulerResults>
         <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
       </ng-template>
     </ng-container>
+
+    <p class="results-gate" *ngIf="!showResults">{{ resultsGateMessage }}</p>
   </div>
 </div>

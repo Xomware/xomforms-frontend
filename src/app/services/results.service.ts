@@ -14,6 +14,23 @@ import { FormResult, OverlapResult } from '../models/response.model';
  * `pollForCreator`/`pollPublic` re-fetch every ~10-15s for a live feel
  * per the plan (MVP uses interval polling, not websockets -- v2 concern).
  */
+/**
+ * How a respondent identifies themselves to the public results route. Guests
+ * present the id their browser generated at submit time; signed-in callers
+ * present the email they submitted under (that route has no authorizer).
+ */
+export interface ResultsIdentity {
+  guestId?: string | null;
+  email?: string | null;
+}
+
+function withIdentity(pollId: string, identity?: ResultsIdentity): HttpParams {
+  let params = new HttpParams().set('pollId', pollId);
+  if (identity?.guestId) params = params.set('guestId', identity.guestId);
+  else if (identity?.email) params = params.set('email', identity.email);
+  return params;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ResultsService {
   private readonly baseUrl = `${environment.apiBaseUrl}/results`;
@@ -27,10 +44,18 @@ export class ResultsService {
     return this.http.get<OverlapResult>(`${this.baseUrl}/get`, { params });
   }
 
-  /** GET /results/get-public -- public, respondent/guest view, single fetch. */
-  getPublic(pollId: string): Observable<OverlapResult> {
-    const params = new HttpParams().set('pollId', pollId);
-    return this.http.get<OverlapResult>(`${this.baseUrl}/get-public`, { params });
+  /**
+   * GET /results/get-public -- public, respondent/guest view, single fetch.
+   *
+   * `identity` tells the backend who is asking, so a form set to
+   * "after they respond" can confirm the caller actually answered. The gate
+   * itself lives on the server; this just supplies the claim. Omitting it on
+   * such a form yields a 403, which is the correct outcome.
+   */
+  getPublic(pollId: string, identity?: ResultsIdentity): Observable<OverlapResult> {
+    return this.http.get<OverlapResult>(`${this.baseUrl}/get-public`, {
+      params: withIdentity(pollId, identity),
+    });
   }
 
   /** Re-fetches the creator view every ~10-15s. Caller must unsubscribe on destroy. */
@@ -39,8 +64,8 @@ export class ResultsService {
   }
 
   /** Re-fetches the public/respondent view every ~10-15s. Caller must unsubscribe on destroy. */
-  pollPublic(pollId: string): Observable<OverlapResult> {
-    return timer(0, this.POLL_INTERVAL_MS).pipe(switchMap(() => this.getPublic(pollId)));
+  pollPublic(pollId: string, identity?: ResultsIdentity): Observable<OverlapResult> {
+    return timer(0, this.POLL_INTERVAL_MS).pipe(switchMap(() => this.getPublic(pollId, identity)));
   }
 
   // ── Q&A form results ────────────────────────────────────────────────
@@ -54,9 +79,10 @@ export class ResultsService {
   }
 
   /** GET /results/get-public for a qa poll -- respondent/guest view. */
-  getFormPublic(pollId: string): Observable<FormResult> {
-    const params = new HttpParams().set('pollId', pollId);
-    return this.http.get<FormResult>(`${this.baseUrl}/get-public`, { params });
+  getFormPublic(pollId: string, identity?: ResultsIdentity): Observable<FormResult> {
+    return this.http.get<FormResult>(`${this.baseUrl}/get-public`, {
+      params: withIdentity(pollId, identity),
+    });
   }
 
   /** Re-fetches the creator's qa results every ~10-15s. Caller must unsubscribe. */
@@ -65,7 +91,9 @@ export class ResultsService {
   }
 
   /** Re-fetches the public qa results every ~10-15s. Caller must unsubscribe. */
-  pollFormPublic(pollId: string): Observable<FormResult> {
-    return timer(0, this.POLL_INTERVAL_MS).pipe(switchMap(() => this.getFormPublic(pollId)));
+  pollFormPublic(pollId: string, identity?: ResultsIdentity): Observable<FormResult> {
+    return timer(0, this.POLL_INTERVAL_MS).pipe(
+      switchMap(() => this.getFormPublic(pollId, identity)),
+    );
   }
 }

@@ -37,24 +37,27 @@
       <p class="results-desc" *ngIf="poll.description">{{ poll.description }}</p>
     </header>
 
-    <section class="share-section" aria-label="Share link">
-      <label for="shareUrl" class="share-label">Share this form — anyone with the link can respond</label>
-      <div class="share-row">
-        <input
-          id="shareUrl"
-          type="text"
-          class="share-input"
-          [value]="shareUrl"
-          readonly
-          (click)="$any($event.target).select()"
-        />
-        <button type="button" class="btn-copy" (click)="copyShareLink()">
-          {{ copied ? 'Copied!' : 'Copy' }}
-        </button>
-      </div>
-    </section>
+    <!-- Two jobs, two tabs: reading the answers vs running the form. -->
+    <div class="form-tabs" role="tablist" aria-label="Form sections">
+      <button
+        type="button"
+        class="form-tab"
+        role="tab"
+        [class.form-tab--active]="tab === 'results'"
+        [attr.aria-selected]="tab === 'results'"
+        (click)="tab = 'results'"
+      >Results</button>
+      <button
+        type="button"
+        class="form-tab"
+        role="tab"
+        [class.form-tab--active]="tab === 'admin'"
+        [attr.aria-selected]="tab === 'admin'"
+        (click)="tab = 'admin'"
+      >Admin</button>
+    </div>
 
-    <section class="live-section" aria-label="Live results">
+    <section class="live-section" *ngIf="tab === 'results'" aria-label="Live results">
       <h2>Live results</h2>
       <p class="results-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>
       <app-qa-results *ngIf="isQa; else schedulerResults" [result]="formResult"></app-qa-results>
@@ -62,5 +65,11 @@
         <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
       </ng-template>
     </section>
+
+    <app-admin-panel
+      *ngIf="tab === 'admin'"
+      [poll]="poll"
+      (pollChange)="onPollUpdated($event)"
+    ></app-admin-panel>
   </ng-container>
 </div>

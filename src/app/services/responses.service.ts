@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   AnswerValue,
@@ -9,6 +9,11 @@ import {
   SubmitAvailabilityRequest,
   SubmitAvailabilityResult,
 } from '../models/response.model';
+import {
+  ClaimResult,
+  RespondedForm,
+  RespondedFormsResponse,
+} from '../models/poll.model';
 import { CognitoService } from './cognito.service';
 
 const GUEST_ID_STORAGE_KEY = 'xomforms_guest_id';
@@ -83,6 +88,53 @@ export class ResponsesService {
    * creating a duplicate row -- a guest on a different browser/device is
    * a known, accepted limitation (see plan Risks).
    */
+  /**
+   * Forms the signed-in caller has responded to. Backs the dashboard's
+   * "Responded" tab.
+   */
+  mine(): Observable<RespondedFormsResponse> {
+    return this.http.get<RespondedFormsResponse>(`${this.baseUrl}/mine`);
+  }
+
+  /**
+   * The caller's own response to one form, for prefilling the edit view.
+   *
+   * Two routes, because a guest has no JWT and the public route has no
+   * authorizer context to read an identity from: signed-in callers use the
+   * authed /mine?pollId, guests present the guestId their browser already
+   * holds.
+   */
+  myResponseFor(pollId: string): Observable<{ response: RespondedForm | null }> {
+    if (this.cognito.isAuthenticated()) {
+      return this.http.get<{ response: RespondedForm | null }>(`${this.baseUrl}/mine`, {
+        params: { pollId },
+      });
+    }
+    return this.http.get<{ response: RespondedForm | null }>(`${this.baseUrl}/get-mine`, {
+      params: { pollId, guestId: this.getOrCreateGuestId() },
+    });
+  }
+
+  /**
+   * Link responses submitted from this browser as a guest to the account that
+   * just signed in. No stored guest id means there is nothing to claim.
+   */
+  claimGuestResponses(): Observable<ClaimResult | null> {
+    const guestId = this.peekGuestId();
+    if (!guestId) return of(null);
+    return this.http.post<ClaimResult>(`${this.baseUrl}/claim`, { guestId });
+  }
+
+  /** The identifier a guest submitted under, for the results gate. */
+  guestIdIfAny(): string | null {
+    return this.peekGuestId();
+  }
+
+  /** Reads the stored id WITHOUT minting one -- callers here only want to know. */
+  private peekGuestId(): string | null {
+    return localStorage.getItem(GUEST_ID_STORAGE_KEY);
+  }
+
   private getOrCreateGuestId(): string {
     const existing = localStorage.getItem(GUEST_ID_STORAGE_KEY);
     if (existing) return existing;

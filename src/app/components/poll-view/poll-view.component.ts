@@ -3,9 +3,18 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
 import { ResponsesService } from '../../services/responses.service';
-import { ResultsService } from '../../services/results.service';
+import { ResultsService, ResultsIdentity } from '../../services/results.service';
 import { CognitoService } from '../../services/cognito.service';
-import { Poll, GridBlock, FormField, isChoiceField, isQaPoll } from '../../models/poll.model';
+import {
+  Poll,
+  GridBlock,
+  FormField,
+  ResultsVisibility,
+  allowsResponseEdits,
+  effectiveVisibility,
+  isChoiceField,
+  isQaPoll,
+} from '../../models/poll.model';
 import { AnswerValue, FormResult, OverlapResult } from '../../models/response.model';
 import { generateGrid, PollGridConfig } from '../../models/grid.util';
 
@@ -36,6 +45,10 @@ export class PollViewComponent implements OnInit, OnDestroy {
   answers: Record<string, AnswerValue> = {};
 
   results: OverlapResult | null = null;
+  /** True once we know this respondent already has an answer on file. */
+  hasResponded = false;
+  /** Their existing answer, when editing rather than answering fresh. */
+  editingExisting = false;
   formResult: FormResult | null = null;
   private resultsSub?: Subscription;
 
@@ -86,6 +99,7 @@ export class PollViewComponent implements OnInit, OnDestroy {
           this.displayName = email.split('@')[0] ?? '';
         }
         this.state = 'ready';
+        this.loadExistingResponse();
       },
       error: (err) => {
         this.state = err?.status === 404 ? 'not-found' : 'error';
@@ -143,7 +157,10 @@ export class PollViewComponent implements OnInit, OnDestroy {
     const onSuccess = () => {
       this.submitting = false;
       this.state = 'submitted';
-      if (this.poll?.showResultsToRespondents) {
+      this.hasResponded = true;
+      // Now that a response exists, an after_response form will let them
+      // through the gate.
+      if (this.resultsVisibility !== 'hidden') {
         this.startResultsPolling();
       }
     };
@@ -164,9 +181,70 @@ export class PollViewComponent implements OnInit, OnDestroy {
       .subscribe({ next: onSuccess, error: onError });
   }
 
+  /** Effective visibility, honouring the legacy boolean on older forms. */
+  get resultsVisibility(): ResultsVisibility {
+    return this.poll ? effectiveVisibility(this.poll) : 'hidden';
+  }
+
+  /** May this respondent change an answer they already submitted? */
+  get canEditResponse(): boolean {
+    return !!this.poll && allowsResponseEdits(this.poll) && this.state !== 'closed';
+  }
+
+  /** Why results aren't shown, when they aren't. */
+  get resultsGateMessage(): string {
+    if (this.resultsVisibility === 'hidden') {
+      return 'The organizer has kept results private.';
+    }
+    if (this.resultsVisibility === 'after_response' && !this.hasResponded) {
+      return "Fill out this form to see everyone's answers.";
+    }
+    return '';
+  }
+
+  get showResults(): boolean {
+    return !this.resultsGateMessage;
+  }
+
+  /**
+   * How this respondent proves to the public results route that they answered.
+   * A guest presents their browser id; a signed-in respondent presents the
+   * email they submitted under, since that route has no authorizer context.
+   */
+  private resultsIdentity(): ResultsIdentity {
+    const guestId = this.responsesService.guestIdIfAny();
+    if (!this.cognito.isAuthenticated() && guestId) return { guestId };
+    return { email: this.cognito.currentUser?.email ?? null };
+  }
+
+  /**
+   * Load this respondent's prior answer, if any, so the form opens pre-filled
+   * and "edit your response" genuinely edits rather than starting from blank.
+   * Best-effort: a failure just means they fill it in again.
+   */
+  private loadExistingResponse(): void {
+    this.responsesService.myResponseFor(this.pollId).subscribe({
+      next: (res) => {
+        const existing = res?.response;
+        if (!existing) return;
+        this.hasResponded = true;
+        this.editingExisting = true;
+        if (existing.displayName) this.displayName = existing.displayName;
+        if (existing.blocks?.length) this.selectedBlocks = [...existing.blocks];
+        if (existing.answers) this.answers = { ...(existing.answers as Record<string, AnswerValue>) };
+        // They've answered, so an after_response form should show results now.
+        if (this.resultsVisibility !== 'hidden') this.startResultsPolling();
+      },
+      error: () => {
+        /* no prior answer, or the lookup failed -- fall through to a blank form */
+      },
+    });
+  }
+
   private startResultsPolling(): void {
+    const identity = this.resultsIdentity();
     if (this.isQa) {
-      this.resultsSub = this.resultsService.pollFormPublic(this.pollId).subscribe({
+      this.resultsSub = this.resultsService.pollFormPublic(this.pollId, identity).subscribe({
         next: (result) => (this.formResult = result),
         error: () => {
           /* bonus view -- fail silently */
@@ -174,7 +252,7 @@ export class PollViewComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    this.resultsSub = this.resultsService.pollPublic(this.pollId).subscribe({
+    this.resultsSub = this.resultsService.pollPublic(this.pollId, identity).subscribe({
       next: (result) => (this.results = result),
       error: () => {
         /* results view is a bonus, not critical -- fail silently rather than

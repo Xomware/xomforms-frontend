@@ -20,6 +20,7 @@ import { StyledSelectComponent } from './components/styled-select/styled-select.
 import { StyledDateComponent } from './components/styled-date/styled-date.component';
 import { UserMenuComponent } from './components/user-menu/user-menu.component';
 import { AccountComponent } from './components/account/account.component';
+import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
 import { SignInComponent } from './components/auth/sign-in/sign-in.component';
 import { CallbackComponent } from './components/auth/callback/callback.component';
 
@@ -42,6 +43,7 @@ import { jwtInterceptor } from './interceptors/jwt.interceptor';
     StyledDateComponent,
     UserMenuComponent,
     AccountComponent,
+    AdminPanelComponent,
     SignInComponent,
     CallbackComponent,
   ],
