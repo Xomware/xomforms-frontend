@@ -17,6 +17,9 @@ import { FieldResultsComponent } from './components/field-results/field-results.
 import { QaResultsComponent } from './components/qa-results/qa-results.component';
 import { PollViewComponent } from './components/poll-view/poll-view.component';
 import { StyledSelectComponent } from './components/styled-select/styled-select.component';
+import { StyledDateComponent } from './components/styled-date/styled-date.component';
+import { UserMenuComponent } from './components/user-menu/user-menu.component';
+import { AccountComponent } from './components/account/account.component';
 import { SignInComponent } from './components/auth/sign-in/sign-in.component';
 import { CallbackComponent } from './components/auth/callback/callback.component';
 
@@ -36,6 +39,9 @@ import { jwtInterceptor } from './interceptors/jwt.interceptor';
     QaResultsComponent,
     PollViewComponent,
     StyledSelectComponent,
+    StyledDateComponent,
+    UserMenuComponent,
+    AccountComponent,
     SignInComponent,
     CallbackComponent,
   ],

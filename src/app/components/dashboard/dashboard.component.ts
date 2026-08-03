@@ -1,8 +1,13 @@
 import { Component, OnInit } from '@angular/core';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { PollsService } from '../../services/polls.service';
 import { Poll, PollStatus, derivePollStatus } from '../../models/poll.model';
 
 type LoadState = 'loading' | 'ready' | 'empty' | 'error';
+
+/** Which bulk action the confirm dialog is currently asking about. */
+type PendingAction = { kind: 'delete' | 'close' | 'reopen'; pollIds: string[] } | null;
 
 /** A poll plus its UI-derived, view-ready fields (status, formatted date). */
 interface FormRow {
@@ -29,6 +34,15 @@ export class DashboardComponent implements OnInit {
   search = '';
   statusFilter: 'all' | PollStatus = 'all';
 
+  /** Selected pollIds for bulk actions. */
+  selected = new Set<string>();
+  /** pollId whose per-row action menu is open (only one at a time). */
+  openMenuId: string | null = null;
+  /** Non-null while the confirm dialog is up. */
+  pending: PendingAction = null;
+  busy = false;
+  actionError = '';
+
   private readonly dateFmt = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
     month: 'short',
@@ -43,6 +57,11 @@ export class DashboardComponent implements OnInit {
 
   load(): void {
     this.state = 'loading';
+    // A reload invalidates any selection -- stale ids must not survive into a
+    // later bulk action.
+    this.selected.clear();
+    this.openMenuId = null;
+    this.actionError = '';
     this.pollsService.list().subscribe({
       next: (res) => {
         const polls = [...(res.polls ?? [])].sort(
@@ -85,6 +104,197 @@ export class DashboardComponent implements OnInit {
 
   trackByPollId(_index: number, row: FormRow): string {
     return row.poll.pollId;
+  }
+
+  // ── Selection ─────────────────────────────────────────────────────
+  isSelected(pollId: string): boolean {
+    return this.selected.has(pollId);
+  }
+
+  toggleSelected(pollId: string): void {
+    if (this.selected.has(pollId)) {
+      this.selected.delete(pollId);
+    } else {
+      this.selected.add(pollId);
+    }
+  }
+
+  /**
+   * "Select all" means all VISIBLE rows, never the whole list -- selecting rows
+   * hidden behind a filter and then bulk-deleting them is exactly the kind of
+   * surprise that loses someone's data.
+   */
+  get allVisibleSelected(): boolean {
+    const visible = this.visibleRows;
+    return visible.length > 0 && visible.every((r) => this.selected.has(r.poll.pollId));
+  }
+
+  toggleSelectAllVisible(): void {
+    const visible = this.visibleRows;
+    if (this.allVisibleSelected) {
+      for (const row of visible) this.selected.delete(row.poll.pollId);
+    } else {
+      for (const row of visible) this.selected.add(row.poll.pollId);
+    }
+  }
+
+  clearSelection(): void {
+    this.selected.clear();
+  }
+
+  get selectedCount(): number {
+    return this.selected.size;
+  }
+
+  /** Selection is scoped to what's visible, so hidden rows never get acted on. */
+  private get selectedVisibleIds(): string[] {
+    return this.visibleRows
+      .map((r) => r.poll.pollId)
+      .filter((id) => this.selected.has(id));
+  }
+
+  // ── Per-row menu ──────────────────────────────────────────────────
+  toggleMenu(pollId: string): void {
+    this.openMenuId = this.openMenuId === pollId ? null : pollId;
+  }
+
+  closeMenu(): void {
+    this.openMenuId = null;
+  }
+
+  // ── Action intents (all funnel through the confirm dialog) ────────
+  askDelete(pollIds: string[]): void {
+    if (!pollIds.length) return;
+    this.closeMenu();
+    this.actionError = '';
+    this.pending = { kind: 'delete', pollIds };
+  }
+
+  askClose(pollIds: string[]): void {
+    if (!pollIds.length) return;
+    this.closeMenu();
+    this.actionError = '';
+    this.pending = { kind: 'close', pollIds };
+  }
+
+  askReopen(pollIds: string[]): void {
+    if (!pollIds.length) return;
+    this.closeMenu();
+    this.actionError = '';
+    this.pending = { kind: 'reopen', pollIds };
+  }
+
+  askDeleteSelected(): void {
+    this.askDelete(this.selectedVisibleIds);
+  }
+
+  askCloseSelected(): void {
+    this.askClose(this.selectedVisibleIds);
+  }
+
+  cancelPending(): void {
+    this.pending = null;
+  }
+
+  get pendingTitle(): string {
+    if (!this.pending) return '';
+    const n = this.pending.pollIds.length;
+    const noun = n === 1 ? 'form' : `${n} forms`;
+    if (this.pending.kind === 'delete') return `Delete ${noun}?`;
+    if (this.pending.kind === 'close') return `Close ${noun}?`;
+    return `Reopen ${noun}?`;
+  }
+
+  get pendingBody(): string {
+    if (!this.pending) return '';
+    const n = this.pending.pollIds.length;
+    const subject = n === 1 ? 'This form' : 'These forms';
+    if (this.pending.kind === 'delete') {
+      return `${subject} and every response submitted to ${
+        n === 1 ? 'it' : 'them'
+      } will be permanently deleted. This cannot be undone.`;
+    }
+    if (this.pending.kind === 'close') {
+      return `${subject} will stop accepting new responses. Existing responses are kept, and you can reopen at any time.`;
+    }
+    return `${subject} will start accepting responses again.`;
+  }
+
+  get pendingConfirmLabel(): string {
+    if (!this.pending) return '';
+    if (this.pending.kind === 'delete') return 'Delete';
+    return this.pending.kind === 'close' ? 'Close' : 'Reopen';
+  }
+
+  get pendingIsDestructive(): boolean {
+    return this.pending?.kind === 'delete';
+  }
+
+  /**
+   * Run the pending action across every selected poll in parallel.
+   *
+   * Each request swallows its own error into a per-id result so one failure
+   * can't cancel the siblings; rows are only mutated locally for the ids that
+   * actually succeeded, and any failure is surfaced rather than silently
+   * leaving the UI out of sync with the server.
+   */
+  confirmPending(): void {
+    if (!this.pending || this.busy) return;
+    const { kind, pollIds } = this.pending;
+    this.busy = true;
+    this.actionError = '';
+
+    const calls = pollIds.map((pollId) => {
+      // Widened to unknown: the three calls resolve to different payloads and
+      // only their success/failure matters here.
+      const req: Observable<unknown> =
+        kind === 'delete'
+          ? this.pollsService.delete(pollId)
+          : kind === 'close'
+            ? this.pollsService.close(pollId)
+            : this.pollsService.reopen(pollId);
+      return req.pipe(
+        map((res) => ({ pollId, ok: true, poll: res as Poll })),
+        catchError(() => of({ pollId, ok: false, poll: null as Poll | null })),
+      );
+    });
+
+    forkJoin(calls).subscribe((results) => {
+      const succeeded = new Map(
+        results.filter((r) => r.ok).map((r) => [r.pollId, r.poll] as const),
+      );
+      const failedCount = results.length - succeeded.size;
+
+      if (kind === 'delete') {
+        this.rows = this.rows.filter((r) => !succeeded.has(r.poll.pollId));
+      } else {
+        this.rows = this.rows.map((row) => {
+          if (!succeeded.has(row.poll.pollId)) return row;
+          // Take closeAt from the server's echo rather than stamping a local
+          // clock: the backend decides the instant, and a client-generated
+          // "now" isn't yet in the past, so derivePollStatus would still read
+          // the row as open.
+          const updated = succeeded.get(row.poll.pollId);
+          const poll: Poll = { ...row.poll, closeAt: updated?.closeAt ?? null };
+          return { ...row, poll, status: derivePollStatus(poll) };
+        });
+      }
+
+      // Successful ids leave the selection; failed ones stay put so a retry
+      // doesn't require reselecting them.
+      for (const id of succeeded.keys()) this.selected.delete(id);
+
+      if (failedCount > 0) {
+        this.actionError =
+          failedCount === results.length
+            ? "That didn't work. Please try again."
+            : `${failedCount} of ${results.length} forms couldn't be updated. They're still selected — try again.`;
+      }
+
+      this.busy = false;
+      this.pending = null;
+      if (this.rows.length === 0) this.state = 'empty';
+    });
   }
 
   private formatDate(iso: string): string {

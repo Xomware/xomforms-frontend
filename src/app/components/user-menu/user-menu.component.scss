@@ -1,0 +1,122 @@
+/* Trigger sits on the always-dark header; the panel is a light surface
+   matching xf-select / xf-date. */
+:host {
+  display: block;
+  position: relative;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--xf-radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: border-color var(--xf-transition), background var(--xf-transition);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-yellow);
+    outline-offset: 2px;
+  }
+}
+
+.user-menu--open .user-menu__trigger {
+  border-color: var(--xf-yellow);
+}
+
+.user-menu__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-menu__avatar--initials {
+  background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.user-menu__panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 216px;
+  max-width: 280px;
+  padding: 4px;
+  background: var(--xf-surface);
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  box-shadow: var(--xf-shadow-card);
+}
+
+.user-menu__identity {
+  padding: 10px 10px 8px;
+}
+
+.user-menu__name {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--xf-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu__email {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--xf-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu__divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--xf-border);
+}
+
+.user-menu__item {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--xf-radius-sm);
+  background: transparent;
+  color: var(--xf-text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--xf-transition);
+
+  &:hover {
+    background: var(--xf-surface-2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: -2px;
+  }
+}

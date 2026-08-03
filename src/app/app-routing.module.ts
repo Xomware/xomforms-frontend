@@ -6,6 +6,7 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { PollCreateComponent } from './components/poll-create/poll-create.component';
 import { FormResultsComponent } from './components/form-results/form-results.component';
 import { PollViewComponent } from './components/poll-view/poll-view.component';
+import { AccountComponent } from './components/account/account.component';
 import { SignInComponent } from './components/auth/sign-in/sign-in.component';
 import { CallbackComponent } from './components/auth/callback/callback.component';
 import { authGuard } from './guards/auth.guard';
@@ -28,6 +29,7 @@ const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'forms/new', component: PollCreateComponent, canActivate: [authGuard] },
   { path: 'forms/:id', component: FormResultsComponent, canActivate: [authGuard] },
+  { path: 'account', component: AccountComponent, canActivate: [authGuard] },
   { path: 'f/:pollId', component: PollViewComponent },
 
   { path: 'auth/sign-in', component: SignInComponent },

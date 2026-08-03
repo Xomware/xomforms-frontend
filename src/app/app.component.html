@@ -15,16 +15,15 @@
 
   <nav class="header-actions" *ngIf="cognito.isReady$ | async">
     <ng-container *ngIf="cognito.user$ | async as user; else signedOut">
+      <!-- One real tab. "New form" lives on the dashboard, which already
+           surfaces it twice -- a lone button competing with a lone tab is what
+           made this header read as cluttered. -->
       <a
         routerLink="/dashboard"
-        routerLinkActive="header-link--active"
-        class="header-link"
+        routerLinkActive="header-tab--active"
+        class="header-tab"
       >My Forms</a>
-      <a routerLink="/forms/new" class="header-btn header-btn--primary">
-        <span aria-hidden="true">+</span> New form
-      </a>
-      <span class="account-email" [title]="user.email">{{ user.email }}</span>
-      <button type="button" class="header-btn" (click)="signOut()">Sign out</button>
+      <xf-user-menu [user]="user" (signOut)="signOut()"></xf-user-menu>
     </ng-container>
     <ng-template #signedOut>
       <a routerLink="/auth/sign-in" class="header-btn">Sign in</a>
