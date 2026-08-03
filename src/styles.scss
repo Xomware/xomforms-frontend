@@ -83,6 +83,20 @@
     --xf-text-muted: #a79fc2;
     --xf-text-faint: #7c7498;
 
+    /*
+     * Selection tints MUST be re-stated for dark. The light values
+     * (--xf-purple-100 #efe7f8, --xf-purple-300 #a985d6) are near-white, and
+     * they're used as *backgrounds* for selected/active states -- selected
+     * dropdown options, selected form cards, the active interval segment,
+     * painted availability cells. Left at their light values they render a
+     * near-white fill under --xf-text, which is also near-white in this theme,
+     * so the label disappears entirely.
+     * Alpha over the dark surface keeps the tint reading as "purple selection"
+     * at any nesting depth instead of a flat slab.
+     */
+    --xf-purple-100: rgba(154, 107, 255, 0.22);
+    --xf-purple-300: #c4a6f0;
+
     /* Brighten the primary so it stays vivid on dark surfaces. */
     --xf-purple: #9a6bff;
     --xf-primary: #9a6bff;

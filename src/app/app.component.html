@@ -1,34 +1,39 @@
 <header class="app-header">
-  <a routerLink="/" class="brand" aria-label="Xomforms home">
-    <picture>
-      <source srcset="assets/xomforms-banner.webp" type="image/webp" />
-      <img
-        src="assets/xomforms-banner.png"
-        alt="Xomforms"
-        class="brand-banner"
-        width="1200"
-        height="498"
-        decoding="async"
-      />
-    </picture>
-  </a>
+  <!-- Inner container is width-constrained and centred so the brand lines up
+       with the page heading below it, rather than hugging the viewport edge. -->
+  <div class="header-inner">
+    <div class="header-left">
+      <a routerLink="/" class="brand" aria-label="Xomforms home">
+        <picture>
+          <source srcset="assets/xomforms-banner.webp" type="image/webp" />
+          <img
+            src="assets/xomforms-banner.png"
+            alt="Xomforms"
+            class="brand-banner"
+            width="1200"
+            height="498"
+            decoding="async"
+          />
+        </picture>
+      </a>
 
-  <nav class="header-actions" *ngIf="cognito.isReady$ | async">
-    <ng-container *ngIf="cognito.user$ | async as user; else signedOut">
-      <!-- One real tab. "New form" lives on the dashboard, which already
-           surfaces it twice -- a lone button competing with a lone tab is what
-           made this header read as cluttered. -->
-      <a
-        routerLink="/dashboard"
-        routerLinkActive="header-tab--active"
-        class="header-tab"
-      >My Forms</a>
-      <xf-user-menu [user]="user" (signOut)="signOut()"></xf-user-menu>
-    </ng-container>
-    <ng-template #signedOut>
-      <a routerLink="/auth/sign-in" class="header-btn">Sign in</a>
-    </ng-template>
-  </nav>
+      <!-- Nav sits NEXT TO the brand, not pinned to the right edge. -->
+      <nav class="header-nav" *ngIf="(cognito.isReady$ | async) && (cognito.user$ | async)">
+        <a routerLink="/dashboard" routerLinkActive="header-tab--active" class="header-tab">
+          My Forms
+        </a>
+      </nav>
+    </div>
+
+    <div class="header-right" *ngIf="cognito.isReady$ | async">
+      <ng-container *ngIf="cognito.user$ | async as user; else signedOut">
+        <xf-user-menu [user]="user" (signOut)="signOut()"></xf-user-menu>
+      </ng-container>
+      <ng-template #signedOut>
+        <a routerLink="/auth/sign-in" class="header-btn">Sign in</a>
+      </ng-template>
+    </div>
+  </div>
 </header>
 
 <main class="app-main">

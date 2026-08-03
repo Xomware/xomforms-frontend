@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Location } from '@angular/common';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
@@ -160,6 +161,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private pollsService: PollsService,
     private resultsService: ResultsService,
+    private location: Location,
   ) {
     this.form = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(200)]],
@@ -405,6 +407,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       next: (poll) => {
         this.submitting = false;
         this.createdPoll = poll;
+        this.adoptCreatedUrl(poll.pollId);
         this.startSchedulerResultsPolling(poll.pollId);
       },
       error: (err) => {
@@ -438,6 +441,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       next: (poll) => {
         this.submitting = false;
         this.createdPoll = poll;
+        this.adoptCreatedUrl(poll.pollId);
         this.startFormResultsPolling(poll.pollId);
       },
       error: (err) => {
@@ -494,6 +498,20 @@ export class PollCreateComponent implements OnInit, OnDestroy {
         this.resultsError = this.friendlyError(err);
       },
     });
+  }
+
+  /**
+   * Give the newly created form its own URL.
+   *
+   * The page used to sit on /forms/new after creating, so the address bar still
+   * read "new" for a form that already existed, and a refresh or a shared tab
+   * dumped you back into an empty builder. replaceState (rather than navigate)
+   * swaps the URL without tearing down this component, so the "form created +
+   * share link + live results" view survives; a reload then lands on the real
+   * results page for that id.
+   */
+  private adoptCreatedUrl(pollId: string): void {
+    this.location.replaceState(`/forms/${pollId}`);
   }
 
   private genId(prefix: string): string {
