@@ -31,7 +31,7 @@ import {
 type ViewState = 'loading' | 'not-found' | 'closed' | 'needs-signin' | 'ready' | 'error';
 
 /** Sections a respondent gets. Mirrors the creator's, minus Admin. */
-export type RespondentTab = 'response' | 'results' | 'analytics';
+export type RespondentTab = 'response' | 'results' | 'analytics' | 'admin';
 
 /**
  * Respondent landing: guest name entry (when guestAllowed) or authed
@@ -68,6 +68,8 @@ export class PollViewComponent implements OnInit, OnDestroy {
    * the outcome. Signed-in respondents already have one on their token.
    */
   guestEmail = '';
+  /** Only complain once they've actually left the field. */
+  guestEmailTouched = false;
 
   /**
    * Responding used to be a dead end -- a "thanks" screen with no way back to
@@ -128,6 +130,7 @@ export class PollViewComponent implements OnInit, OnDestroy {
         }
         this.state = 'ready';
         this.loadExistingResponse();
+        if (this.isCreator) this.startResultsPolling();
       },
       error: (err) => {
         this.state = err?.status === 404 ? 'not-found' : 'error';
@@ -292,8 +295,16 @@ export class PollViewComponent implements OnInit, OnDestroy {
   }
 
   get guestEmailError(): string {
-    if (!this.needsGuestEmail || !this.guestEmail.trim()) return '';
-    return this.guestEmailValid ? '' : 'That doesn\'t look like an email address.';
+    if (!this.needsGuestEmail) return '';
+    // Nagging while someone is halfway through typing is noise; complain once
+    // they've moved on, or once they've typed something clearly wrong.
+    if (!this.guestEmailTouched) return '';
+    if (!this.guestEmail.trim()) return 'Enter your email so you can be told the time.';
+    return this.guestEmailValid ? '' : "That doesn't look like an email address.";
+  }
+
+  onGuestEmailBlur(): void {
+    this.guestEmailTouched = true;
   }
 
   /** Guests send what they typed; the server reads an authed caller's token. */
@@ -321,19 +332,38 @@ export class PollViewComponent implements OnInit, OnDestroy {
   }
 
   // ── Tabs ───────────────────────────────────────────────────────────
+  /**
+   * The creator opening their own share link is still the creator. This page
+   * is reachable from "Open form" on the dashboard, so without an Admin tab
+   * here the settings and invites appear to vanish depending on which link
+   * you happened to click.
+   */
+  get isCreator(): boolean {
+    const me = this.cognito.currentUser?.email;
+    return !!me && !!this.poll && me === this.poll.creatorEmail;
+  }
+
   /** Results and Analytics only exist once they're allowed to be seen. */
   get availableTabs(): RespondentTab[] {
     const tabs: RespondentTab[] = ['response'];
-    if (this.showResults) {
+    // A creator always sees results on their own form, gate or no gate.
+    if (this.showResults || this.isCreator) {
       tabs.push('results');
       if (!this.isQa) tabs.push('analytics');
     }
+    if (this.isCreator) tabs.push('admin');
     return tabs;
   }
 
   tabLabel(tab: RespondentTab): string {
     if (tab === 'response') return 'Your response';
-    return tab === 'results' ? 'Live results' : 'Analytics';
+    if (tab === 'results') return 'Live results';
+    return tab === 'analytics' ? 'Analytics' : 'Admin';
+  }
+
+  /** Keep the local copy in step after a settings or finalize change. */
+  onPollUpdated(poll: Poll): void {
+    this.poll = poll;
   }
 
   setTab(tab: RespondentTab): void {
@@ -372,6 +402,22 @@ export class PollViewComponent implements OnInit, OnDestroy {
   }
 
   private startResultsPolling(): void {
+    // A creator reads their own results through the authed route: the public
+    // one is gated by resultsVisibility, which would lock them out of their
+    // own form when it's set to hidden.
+    if (this.isCreator) {
+      this.resultsSub = this.isQa
+        ? this.resultsService.pollFormForCreator(this.pollId).subscribe({
+            next: (r) => (this.formResult = r),
+            error: () => {},
+          })
+        : this.resultsService.pollForCreator(this.pollId).subscribe({
+            next: (r) => (this.results = r),
+            error: () => {},
+          });
+      return;
+    }
+
     const identity = this.resultsIdentity();
     if (this.isQa) {
       this.resultsSub = this.resultsService.pollFormPublic(this.pollId, identity).subscribe({

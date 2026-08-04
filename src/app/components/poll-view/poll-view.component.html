@@ -26,6 +26,10 @@
     <h1>{{ poll.title }}</h1>
     <p class="description" *ngIf="poll.description">{{ poll.description }}</p>
 
+    <p class="creator-note" *ngIf="isCreator" role="status">
+      You created this form — this is what respondents see.
+    </p>
+
     <p class="saved-banner" *ngIf="justSaved" role="status">
       Your response has been saved.
     </p>
@@ -89,6 +93,8 @@
           autocomplete="email"
           inputmode="email"
           [attr.aria-invalid]="guestEmailError ? 'true' : null"
+          [class.input-invalid]="guestEmailError"
+          (blur)="onGuestEmailBlur()"
         />
         <p class="field-hint">
           So the organizer can tell you the time once it's picked. Not shown to other
@@ -152,6 +158,15 @@
       <ng-template #schedulerResults>
         <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
       </ng-template>
+    </section>
+
+    <!-- Admin: creator-only, same panel as the form's own page -->
+    <section class="tab-panel" *ngIf="tab === 'admin'">
+      <app-admin-panel
+        [poll]="poll"
+        [results]="results"
+        (pollChange)="onPollUpdated($event)"
+      ></app-admin-panel>
     </section>
 
     <!-- Analytics -->
