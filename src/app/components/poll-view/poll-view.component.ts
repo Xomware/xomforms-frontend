@@ -161,6 +161,9 @@ export class PollViewComponent implements OnInit, OnDestroy {
       // Now that a response exists, an after_response form will let them
       // through the gate.
       if (this.resultsVisibility !== 'hidden') {
+        // Submitting is what unlocks an after_response form, so start polling
+        // immediately -- the first tick fires straight away.
+        this.resultsSub?.unsubscribe();
         this.startResultsPolling();
       }
     };

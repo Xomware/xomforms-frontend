@@ -187,6 +187,11 @@ export class FormResultsComponent implements OnInit, OnDestroy {
     const done = () => {
       this.savingPicks = false;
       this.picksSaved = true;
+      // Pull results immediately instead of leaving the other tabs stale until
+      // the next poll tick. Saving your own availability CHANGES the results,
+      // so switching to them and seeing your answer missing reads as a bug --
+      // which is exactly what a 12-second wait looks like.
+      this.refreshResultsNow();
     };
     const fail = (err: unknown) => {
       this.savingPicks = false;
@@ -202,6 +207,31 @@ export class FormResultsComponent implements OnInit, OnDestroy {
     this.responsesService
       .submit(this.pollId, name, this.myBlocks)
       .subscribe({ next: done, error: fail });
+  }
+
+  /** One-shot refetch, separate from the interval subscription. */
+  private refreshResultsNow(): void {
+    if (this.isQa) {
+      this.resultsService.getFormForCreator(this.pollId).subscribe({
+        next: (result) => {
+          this.resultsError = '';
+          this.formResult = result;
+        },
+        error: () => {
+          /* the interval poll will catch up -- don't surface a second error */
+        },
+      });
+      return;
+    }
+    this.resultsService.getForCreator(this.pollId).subscribe({
+      next: (result) => {
+        this.resultsError = '';
+        this.results = result;
+      },
+      error: () => {
+        /* the interval poll will catch up */
+      },
+    });
   }
 
   // ── Analytics ──────────────────────────────────────────────────────
