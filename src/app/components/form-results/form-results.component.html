@@ -37,28 +37,72 @@
       <p class="results-desc" *ngIf="poll.description">{{ poll.description }}</p>
     </header>
 
-    <!-- Two jobs, two tabs: reading the answers vs running the form. -->
-    <div class="form-tabs" role="tablist" aria-label="Form sections">
+    <nav class="form-tabs" role="tablist" aria-label="Form sections">
       <button
-        type="button"
-        class="form-tab"
-        role="tab"
+        type="button" class="form-tab" role="tab"
+        [class.form-tab--active]="tab === 'picks'"
+        [attr.aria-selected]="tab === 'picks'"
+        (click)="tab = 'picks'"
+      >My picks</button>
+      <button
+        type="button" class="form-tab" role="tab"
         [class.form-tab--active]="tab === 'results'"
         [attr.aria-selected]="tab === 'results'"
         (click)="tab = 'results'"
-      >Results</button>
+      >Live results</button>
       <button
-        type="button"
-        class="form-tab"
-        role="tab"
+        *ngIf="!isQa"
+        type="button" class="form-tab" role="tab"
+        [class.form-tab--active]="tab === 'analytics'"
+        [attr.aria-selected]="tab === 'analytics'"
+        (click)="tab = 'analytics'"
+      >Analytics</button>
+      <button
+        type="button" class="form-tab" role="tab"
         [class.form-tab--active]="tab === 'admin'"
         [attr.aria-selected]="tab === 'admin'"
         (click)="tab = 'admin'"
       >Admin</button>
-    </div>
+    </nav>
 
-    <section class="live-section" *ngIf="tab === 'results'" aria-label="Live results">
-      <h2>Live results</h2>
+    <!-- My picks: the creator answers their own form in place, rather than
+         following a link out to the public respond page and back. -->
+    <section class="tab-panel" *ngIf="tab === 'picks'">
+      <div class="picks-bar">
+        <label class="picks-name">
+          <span>Your name</span>
+          <input type="text" [(ngModel)]="displayName" placeholder="Your name" />
+        </label>
+        <div class="picks-actions">
+          <span class="picks-saved" *ngIf="picksSaved">Saved</span>
+          <button
+            type="button"
+            class="picks-save"
+            [disabled]="!canSavePicks"
+            (click)="savePicks()"
+          >{{ savingPicks ? 'Saving…' : 'Save my availability' }}</button>
+        </div>
+      </div>
+      <p class="picks-error" *ngIf="picksError" role="alert">{{ picksError }}</p>
+      <p class="picks-closed" *ngIf="status === 'closed'">
+        This form is closed, so responses can no longer be changed.
+      </p>
+
+      <app-availability-grid
+        *ngIf="!isQa"
+        [blocks]="grid"
+        [initialSelected]="myBlocks"
+        [timeFilterIds]="$any(poll).quickFilters"
+        [readOnly]="status === 'closed'"
+        (selectionChange)="onPicksChange($event)"
+      ></app-availability-grid>
+
+      <p class="picks-qa-note" *ngIf="isQa">
+        Open the form to answer its questions.
+      </p>
+    </section>
+
+    <section class="tab-panel" *ngIf="tab === 'results'" aria-label="Live results">
       <p class="results-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>
       <app-qa-results *ngIf="isQa; else schedulerResults" [result]="formResult"></app-qa-results>
       <ng-template #schedulerResults>
@@ -66,10 +110,49 @@
       </ng-template>
     </section>
 
-    <app-admin-panel
-      *ngIf="tab === 'admin'"
-      [poll]="poll"
-      (pollChange)="onPollUpdated($event)"
-    ></app-admin-panel>
+    <section class="tab-panel" *ngIf="tab === 'analytics'" aria-label="Analytics">
+      <p class="analytics-empty" *ngIf="!hasAnalytics">
+        Analytics appear once people start responding.
+      </p>
+
+      <ng-container *ngIf="hasAnalytics">
+        <div class="stat-grid">
+          <div class="stat">
+            <span class="stat__value">{{ respondentCount }}</span>
+            <span class="stat__label">Respondents</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ bestTurnoutPercent }}%</span>
+            <span class="stat__label">Best turnout</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ unanimousCount }}</span>
+            <span class="stat__label">Times everyone is free</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ deadSlotPercent }}%</span>
+            <span class="stat__label">Times nobody can make</span>
+          </div>
+        </div>
+
+        <h3 class="analytics-subtitle">Best turnout by day</h3>
+        <ul class="day-bars">
+          <li *ngFor="let day of dayBreakdown" class="day-bar">
+            <span class="day-bar__label">{{ day.label }}</span>
+            <span class="day-bar__track">
+              <span
+                class="day-bar__fill"
+                [style.width.%]="respondentCount ? (day.best / respondentCount) * 100 : 0"
+              ></span>
+            </span>
+            <span class="day-bar__count">{{ day.best }}/{{ respondentCount }}</span>
+          </li>
+        </ul>
+      </ng-container>
+    </section>
+
+    <section class="tab-panel" *ngIf="tab === 'admin'">
+      <app-admin-panel [poll]="poll" (pollChange)="onPollUpdated($event)"></app-admin-panel>
+    </section>
   </ng-container>
 </div>
