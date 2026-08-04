@@ -93,6 +93,29 @@
     </label>
 
     <div class="setting">
+      <span class="setting__label">Instructions for respondents</span>
+      <span class="setting__hint">
+        Shown above the grid and included in invite emails. Say <em>how</em> to answer —
+        the event length and start range are filled in automatically.
+      </span>
+      <textarea
+        class="instructions-input"
+        rows="2"
+        [(ngModel)]="instructionsDraft"
+        placeholder="e.g. Only pick slots you can commit to for the whole season."
+        aria-label="Instructions for respondents"
+      ></textarea>
+      <div class="instructions-actions">
+        <button
+          type="button"
+          class="admin-btn"
+          [disabled]="!instructionsDirty || savingSetting === 'instructions'"
+          (click)="saveInstructions()"
+        >{{ savingSetting === 'instructions' ? 'Saving…' : 'Save note' }}</button>
+      </div>
+    </div>
+
+    <div class="setting">
       <span class="setting__label">Quick filters respondents can use</span>
       <span class="setting__hint">
         Shortcut pills on the grid. They combine — Weekdays plus After 5 PM selects weekday

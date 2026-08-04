@@ -131,6 +131,35 @@ describe('AdminPanelComponent', () => {
     expect(component.settingsError).toContain('creator');
   });
 
+  // ── Instructions ──────────────────────────────────────────────────
+  it('seeds the draft from the saved note', () => {
+    component.poll = { ...POLL, instructions: 'Season commitment only.' };
+    component.ngOnInit();
+    expect(component.instructionsDraft).toBe('Season commitment only.');
+    expect(component.instructionsDirty).toBeFalse();
+  });
+
+  it('only offers to save once the note actually changed', () => {
+    component.instructionsDraft = '  ';
+    expect(component.instructionsDirty).toBeFalse();
+    component.instructionsDraft = 'Pick carefully';
+    expect(component.instructionsDirty).toBeTrue();
+  });
+
+  it('saves the trimmed note', () => {
+    polls.update.and.returnValue(of({ ...POLL, instructions: 'Pick carefully' }));
+    component.instructionsDraft = '  Pick carefully  ';
+    component.saveInstructions();
+
+    expect(polls.update).toHaveBeenCalledWith('p1', { instructions: 'Pick carefully' });
+    expect(component.instructionsDraft).toBe('Pick carefully');
+  });
+
+  it('does nothing when the note is unchanged', () => {
+    component.saveInstructions();
+    expect(polls.update).not.toHaveBeenCalled();
+  });
+
   it('builds the public share link', () => {
     expect(component.shareUrl).toContain('/f/p1');
   });

@@ -17,6 +17,7 @@ export interface UpdatePollSettings {
   resultsVisibility?: ResultsVisibility;
   allowResponseEdits?: boolean;
   quickFilters?: string[];
+  instructions?: string;
 }
 
 /**

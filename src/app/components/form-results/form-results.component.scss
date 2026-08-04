@@ -481,3 +481,32 @@
   font-size: 0.95rem;
   line-height: 1.4;
 }
+
+/* The creator's own words -- visually distinct from the derived guidance
+   above it so it doesn't read as boilerplate. */
+.organizer-note {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--xf-border-strong);
+  border-left: 3px solid var(--xf-accent);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface-2);
+}
+
+.organizer-note__label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--xf-text-muted);
+}
+
+.organizer-note__body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--xf-text);
+  white-space: pre-wrap;
+}

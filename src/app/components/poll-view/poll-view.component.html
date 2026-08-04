@@ -61,6 +61,10 @@
 
     <!-- Scheduler: the availability grid (unchanged) -->
     <ng-template #schedulerGrid>
+      <div class="organizer-note" *ngIf="poll?.instructions as organizerNote">
+        <span class="organizer-note__label">A note from the organizer</span>
+        <p class="organizer-note__body">{{ organizerNote }}</p>
+      </div>
       <div class="picking-note" *ngIf="pickingSummary">
         <span class="picking-note__icon" aria-hidden="true">⏱</span>
         <span>{{ pickingSummary }}</span>

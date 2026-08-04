@@ -95,6 +95,11 @@ export interface CreatePollRequest {
   allowResponseEdits?: boolean; // default true
   /** Which quick time filters the respondent grid offers. Empty = defaults. */
   quickFilters?: string[];
+  /**
+   * Free-text note from the creator telling respondents HOW to answer.
+   * Distinct from `description`, which describes the event itself.
+   */
+  instructions?: string | null;
   closeAt?: string | null; // ISO 8601 UTC datetime
   /**
    * Event length in minutes (15-min steps, 15..360). Required for the windowed
@@ -127,6 +132,7 @@ export interface Poll {
   resultsVisibility?: ResultsVisibility;
   allowResponseEdits?: boolean;
   quickFilters?: string[] | null;
+  instructions?: string | null;
   invites?: FormInvite[] | null;
   closeAt?: string | null;
   /** Event length in minutes; may be absent on polls created before this field. */

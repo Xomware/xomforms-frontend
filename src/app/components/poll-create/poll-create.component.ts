@@ -158,6 +158,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(200)]],
       description: ['', [Validators.maxLength(2000)]],
+      instructions: ['', [Validators.maxLength(1000)]],
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
       // Duration + start-range model: the creator sets an event length and the
@@ -358,6 +359,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       title: value.title.trim(),
       description: value.description?.trim() || null,
       formType: 'scheduler',
+      instructions: value.instructions?.trim() || null,
       startDate: value.startDate,
       endDate: value.endDate,
       earliestStartMinute: Number(value.earliestStartMinute),
@@ -397,6 +399,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       title: value.title.trim(),
       description: value.description?.trim() || null,
       formType: 'qa',
+      instructions: value.instructions?.trim() || null,
       fields: this.buildFields(),
       guestAllowed: !!value.guestAllowed,
       showResultsToRespondents: !!value.showResultsToRespondents,
