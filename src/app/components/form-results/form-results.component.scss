@@ -3,7 +3,7 @@
 }
 
 .results-page {
-  max-width: 860px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: clamp(20px, 4vw, 32px) clamp(16px, 4vw, 28px) 64px;
 }
@@ -274,4 +274,187 @@
   background: var(--xf-surface);
   color: var(--xf-primary);
   box-shadow: var(--xf-shadow-sm);
+}
+
+/* ── Tab panels ───────────────────────────────────────────────────── */
+.tab-panel {
+  display: block;
+}
+
+/* ── My picks ─────────────────────────────────────────────────────── */
+.picks-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.picks-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--xf-text-muted);
+
+  input {
+    width: 220px;
+    max-width: 60vw;
+    padding: 9px 12px;
+    border: 1px solid var(--xf-border-strong);
+    border-radius: var(--xf-radius-sm);
+    background: var(--xf-surface);
+    color: var(--xf-text);
+    font-size: 0.9rem;
+    font-family: inherit;
+
+    &:focus-visible {
+      outline: none;
+      border-color: var(--xf-primary);
+      box-shadow: 0 0 0 3px var(--xf-focus-ring);
+    }
+  }
+}
+
+.picks-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.picks-saved {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--xf-primary);
+}
+
+/* Sized like a normal control -- the old full-width slab was the reason the
+   page read as a stack of oversized buttons. */
+.picks-save {
+  padding: 9px 16px;
+  border: 1px solid var(--xf-primary);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-primary);
+  color: var(--xf-on-primary);
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--xf-transition);
+
+  &:hover:not(:disabled) {
+    background: var(--xf-primary-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.picks-error {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: var(--xf-danger-text);
+}
+
+.picks-closed,
+.picks-qa-note,
+.analytics-empty {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px dashed var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface-2);
+  color: var(--xf-text-muted);
+  font-size: 0.85rem;
+}
+
+/* ── Analytics ────────────────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--xf-border);
+  border-radius: var(--xf-radius);
+  background: var(--xf-surface);
+}
+
+.stat__value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--xf-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__label {
+  font-size: 0.78rem;
+  color: var(--xf-text-muted);
+}
+
+.analytics-subtitle {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--xf-text);
+}
+
+.day-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-bar {
+  display: grid;
+  grid-template-columns: 110px 1fr 56px;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--xf-text-muted);
+}
+
+.day-bar__track {
+  height: 10px;
+  border-radius: var(--xf-radius-pill);
+  background: var(--xf-surface-3);
+  overflow: hidden;
+}
+
+.day-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--xf-radius-pill);
+  background: var(--xf-primary);
+  transition: width var(--xf-transition);
+}
+
+.day-bar__count {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .day-bar {
+    grid-template-columns: 88px 1fr 48px;
+    gap: 8px;
+  }
 }

@@ -4,9 +4,7 @@ import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
-import { ResultsService } from '../../services/results.service';
 import { CreatePollRequest, FieldType, FormField, GridBlock, Poll } from '../../models/poll.model';
-import { FormResult, OverlapResult } from '../../models/response.model';
 import {
   EndTimeSummary,
   eventEndSummary,
@@ -150,18 +148,10 @@ export class PollCreateComponent implements OnInit, OnDestroy {
 
   submitting = false;
   errorMessage = '';
-  createdPoll: Poll | null = null;
-  results: OverlapResult | null = null;
-  formResult: FormResult | null = null;
-  resultsError = '';
-  addOwnAvailability = false;
-
-  private resultsSub?: Subscription;
 
   constructor(
     private fb: FormBuilder,
     private pollsService: PollsService,
-    private resultsService: ResultsService,
     private location: Location,
     private router: Router,
   ) {
@@ -185,7 +175,6 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       // shared openly; requiring an account is the exception.
       guestAllowed: [true],
       showResultsToRespondents: [false],
-      addOwnAvailability: [false],
       // closeAt is split into a date + a time-of-day so both halves can use the
       // styled pickers. Recombined into one ISO instant at submit; a blank date
       // means "never closes", whatever the time says.
@@ -211,7 +200,6 @@ export class PollCreateComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.resultsSub?.unsubscribe();
     this.valueSub?.unsubscribe();
     this.granularitySub?.unsubscribe();
   }
@@ -341,27 +329,6 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched);
   }
 
-  get shareUrl(): string {
-    if (!this.createdPoll) return '';
-    return `${window.location.origin}/f/${this.createdPoll.pollId}`;
-  }
-
-  /** The respond page for the creator to add their own availability. */
-  get respondUrl(): string {
-    return this.createdPoll ? `/f/${this.createdPoll.pollId}` : '';
-  }
-
-  get createdIsQa(): boolean {
-    return this.createdPoll?.formType === 'qa';
-  }
-
-  copyShareLink(): void {
-    if (!this.shareUrl) return;
-    navigator.clipboard?.writeText(this.shareUrl).catch(() => {
-      /* clipboard access denied -- non-fatal, the link is still visible/selectable */
-    });
-  }
-
   // ── Submit ────────────────────────────────────────────────────────
   onSubmit(): void {
     if (this.submitting) return;
@@ -385,7 +352,6 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     const value = this.form.value;
-    this.addOwnAvailability = !!value.addOwnAvailability;
     // Send the start-range shape; the backend derives + persists the grid
     // window (dayStart = earliest, dayEnd = latest + duration, granularity = 15).
     const req: CreatePollRequest = {
@@ -408,9 +374,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     this.pollsService.create(req).subscribe({
       next: (poll) => {
         this.submitting = false;
-        this.createdPoll = poll;
-        this.adoptCreatedUrl(poll.pollId);
-        this.startSchedulerResultsPolling(poll.pollId);
+        this.goToCreatedForm(poll);
       },
       error: (err) => {
         this.submitting = false;
@@ -442,9 +406,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     this.pollsService.create(req).subscribe({
       next: (poll) => {
         this.submitting = false;
-        this.createdPoll = poll;
-        this.adoptCreatedUrl(poll.pollId);
-        this.startFormResultsPolling(poll.pollId);
+        this.goToCreatedForm(poll);
       },
       error: (err) => {
         this.submitting = false;
@@ -478,54 +440,19 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     });
   }
 
-  private startSchedulerResultsPolling(pollId: string): void {
-    this.resultsSub = this.resultsService.pollForCreator(pollId).subscribe({
-      next: (result) => {
-        this.resultsError = '';
-        this.results = result;
-      },
-      error: (err) => {
-        this.resultsError = this.friendlyError(err);
-      },
-    });
-  }
-
-  private startFormResultsPolling(pollId: string): void {
-    this.resultsSub = this.resultsService.pollFormForCreator(pollId).subscribe({
-      next: (result) => {
-        this.resultsError = '';
-        this.formResult = result;
-      },
-      error: (err) => {
-        this.resultsError = this.friendlyError(err);
-      },
-    });
-  }
-
   /**
-   * Give the newly created form its own URL.
+   * Hand off to the form's own page as soon as it exists.
    *
-   * The page used to sit on /forms/new after creating, so the address bar still
-   * read "new" for a form that already existed, and a refresh or a shared tab
-   * dumped you back into an empty builder. replaceState (rather than navigate)
-   * swaps the URL without tearing down this component, so the "form created +
-   * share link + live results" view survives; a reload then lands on the real
-   * results page for that id.
+   * There used to be a bespoke "Poll created" screen here with its own share
+   * box, an "add your availability" link out to the public page, and a copy of
+   * the results. All three already live on /forms/<id> -- as the Admin tab, the
+   * My picks tab, and Live results -- so the extra screen was a narrow,
+   * duplicated version of a page we already have. Navigating straight there
+   * also means the URL, the title, and the tabs are correct from the first
+   * frame.
    */
-  private adoptCreatedUrl(pollId: string): void {
-    this.location.replaceState(`/forms/${pollId}`);
-  }
-
-  /**
-   * Send the creator to the form's own page after creating it.
-   *
-   * replaceState alone left this component rendering its inline "created"
-   * view under a /forms/<id> URL -- so the address bar was right but the
-   * Results/Admin tabs (share link, invites, settings) were nowhere to be
-   * seen. Navigating properly lands on the real page instead.
-   */
-  goToForm(): void {
-    if (this.createdPoll) this.router.navigate(['/forms', this.createdPoll.pollId]);
+  private goToCreatedForm(poll: Poll): void {
+    this.router.navigate(['/forms', poll.pollId]);
   }
 
   private genId(prefix: string): string {

@@ -1,4 +1,4 @@
-<ng-container *ngIf="!createdPoll; else createdView">
+<ng-container>
   <!-- ── Starter picker ─────────────────────────────────────────────── -->
   <div class="starter-page" *ngIf="mode === 'picker'">
     <a routerLink="/dashboard" class="back-link">← My Forms</a>
@@ -192,13 +192,6 @@
         </label>
       </div>
 
-      <div class="field checkbox-field">
-        <label>
-          <input type="checkbox" formControlName="addOwnAvailability" />
-          Add my own availability after creating
-        </label>
-      </div>
-
       <div class="field">
         <label for="closeAtDate">Close responses at <span class="optional">(optional)</span></label>
         <div class="field-row">
@@ -388,30 +381,3 @@
     </form>
   </div>
 </ng-container>
-
-<ng-template #createdView>
-  <div class="poll-created-page">
-    <a routerLink="/dashboard" class="back-link">← My Forms</a>
-    <h1>{{ createdIsQa ? 'Form created' : 'Poll created' }}</h1>
-    <p class="share-label">Share this link — <strong>anyone with the link can respond</strong>:</p>
-    <div class="share-row">
-      <input type="text" [value]="shareUrl" readonly (click)="$any($event.target).select()" />
-      <button type="button" (click)="copyShareLink()">Copy</button>
-    </div>
-
-    <a *ngIf="addOwnAvailability && !createdIsQa" [routerLink]="respondUrl" class="add-availability-cta">
-      Add your availability →
-    </a>
-
-    <button type="button" class="manage-cta" (click)="goToForm()">
-      Manage this form — invites, settings, results →
-    </button>
-
-    <h2>Live results</h2>
-    <p class="form-error" *ngIf="resultsError" role="alert">{{ resultsError }}</p>
-    <app-qa-results *ngIf="createdIsQa; else schedulerResults" [result]="formResult"></app-qa-results>
-    <ng-template #schedulerResults>
-      <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
-    </ng-template>
-  </div>
-</ng-template>
