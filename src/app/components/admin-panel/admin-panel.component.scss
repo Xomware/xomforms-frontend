@@ -326,3 +326,32 @@
   background: var(--xf-purple-100);
   color: var(--xf-primary);
 }
+
+.instructions-input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface);
+  color: var(--xf-text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  resize: vertical;
+
+  &::placeholder {
+    color: var(--xf-text-faint);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+}
+
+.instructions-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

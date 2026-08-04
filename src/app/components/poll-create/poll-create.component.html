@@ -51,6 +51,22 @@
         <textarea id="description" formControlName="description" rows="3"></textarea>
       </div>
 
+      <div class="field">
+        <label for="schedInstructions">
+          Instructions for respondents <span class="optional">(optional)</span>
+        </label>
+        <textarea
+          id="schedInstructions"
+          formControlName="instructions"
+          rows="2"
+          placeholder="e.g. Only pick slots you can commit to for the whole season."
+        ></textarea>
+        <p class="field-hint">
+          Shown above the grid and included in invite emails. Use it to say <em>how</em> to
+          answer — the event details are filled in automatically.
+        </p>
+      </div>
+
       <div class="field-row">
         <div class="field">
           <label for="startDate">Start date</label>
@@ -232,6 +248,22 @@
       <div class="field">
         <label for="qaDescription">Description <span class="optional">(optional)</span></label>
         <textarea id="qaDescription" formControlName="description" rows="2"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="qaInstructions">
+          Instructions for respondents <span class="optional">(optional)</span>
+        </label>
+        <textarea
+          id="qaInstructions"
+          formControlName="instructions"
+          rows="2"
+          placeholder="e.g. Only pick slots you can commit to for the whole season."
+        ></textarea>
+        <p class="field-hint">
+          Shown above the grid and included in invite emails. Use it to say <em>how</em> to
+          answer — the event details are filled in automatically.
+        </p>
       </div>
 
       <!-- Field list -->

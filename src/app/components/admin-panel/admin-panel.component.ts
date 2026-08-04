@@ -67,6 +67,8 @@ export class AdminPanelComponent implements OnInit {
   // ── Settings ───────────────────────────────────────────────────────
   savingSetting = '';
   settingsError = '';
+  /** Local draft so typing doesn't fire a save on every keystroke. */
+  instructionsDraft = '';
 
   constructor(
     private invitesService: InvitesService,
@@ -74,7 +76,17 @@ export class AdminPanelComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.instructionsDraft = this.poll.instructions ?? '';
     this.loadInvites();
+  }
+
+  get instructionsDirty(): boolean {
+    return this.instructionsDraft.trim() !== (this.poll.instructions ?? '').trim();
+  }
+
+  saveInstructions(): void {
+    if (!this.instructionsDirty) return;
+    this.save({ instructions: this.instructionsDraft.trim() }, 'instructions');
   }
 
   // ── Share link ─────────────────────────────────────────────────────
@@ -207,6 +219,7 @@ export class AdminPanelComponent implements OnInit {
         // Take the server's copy rather than patching locally, so the legacy
         // showResultsToRespondents mirror stays consistent here too.
         this.poll = updated;
+        this.instructionsDraft = updated.instructions ?? '';
         this.pollChange.emit(updated);
       },
       error: (err) => {
