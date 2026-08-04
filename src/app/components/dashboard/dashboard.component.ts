@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { Observable, forkJoin, of } from 'rxjs';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Observable, Subscription, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { PollsService } from '../../services/polls.service';
 import { ResponsesService } from '../../services/responses.service';
@@ -38,7 +39,7 @@ interface FormRow {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   state: LoadState = 'loading';
   rows: FormRow[] = [];
 
@@ -49,6 +50,7 @@ export class DashboardComponent implements OnInit {
 
   /** Set when signing in just linked guest responses to this account. */
   claimNotice = '';
+  private tabSub?: Subscription;
 
   search = '';
   statusFilter: 'all' | PollStatus = 'all';
@@ -71,9 +73,16 @@ export class DashboardComponent implements OnInit {
   constructor(
     private pollsService: PollsService,
     private responsesService: ResponsesService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
+    // ?tab= makes each half of My Forms linkable, so the header can point at
+    // them directly instead of always dropping you on "created".
+    this.tabSub = this.route.queryParamMap.subscribe((params) => {
+      const tab = params.get('tab');
+      this.sourceTab = tab === 'responded' ? 'responded' : 'created';
+    });
     this.load();
     this.loadResponded();
     this.claimGuestResponses();
@@ -113,6 +122,10 @@ export class DashboardComponent implements OnInit {
 
   dismissClaimNotice(): void {
     this.claimNotice = '';
+  }
+
+  ngOnDestroy(): void {
+    this.tabSub?.unsubscribe();
   }
 
   loadResponded(): void {

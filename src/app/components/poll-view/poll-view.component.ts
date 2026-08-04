@@ -16,7 +16,7 @@ import {
   isQaPoll,
 } from '../../models/poll.model';
 import { AnswerValue, FormResult, OverlapResult } from '../../models/response.model';
-import { generateGrid, PollGridConfig } from '../../models/grid.util';
+import { generateGrid, PollGridConfig, startRangeSummary } from '../../models/grid.util';
 
 type ViewState = 'loading' | 'not-found' | 'closed' | 'needs-signin' | 'ready' | 'submitted' | 'error';
 
@@ -192,6 +192,11 @@ export class PollViewComponent implements OnInit, OnDestroy {
   }
 
   /** Why results aren't shown, when they aren't. */
+  /** What the respondent is actually choosing, in plain language. */
+  get pickingSummary(): string | null {
+    return this.poll ? startRangeSummary(this.poll) : null;
+  }
+
   get resultsGateMessage(): string {
     if (this.resultsVisibility === 'hidden') {
       return 'The organizer has kept results private.';

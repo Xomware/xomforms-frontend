@@ -6,7 +6,7 @@ import { ResultsService } from '../../services/results.service';
 import { ResponsesService } from '../../services/responses.service';
 import { GridBlock, Poll, PollStatus, derivePollStatus, isQaPoll } from '../../models/poll.model';
 import { AnswerValue, FormResult, OverlapResult } from '../../models/response.model';
-import { generateGrid } from '../../models/grid.util';
+import { generateGrid, startRangeSummary } from '../../models/grid.util';
 
 /** Sections of a form, for its creator. */
 export type FormTab = 'picks' | 'results' | 'analytics' | 'admin';
@@ -157,6 +157,11 @@ export class FormResultsComponent implements OnInit, OnDestroy {
         /* no prior answer -- start blank */
       },
     });
+  }
+
+  /** What the respondent is actually choosing, in plain language. */
+  get pickingSummary(): string | null {
+    return this.poll ? startRangeSummary(this.poll) : null;
   }
 
   onPicksChange(blocks: string[]): void {

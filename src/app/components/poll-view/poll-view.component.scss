@@ -267,3 +267,26 @@ input[type='text'] {
   background: var(--xf-surface-2);
   color: var(--xf-text-muted);
 }
+
+/* Explains that the grid is START times, not the hours the event covers --
+   without it people paint every hour they're free instead. */
+.picking-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--xf-border-strong);
+  border-left: 3px solid var(--xf-primary);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface-2);
+  color: var(--xf-text);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.picking-note__icon {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
