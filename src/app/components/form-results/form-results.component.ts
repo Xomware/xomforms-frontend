@@ -14,6 +14,15 @@ import {
 } from '../../models/poll.model';
 import { AnswerValue, FormResult, OverlapResult } from '../../models/response.model';
 import { generateGrid, startRangeSummary } from '../../models/grid.util';
+import {
+  DayTurnout,
+  bestTurnoutPercent,
+  dayTurnout,
+  deadSlotPercent,
+  hasAnalytics,
+  respondentCount,
+  unanimousCount,
+} from '../../models/analytics.util';
 
 /** Sections of a form, for its creator. */
 export type FormTab = 'picks' | 'results' | 'analytics' | 'admin';
@@ -257,57 +266,29 @@ export class FormResultsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Analytics ──────────────────────────────────────────────────────
+  // ── Analytics (shared with the respondent view) ────────────────────
   get hasAnalytics(): boolean {
-    return !this.isQa && !!this.results && this.results.totalRespondents > 0;
+    return !this.isQa && hasAnalytics(this.results);
   }
 
   get respondentCount(): number {
-    return this.results?.totalRespondents ?? 0;
+    return respondentCount(this.results);
   }
 
-  /** Blocks where everyone is free -- the unambiguous wins. */
   get unanimousCount(): number {
-    const total = this.respondentCount;
-    if (!total || !this.results) return 0;
-    return this.results.blocks.filter((b) => b.count === total).length;
+    return unanimousCount(this.results);
   }
 
-  /** Share of offered start times that nobody at all can make. */
   get deadSlotPercent(): number {
-    const blocks = this.results?.blocks ?? [];
-    if (!blocks.length) return 0;
-    const dead = blocks.filter((b) => b.count === 0).length;
-    return Math.round((dead / blocks.length) * 100);
+    return deadSlotPercent(this.results);
   }
 
-  /** Best headcount for a start time, as a fraction of everyone who answered. */
   get bestTurnoutPercent(): number {
-    const total = this.respondentCount;
-    if (!total || !this.results) return 0;
-    const best = this.results.bestWindowCount ?? Math.max(...this.results.blocks.map((b) => b.count), 0);
-    return Math.round((best / total) * 100);
+    return bestTurnoutPercent(this.results);
   }
 
-  /** Per-day availability, so a creator can see which days are worth keeping. */
-  get dayBreakdown(): { date: string; label: string; best: number }[] {
-    const blocks = this.results?.blocks ?? [];
-    const byDay = new Map<string, number>();
-    for (const block of blocks) {
-      const date = block.blockId.split('T')[0];
-      byDay.set(date, Math.max(byDay.get(date) ?? 0, block.count));
-    }
-    return Array.from(byDay.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([date, best]) => ({
-        date,
-        label: new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-        }),
-        best,
-      }));
+  get dayBreakdown(): DayTurnout[] {
+    return dayTurnout(this.results);
   }
 
   private startResultsPolling(): void {

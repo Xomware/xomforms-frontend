@@ -18,8 +18,20 @@ import {
 } from '../../models/poll.model';
 import { AnswerValue, FormResult, OverlapResult } from '../../models/response.model';
 import { generateGrid, PollGridConfig, startRangeSummary } from '../../models/grid.util';
+import {
+  DayTurnout,
+  bestTurnoutPercent,
+  dayTurnout,
+  deadSlotPercent,
+  hasAnalytics,
+  respondentCount,
+  unanimousCount,
+} from '../../models/analytics.util';
 
-type ViewState = 'loading' | 'not-found' | 'closed' | 'needs-signin' | 'ready' | 'submitted' | 'error';
+type ViewState = 'loading' | 'not-found' | 'closed' | 'needs-signin' | 'ready' | 'error';
+
+/** Sections a respondent gets. Mirrors the creator's, minus Admin. */
+export type RespondentTab = 'response' | 'results' | 'analytics';
 
 /**
  * Respondent landing: guest name entry (when guestAllowed) or authed
@@ -50,6 +62,15 @@ export class PollViewComponent implements OnInit, OnDestroy {
   hasResponded = false;
   /** Their existing answer, when editing rather than answering fresh. */
   editingExisting = false;
+
+  /**
+   * Responding used to be a dead end -- a "thanks" screen with no way back to
+   * your own answer. These are the same sections the creator gets, minus the
+   * creator-only Admin tab.
+   */
+  tab: RespondentTab = 'response';
+  /** Shows the success banner without stranding them on a terminal screen. */
+  justSaved = false;
   formResult: FormResult | null = null;
   private resultsSub?: Subscription;
 
@@ -157,7 +178,11 @@ export class PollViewComponent implements OnInit, OnDestroy {
 
     const onSuccess = () => {
       this.submitting = false;
-      this.state = 'submitted';
+      // Stay on the form rather than swapping to a terminal screen, so the
+      // response remains visible and editable.
+      this.state = 'ready';
+      this.justSaved = true;
+      this.editingExisting = true;
       this.hasResponded = true;
       // Now that a response exists, an after_response form will let them
       // through the gate.
@@ -166,6 +191,9 @@ export class PollViewComponent implements OnInit, OnDestroy {
         // immediately -- the first tick fires straight away.
         this.resultsSub?.unsubscribe();
         this.startResultsPolling();
+        // Answering is usually asked in order to SEE the answers, so land
+        // them there rather than back on a form they just completed.
+        this.tab = 'results';
       }
     };
     const onError = (err: unknown) => {
@@ -264,6 +292,57 @@ export class PollViewComponent implements OnInit, OnDestroy {
         /* no prior answer, or the lookup failed -- fall through to a blank form */
       },
     });
+  }
+
+  // ── Tabs ───────────────────────────────────────────────────────────
+  /** Results and Analytics only exist once they're allowed to be seen. */
+  get availableTabs(): RespondentTab[] {
+    const tabs: RespondentTab[] = ['response'];
+    if (this.showResults) {
+      tabs.push('results');
+      if (!this.isQa) tabs.push('analytics');
+    }
+    return tabs;
+  }
+
+  tabLabel(tab: RespondentTab): string {
+    if (tab === 'response') return 'Your response';
+    return tab === 'results' ? 'Live results' : 'Analytics';
+  }
+
+  setTab(tab: RespondentTab): void {
+    this.tab = tab;
+    this.justSaved = false;
+  }
+
+  /** A guest has answered but has nowhere for it to live yet. */
+  get canSaveToProfile(): boolean {
+    return !this.cognito.isAuthenticated() && this.hasResponded;
+  }
+
+  // ── Analytics (same numbers the creator sees) ──────────────────────
+  get hasAnalytics(): boolean {
+    return !this.isQa && hasAnalytics(this.results);
+  }
+
+  get respondentCount(): number {
+    return respondentCount(this.results);
+  }
+
+  get unanimousCount(): number {
+    return unanimousCount(this.results);
+  }
+
+  get deadSlotPercent(): number {
+    return deadSlotPercent(this.results);
+  }
+
+  get bestTurnoutPercent(): number {
+    return bestTurnoutPercent(this.results);
+  }
+
+  get dayBreakdown(): DayTurnout[] {
+    return dayTurnout(this.results);
   }
 
   private startResultsPolling(): void {

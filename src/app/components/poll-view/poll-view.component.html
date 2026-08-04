@@ -26,6 +26,41 @@
     <h1>{{ poll.title }}</h1>
     <p class="description" *ngIf="poll.description">{{ poll.description }}</p>
 
+    <p class="saved-banner" *ngIf="justSaved" role="status">
+      Your response has been saved.
+    </p>
+
+    <nav class="resp-tabs" role="tablist" aria-label="Form sections" *ngIf="availableTabs.length > 1">
+      <button
+        *ngFor="let t of availableTabs"
+        type="button"
+        class="resp-tab"
+        role="tab"
+        [class.resp-tab--active]="tab === t"
+        [attr.aria-selected]="tab === t"
+        (click)="setTab(t)"
+      >{{ tabLabel(t) }}</button>
+    </nav>
+
+    <!-- Guests have answered but have nowhere for it to live yet. -->
+    <div class="save-profile" *ngIf="canSaveToProfile">
+      <span>
+        Answering as a guest. <strong>Sign in</strong> to keep this in My Forms and edit it from
+        any device.
+      </span>
+      <a [href]="signInUrl" class="save-profile__cta">Save to my account</a>
+    </div>
+
+    <ng-container *ngIf="tab === 'response'">
+    <p class="editing-banner" *ngIf="editingExisting && canEditResponse && !justSaved" role="status">
+      You've already answered this form — your previous response is filled in below. Saving
+      again replaces it.
+    </p>
+
+    <p class="editing-banner editing-banner--locked" *ngIf="editingExisting && !canEditResponse" role="status">
+      You've already answered this form, and the organizer has turned off edits.
+    </p>
+
     <!-- Signed in: show identity clearly, name is just the label on results -->
     <div class="identity identity--authed" *ngIf="cognito.isAuthenticated()">
       <p class="identity__badge">
@@ -90,35 +125,62 @@
     <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
 
     <button type="button" class="submit-btn" [disabled]="!canSubmit()" (click)="onSubmit()">
-      {{ submitting ? 'Submitting…' : (isQa ? 'Submit response' : 'Submit availability') }}
+      {{ submitting ? 'Saving…' : (editingExisting ? 'Update my response' : (isQa ? 'Submit response' : 'Submit availability')) }}
     </button>
-  </div>
+    </ng-container>
 
-  <p class="editing-banner" *ngIf="state === 'ready' && editingExisting && canEditResponse" role="status">
-    You've already answered this form — your previous response is filled in below. Submitting
-    again replaces it.
-  </p>
-
-  <p class="editing-banner editing-banner--locked" *ngIf="state === 'ready' && editingExisting && !canEditResponse" role="status">
-    You've already answered this form, and the organizer has turned off edits.
-  </p>
-
-  <div class="submitted-view" *ngIf="state === 'submitted'">
-    <h1>Thanks{{ displayName ? ', ' + displayName : '' }}!</h1>
-    <p>Your response has been recorded.</p>
-
-    <p class="edit-hint" *ngIf="canEditResponse">
-      Changed your mind? Reopen this link any time to update your answer.
-    </p>
-
-    <ng-container *ngIf="showResults">
-      <h2>Live results</h2>
+    <!-- Results -->
+    <section class="tab-panel" *ngIf="tab === 'results'">
       <app-qa-results *ngIf="isQa; else schedulerResults" [result]="formResult"></app-qa-results>
       <ng-template #schedulerResults>
         <app-overlap-heatmap [result]="results"></app-overlap-heatmap>
       </ng-template>
-    </ng-container>
+    </section>
 
-    <p class="results-gate" *ngIf="!showResults">{{ resultsGateMessage }}</p>
+    <!-- Analytics -->
+    <section class="tab-panel" *ngIf="tab === 'analytics'">
+      <p class="results-gate" *ngIf="!hasAnalytics">
+        Analytics appear once people start responding.
+      </p>
+      <ng-container *ngIf="hasAnalytics">
+        <div class="stat-grid">
+          <div class="stat">
+            <span class="stat__value">{{ respondentCount }}</span>
+            <span class="stat__label">Respondents</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ bestTurnoutPercent }}%</span>
+            <span class="stat__label">Best turnout</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ unanimousCount }}</span>
+            <span class="stat__label">Times everyone is free</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ deadSlotPercent }}%</span>
+            <span class="stat__label">Times nobody can make</span>
+          </div>
+        </div>
+
+        <h2 class="analytics-subtitle">Best turnout by day</h2>
+        <ul class="day-bars">
+          <li *ngFor="let day of dayBreakdown" class="day-bar">
+            <span class="day-bar__label">{{ day.label }}</span>
+            <span class="day-bar__track">
+              <span
+                class="day-bar__fill"
+                [style.width.%]="respondentCount ? (day.best / respondentCount) * 100 : 0"
+              ></span>
+            </span>
+            <span class="day-bar__count">{{ day.best }}/{{ respondentCount }}</span>
+          </li>
+        </ul>
+      </ng-container>
+    </section>
+
+    <p class="results-gate" *ngIf="tab === 'response' && !showResults && hasResponded">
+      {{ resultsGateMessage }}
+    </p>
   </div>
+
 </div>
