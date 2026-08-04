@@ -8,6 +8,7 @@ import { PollsService } from '../../services/polls.service';
 import { ResultsService } from '../../services/results.service';
 import { ResponsesService } from '../../services/responses.service';
 import { CognitoService } from '../../services/cognito.service';
+import { InvitesService } from '../../services/invites.service';
 import { Poll } from '../../models/poll.model';
 
 const POLL: Poll = {
@@ -30,6 +31,7 @@ describe('PollViewComponent — guest email + creator access', () => {
   let fixture: ComponentFixture<PollViewComponent>;
   let component: PollViewComponent;
   let cognito: { isAuthenticated: jasmine.Spy; currentUser: { email: string } | null };
+  let invites: jasmine.SpyObj<InvitesService>;
 
   beforeEach(async () => {
     const polls = jasmine.createSpyObj('PollsService', ['get']);
@@ -52,6 +54,8 @@ describe('PollViewComponent — guest email + creator access', () => {
     responses.guestIdIfAny.and.returnValue(null);
 
     cognito = { isAuthenticated: jasmine.createSpy().and.returnValue(false), currentUser: null };
+    invites = jasmine.createSpyObj('InvitesService', ['resolve']);
+    invites.resolve.and.returnValue(of(null));
 
     await TestBed.configureTestingModule({
       declarations: [PollViewComponent],
@@ -61,9 +65,15 @@ describe('PollViewComponent — guest email + creator access', () => {
         { provide: ResultsService, useValue: results },
         { provide: ResponsesService, useValue: responses },
         { provide: CognitoService, useValue: cognito },
+        { provide: InvitesService, useValue: invites },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ pollId: 'p1' }) } },
+          useValue: {
+            snapshot: {
+              paramMap: convertToParamMap({ pollId: 'p1' }),
+              queryParamMap: convertToParamMap({}),
+            },
+          },
         },
       ],
       schemas: [NO_ERRORS_SCHEMA],
@@ -116,6 +126,61 @@ describe('PollViewComponent — guest email + creator access', () => {
     component.displayName = 'Dom';
     // Their token already carries it.
     expect(component.canSubmit()).toBeTrue();
+  });
+
+  // ── Invite prefill ────────────────────────────────────────────────
+  const withInvite = (token = 'tok1') => {
+    const route = TestBed.inject(ActivatedRoute) as unknown as {
+      snapshot: { paramMap: unknown; queryParamMap: unknown };
+    };
+    route.snapshot.queryParamMap = convertToParamMap({ i: token });
+  };
+
+  it('fills in whoever the invite was sent to', () => {
+    withInvite();
+    invites.resolve.and.returnValue(of({ email: 'sam@x.com', name: 'Sam' }));
+    component.ngOnInit();
+
+    expect(invites.resolve).toHaveBeenCalledWith('p1', 'tok1');
+    expect(component.guestEmail).toBe('sam@x.com');
+    expect(component.displayName).toBe('Sam');
+    // Saying so matters: an address appearing by itself reads as a bug.
+    expect(component.prefilledFromInvite).toBeTrue();
+  });
+
+  it('never overwrites something already typed', () => {
+    withInvite();
+    invites.resolve.and.returnValue(of({ email: 'sam@x.com', name: 'Sam' }));
+    component.guestEmail = 'mine@x.com';
+    component.displayName = 'Me';
+    component.ngOnInit();
+
+    expect(component.guestEmail).toBe('mine@x.com');
+    expect(component.displayName).toBe('Me');
+  });
+
+  it('ignores the invite for a signed-in visitor', () => {
+    // Their own identity outranks whichever link they happened to open.
+    withInvite();
+    cognito.isAuthenticated.and.returnValue(true);
+    cognito.currentUser = { email: 'someone@example.com' };
+    component.ngOnInit();
+
+    expect(invites.resolve).not.toHaveBeenCalled();
+  });
+
+  it('falls back to asking when the token is stale', () => {
+    withInvite('expired');
+    invites.resolve.and.returnValue(of(null));
+    component.ngOnInit();
+
+    expect(component.guestEmail).toBe('');
+    expect(component.prefilledFromInvite).toBeFalse();
+  });
+
+  it('does nothing without a token on the link', () => {
+    component.ngOnInit();
+    expect(invites.resolve).not.toHaveBeenCalled();
   });
 
   // ── Creator access ────────────────────────────────────────────────

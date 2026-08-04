@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
 import { ResponsesService } from '../../services/responses.service';
+import { InvitesService } from '../../services/invites.service';
 import { ResultsService, ResultsIdentity } from '../../services/results.service';
 import { CognitoService } from '../../services/cognito.service';
 import {
@@ -70,6 +71,10 @@ export class PollViewComponent implements OnInit, OnDestroy {
   guestEmail = '';
   /** Only complain once they've actually left the field. */
   guestEmailTouched = false;
+  /** The ?i= on an invite link, identifying who it was mailed to. */
+  private inviteToken: string | null = null;
+  /** True when the fields were filled from that invite rather than typed. */
+  prefilledFromInvite = false;
 
   /**
    * Responding used to be a dead end -- a "thanks" screen with no way back to
@@ -90,10 +95,12 @@ export class PollViewComponent implements OnInit, OnDestroy {
     private responsesService: ResponsesService,
     private resultsService: ResultsService,
     public cognito: CognitoService,
+    private invitesService: InvitesService,
   ) {}
 
   ngOnInit(): void {
     this.pollId = this.route.snapshot.paramMap.get('pollId') ?? '';
+    this.inviteToken = this.route.snapshot.queryParamMap.get('i');
     if (!this.pollId) {
       this.state = 'not-found';
       return;
@@ -129,6 +136,7 @@ export class PollViewComponent implements OnInit, OnDestroy {
           this.displayName = email.split('@')[0] ?? '';
         }
         this.state = 'ready';
+        this.prefillFromInvite();
         this.loadExistingResponse();
         if (this.isCreator) this.startResultsPolling();
       },
@@ -305,6 +313,24 @@ export class PollViewComponent implements OnInit, OnDestroy {
 
   onGuestEmailBlur(): void {
     this.guestEmailTouched = true;
+  }
+
+  /**
+   * Fill in whoever this invite was sent to.
+   *
+   * Runs before loadExistingResponse so a real prior answer still wins -- what
+   * they actually submitted beats what we mailed. Signed-in visitors are
+   * skipped: their own identity outranks whichever link they happened to open.
+   */
+  private prefillFromInvite(): void {
+    if (!this.inviteToken || this.cognito.isAuthenticated()) return;
+    this.invitesService.resolve(this.pollId, this.inviteToken).subscribe((recipient) => {
+      if (!recipient?.email) return;
+      // Never overwrite something they've already typed.
+      if (!this.guestEmail.trim()) this.guestEmail = recipient.email;
+      if (!this.displayName.trim() && recipient.name) this.displayName = recipient.name;
+      this.prefilledFromInvite = true;
+    });
   }
 
   /** Guests send what they typed; the server reads an authed caller's token. */
