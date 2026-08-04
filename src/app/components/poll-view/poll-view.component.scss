@@ -86,11 +86,14 @@ label {
   color: var(--xf-text);
 }
 
-input[type='text'] {
+/* Styled by EXCLUSION, not by listing types: enumerating them means every new
+   input type (email, url, number) silently falls through to browser default,
+   which is how the email field ended up as a white box in a dark form. */
+input:not([type='checkbox']):not([type='radio']) {
   padding: 10px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.95rem;
   font-family: inherit;
@@ -519,4 +522,40 @@ input[type='text'] {
 .day-bar__count {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* The creator opening their own share link -- says which view they're in,
+   since the respondent and creator pages otherwise look identical here. */
+.creator-note {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px dashed var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface-2);
+  color: var(--xf-text-muted);
+  font-size: 0.82rem;
+}
+
+/* These existed in the markup but had no styles here at all, so validation
+   messages rendered invisible and nothing ever turned red. */
+.field-hint {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--xf-text-muted);
+}
+
+.field-error {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--xf-danger-text);
+}
+
+.input-invalid {
+  border-color: var(--xf-danger-text) !important;
+
+  &:focus-visible {
+    border-color: var(--xf-danger-text) !important;
+    box-shadow: 0 0 0 3px var(--xf-danger-bg) !important;
+  }
 }

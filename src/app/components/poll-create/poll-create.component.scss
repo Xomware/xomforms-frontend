@@ -83,10 +83,10 @@ label {
   color: var(--xf-text-faint);
 }
 
-input[type='text'],
-input[type='date'],
-input[type='time'],
-input[type='datetime-local'],
+/* Styled by EXCLUSION, not by listing types. The enumerated version already
+   missed type="number" (the scale min/max inputs), and would miss the next
+   type added too. */
+input:not([type='checkbox']):not([type='radio']),
 textarea,
 select {
   padding: 10px 12px;
