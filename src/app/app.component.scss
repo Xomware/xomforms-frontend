@@ -8,16 +8,20 @@
   z-index: 10;
 }
 
-/* Matches the widest page container (860px) plus its gutters, so the brand
-   and nav align with the content beneath instead of hugging the viewport. */
+/* Full width with the app's standard gutter, so the brand sits hard left.
+   A centred max-width container looked deliberate when every page was 860px,
+   but pages now range 720-1180 and the logo ended up floating in from the
+   edge with no relationship to anything beneath it. */
 .header-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  max-width: 908px;
-  margin: 0 auto;
-  padding: 8px clamp(16px, 4vw, 24px);
+  gap: 8px;
+  padding: 8px clamp(16px, 3vw, 28px);
+}
+
+/* Pushes the account cluster right without pinning the nav there too. */
+.header-spacer {
+  flex: 1;
 }
 
 .header-left {

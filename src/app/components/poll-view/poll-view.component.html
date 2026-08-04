@@ -61,6 +61,10 @@
 
     <!-- Scheduler: the availability grid (unchanged) -->
     <ng-template #schedulerGrid>
+      <div class="picking-note" *ngIf="pickingSummary">
+        <span class="picking-note__icon" aria-hidden="true">⏱</span>
+        <span>{{ pickingSummary }}</span>
+      </div>
       <app-availability-grid
       [timeFilterIds]="$any(poll).quickFilters" [blocks]="grid" (selectionChange)="onSelectionChange($event)"></app-availability-grid>
     </ng-template>

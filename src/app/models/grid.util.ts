@@ -205,3 +205,37 @@ export function eventEndSummary(startMinutes: number, durationMinutes: number): 
   const end = startMinutes + durationMinutes;
   return { label: minutesToClockLabel(end), nextDay: end >= 1440 };
 }
+
+/**
+ * Plain-language explanation of what a respondent is actually picking.
+ *
+ * The grid shows START TIMES, not the hours the event covers -- painting 7 PM
+ * on a 3-hour event means 7:00-10:00. That is not obvious from a grid of
+ * times, and getting it wrong means someone marks every hour they are free
+ * rather than the times they could begin.
+ *
+ * Returns null when the poll predates the start-range shape and there is
+ * nothing reliable to say.
+ */
+export function startRangeSummary(poll: {
+  eventDurationMinutes?: number | null;
+  earliestStartMinute?: number;
+  latestStartMinute?: number;
+}): string | null {
+  const duration = poll.eventDurationMinutes;
+  const earliest = poll.earliestStartMinute;
+  const latest = poll.latestStartMinute;
+  if (!duration || earliest == null || latest == null) return null;
+
+  const example = eventEndSummary(earliest, duration);
+  const range =
+    earliest === latest
+      ? `Starts at ${minutesToClockLabel(earliest)}.`
+      : `Start times run from ${minutesToClockLabel(earliest)} to ${minutesToClockLabel(latest)}.`;
+
+  return (
+    `Pick the times you could START. This event runs ${formatDuration(duration)}, ` +
+    `so choosing ${minutesToClockLabel(earliest)} means ${minutesToClockLabel(earliest)}\u2013` +
+    `${example.label}${example.nextDay ? ' the next day' : ''}. ${range}`
+  );
+}

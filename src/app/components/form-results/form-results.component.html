@@ -88,6 +88,11 @@
         This form is closed, so responses can no longer be changed.
       </p>
 
+      <div class="picking-note" *ngIf="pickingSummary">
+        <span class="picking-note__icon" aria-hidden="true">⏱</span>
+        <span>{{ pickingSummary }}</span>
+      </div>
+
       <app-availability-grid
         *ngIf="!isQa"
         [blocks]="grid"
