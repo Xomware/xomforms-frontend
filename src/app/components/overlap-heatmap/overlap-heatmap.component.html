@@ -7,7 +7,7 @@
     aria-live="polite"
   >
     <p class="hero__eyebrow">
-      <span class="hero__mark" aria-hidden="true">{{ everyoneFree ? '✓' : '★' }}</span>
+      <span class="hero__mark"><xf-icon [name]="everyoneFree ? 'check' : 'star'"></xf-icon></span>
       Best time to meet
     </p>
 
@@ -94,7 +94,7 @@
           tabindex="0"
         >
           <span class="heat-count" *ngIf="hasResponses && cell.count > 0">{{ cell.count }}</span>
-          <span class="heat-star" *ngIf="cell.isFull" aria-hidden="true">★</span>
+          <span class="heat-star" *ngIf="cell.isFull"><xf-icon name="star"></xf-icon></span>
         </div>
       </ng-container>
     </div>

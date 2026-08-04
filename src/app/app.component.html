@@ -30,7 +30,7 @@
     <div class="header-right" *ngIf="cognito.isReady$ | async">
       <ng-container *ngIf="cognito.user$ | async as user; else signedOut">
         <a routerLink="/forms/new" class="header-btn header-btn--primary">
-          <span aria-hidden="true">+</span> New form
+          <xf-icon name="plus"></xf-icon> New form
         </a>
         <xf-user-menu [user]="user" (signOut)="signOut()"></xf-user-menu>
       </ng-container>

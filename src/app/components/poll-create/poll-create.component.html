@@ -7,7 +7,7 @@
 
     <div class="starter-grid">
       <button type="button" class="starter-card" (click)="chooseBlankForm()">
-        <span class="starter-card__icon" aria-hidden="true">✍️</span>
+        <span class="starter-card__icon"><xf-icon name="pencil"></xf-icon></span>
         <span class="starter-card__title">Blank form</span>
         <span class="starter-card__desc">
           Build a Q&A form — multiple choice, checkboxes, dropdowns, and scales with
@@ -16,7 +16,7 @@
       </button>
 
       <button type="button" class="starter-card" (click)="chooseScheduler()">
-        <span class="starter-card__icon" aria-hidden="true">📅</span>
+        <span class="starter-card__icon"><xf-icon name="calendar"></xf-icon></span>
         <span class="starter-card__title">Scheduler</span>
         <span class="starter-card__desc">
           Find when everyone's free — the classic availability grid and overlap
@@ -25,7 +25,7 @@
       </button>
 
       <div class="starter-card starter-card--soon" aria-disabled="true">
-        <span class="starter-card__icon" aria-hidden="true">📋</span>
+        <span class="starter-card__icon"><xf-icon name="clipboard"></xf-icon></span>
         <span class="starter-card__title">Templates</span>
         <span class="starter-card__desc">
           RSVP, feedback survey, sign-up sheet, and more — ready to customize.
@@ -155,7 +155,7 @@
 
         <!-- Live end-time warning -->
         <div class="end-warning" *ngIf="latestEndSummary" [class.end-warning--overnight]="latestEndSummary.nextDay">
-          <span class="end-warning__icon" aria-hidden="true">{{ latestEndSummary.nextDay ? '🌙' : '🕒' }}</span>
+          <span class="end-warning__icon"><xf-icon [name]="latestEndSummary.nextDay ? 'moon' : 'clock'"></xf-icon></span>
           <span class="end-warning__text">
             Latest start {{ latestStartLabel }} + {{ durationLabel }} → ends
             <strong>{{ latestEndSummary.label }}</strong>
@@ -301,7 +301,7 @@
                 class="icon-btn icon-btn--danger"
                 (click)="removeField(i)"
                 aria-label="Delete field"
-              >✕</button>
+              ><xf-icon name="close"></xf-icon></button>
             </div>
           </div>
 
@@ -332,7 +332,7 @@
                 (click)="removeOption(field, j)"
                 [disabled]="field.options.length <= 2"
                 aria-label="Remove option"
-              >✕</button>
+              ><xf-icon name="close"></xf-icon></button>
             </div>
             <button type="button" class="add-option-btn" (click)="addOption(field)">+ Add option</button>
           </div>

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { StyledDateComponent } from './styled-date.component';
 
 describe('StyledDateComponent', () => {
@@ -8,6 +9,9 @@ describe('StyledDateComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [StyledDateComponent],
+      // The template renders <xf-icon>; this spec is about date logic, not
+      // markup, so the child component isn't worth pulling in.
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(StyledDateComponent);
     component = fixture.componentInstance;
