@@ -58,6 +58,22 @@ export function isScaleField(field: FormField): field is ScaleFormField {
  */
 export type ResultsVisibility = 'hidden' | 'after_response' | 'always';
 
+/**
+ * Where an event happens. `null`/absent is deliberately NOT the same as
+ * 'virtual' -- a form whose creator said nothing shouldn't claim to be online.
+ */
+export type LocationType = 'in_person' | 'virtual';
+
+/** The shape both the create form and the admin panel edit. */
+export interface FormLocation {
+  locationType?: LocationType | null;
+  locationName?: string | null;
+  locationAddress?: string | null;
+  locationUrl?: string | null;
+  locationLat?: number | null;
+  locationLon?: number | null;
+}
+
 /** One invited recipient plus the outcome of the send. */
 export interface FormInvite {
   email: string;
@@ -133,6 +149,12 @@ export interface Poll {
   allowResponseEdits?: boolean;
   quickFilters?: string[] | null;
   instructions?: string | null;
+  locationType?: LocationType | null;
+  locationName?: string | null;
+  locationAddress?: string | null;
+  locationUrl?: string | null;
+  locationLat?: number | null;
+  locationLon?: number | null;
   invites?: FormInvite[] | null;
   closeAt?: string | null;
   /** Event length in minutes; may be absent on polls created before this field. */
@@ -229,4 +251,13 @@ export interface ClaimResult {
   skippedExisting: string[];
   skippedStale: string[];
   windowHours: number;
+}
+
+/** One-line location summary for lists and headers. Empty when unstated. */
+export function locationSummary(poll: FormLocation): string {
+  if (poll.locationType === 'virtual') return 'Online';
+  if (poll.locationType === 'in_person') {
+    return poll.locationName || poll.locationAddress || 'In person';
+  }
+  return '';
 }

@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { timezoneLabel } from '../../models/grid.util';
 import { PollsService } from '../../services/polls.service';
 import { ResponsesService } from '../../services/responses.service';
 import {
@@ -146,6 +147,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const q = this.search.trim().toLowerCase();
     if (!q) return this.respondedRows;
     return this.respondedRows.filter((r) => (r.title ?? '').toLowerCase().includes(q));
+  }
+
+  /** IANA ids read like file paths; show people a name they recognise. */
+  tzLabel(tz?: string): string {
+    return timezoneLabel(tz);
   }
 
   respondedStatus(row: RespondedForm): PollStatus {

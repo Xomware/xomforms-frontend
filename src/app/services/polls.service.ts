@@ -7,6 +7,7 @@ import {
   Poll,
   PollListResponse,
   ResultsVisibility,
+  LocationType,
 } from '../models/poll.model';
 
 /** Creator-editable settings. Every field optional -- omitted means unchanged. */
@@ -18,6 +19,12 @@ export interface UpdatePollSettings {
   allowResponseEdits?: boolean;
   quickFilters?: string[];
   instructions?: string;
+  locationType?: LocationType | null;
+  locationName?: string | null;
+  locationAddress?: string | null;
+  locationUrl?: string | null;
+  locationLat?: number | null;
+  locationLon?: number | null;
 }
 
 /**

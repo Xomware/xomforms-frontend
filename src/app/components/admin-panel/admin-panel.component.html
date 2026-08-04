@@ -93,6 +93,23 @@
     </label>
 
     <div class="setting">
+      <span class="setting__label">Where does it happen?</span>
+      <span class="setting__hint">Shown to respondents and included in invite emails.</span>
+      <app-location-picker
+        [value]="locationDraft"
+        (valueChange)="locationDraft = $event"
+      ></app-location-picker>
+      <div class="instructions-actions">
+        <button
+          type="button"
+          class="admin-btn"
+          [disabled]="!locationDirty || savingSetting === 'location'"
+          (click)="saveLocation()"
+        >{{ savingSetting === 'location' ? 'Saving…' : 'Save location' }}</button>
+      </div>
+    </div>
+
+    <div class="setting">
       <span class="setting__label">Instructions for respondents</span>
       <span class="setting__hint">
         Shown above the grid and included in invite emails. Say <em>how</em> to answer —

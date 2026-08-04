@@ -1,10 +1,16 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
-import { CreatePollRequest, FieldType, FormField, GridBlock, Poll } from '../../models/poll.model';
+import {
+  CreatePollRequest,
+  FieldType,
+  FormField,
+  FormLocation,
+  GridBlock,
+  Poll,
+} from '../../models/poll.model';
 import {
   EndTimeSummary,
   eventEndSummary,
@@ -13,6 +19,7 @@ import {
   minutesToClockLabel,
   snapDurationToStep,
   snapMinutesToStep,
+  timezoneLabel,
   viewerTimeZone,
 } from '../../models/grid.util';
 import { SelectOption } from '../styled-select/styled-select.component';
@@ -144,6 +151,8 @@ export class PollCreateComponent implements OnInit, OnDestroy {
   readonly addableFieldTypes: FieldType[] = ['single_choice', 'multi_choice', 'dropdown', 'scale'];
 
   mode: CreateMode = 'picker';
+  /** Where the event happens; edited by the location picker as one object. */
+  location: FormLocation = {};
   qaFields: BuilderField[] = [];
 
   submitting = false;
@@ -152,7 +161,6 @@ export class PollCreateComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private pollsService: PollsService,
-    private location: Location,
     private router: Router,
   ) {
     this.form = this.fb.group({
@@ -360,6 +368,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       description: value.description?.trim() || null,
       formType: 'scheduler',
       instructions: value.instructions?.trim() || null,
+      ...this.locationPayload(),
       startDate: value.startDate,
       endDate: value.endDate,
       earliestStartMinute: Number(value.earliestStartMinute),
@@ -400,6 +409,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
       description: value.description?.trim() || null,
       formType: 'qa',
       instructions: value.instructions?.trim() || null,
+      ...this.locationPayload(),
       fields: this.buildFields(),
       guestAllowed: !!value.guestAllowed,
       showResultsToRespondents: !!value.showResultsToRespondents,
@@ -456,6 +466,23 @@ export class PollCreateComponent implements OnInit, OnDestroy {
    */
   private goToCreatedForm(poll: Poll): void {
     this.router.navigate(['/forms', poll.pollId]);
+  }
+
+  /**
+   * Only send location fields once a type is chosen. Sending blanks would
+   * persist "virtual with no link" style half-states on forms whose creator
+   * simply didn't say where it is.
+   */
+  private locationPayload(): FormLocation {
+    if (!this.location.locationType) return {};
+    return {
+      locationType: this.location.locationType,
+      locationName: this.location.locationName?.trim() || null,
+      locationAddress: this.location.locationAddress?.trim() || null,
+      locationUrl: this.location.locationUrl?.trim() || null,
+      locationLat: this.location.locationLat ?? null,
+      locationLon: this.location.locationLon ?? null,
+    };
   }
 
   private genId(prefix: string): string {
@@ -588,7 +615,7 @@ export class PollCreateComponent implements OnInit, OnDestroy {
     const push = (tz: string, group: string) => {
       if (!tz || seen.has(tz)) return;
       seen.add(tz);
-      options.push({ value: tz, label: tz.replace(/_/g, ' '), group });
+      options.push({ value: tz, label: timezoneLabel(tz) || tz.replace(/_/g, ' '), group });
     };
 
     push(detected, 'Your timezone');

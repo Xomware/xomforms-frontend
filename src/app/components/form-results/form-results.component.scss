@@ -510,3 +510,50 @@
   color: var(--xf-text);
   white-space: pre-wrap;
 }
+
+/* Where it happens -- leads the context block, since whether something is
+   worth attending often turns on where before when. */
+.location-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--xf-border-strong);
+  border-left: 3px solid var(--xf-primary);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface-2);
+}
+
+.location-note__icon {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.location-note__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.location-note__main {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--xf-text);
+}
+
+.location-note__sub {
+  font-size: 0.8rem;
+  color: var(--xf-text-muted);
+}
+
+.location-note__link {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--xf-primary);
+  text-decoration: underline;
+  width: fit-content;
+}

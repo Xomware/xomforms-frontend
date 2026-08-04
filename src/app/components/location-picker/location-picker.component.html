@@ -1,0 +1,79 @@
+<div class="location-picker">
+  <div class="loc-types" role="radiogroup" aria-label="Where does it happen?">
+    <button
+      type="button"
+      class="loc-type"
+      role="radio"
+      [class.loc-type--active]="type === 'in_person'"
+      [attr.aria-checked]="type === 'in_person'"
+      (click)="setType('in_person')"
+    >
+      <span class="loc-type__icon" aria-hidden="true">📍</span>
+      <span class="loc-type__label">In person</span>
+    </button>
+    <button
+      type="button"
+      class="loc-type"
+      role="radio"
+      [class.loc-type--active]="type === 'virtual'"
+      [attr.aria-checked]="type === 'virtual'"
+      (click)="setType('virtual')"
+    >
+      <span class="loc-type__icon" aria-hidden="true">💻</span>
+      <span class="loc-type__label">Virtual</span>
+    </button>
+  </div>
+
+  <!-- In person: address first, since that's what people need -->
+  <div class="loc-fields" *ngIf="type === 'in_person'">
+    <div class="loc-field loc-field--address">
+      <label for="locAddress">Address</label>
+      <input
+        id="locAddress"
+        type="text"
+        autocomplete="off"
+        [value]="addressQuery"
+        (input)="onAddressInput($any($event.target).value)"
+        (blur)="dismissSuggestions()"
+        placeholder="Start typing an address…"
+      />
+      <span class="loc-searching" *ngIf="searching">Searching…</span>
+
+      <!-- mousedown, not click: blur fires first and would close the list
+           before a click ever lands. -->
+      <ul class="loc-suggestions" *ngIf="showSuggestions" role="listbox">
+        <li *ngFor="let s of suggestions">
+          <button type="button" role="option" (mousedown)="choose(s)">
+            <span class="loc-suggestion__name">{{ s.name }}</span>
+            <span class="loc-suggestion__secondary">{{ s.secondary }}</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="loc-field">
+      <label for="locName">Place name <span class="optional">(optional)</span></label>
+      <input
+        id="locName"
+        type="text"
+        [value]="value.locationName || ''"
+        (input)="onNameInput($any($event.target).value)"
+        placeholder="e.g. Murphy's back room"
+      />
+    </div>
+  </div>
+
+  <!-- Virtual: a link is the whole location -->
+  <div class="loc-fields" *ngIf="type === 'virtual'">
+    <div class="loc-field loc-field--address">
+      <label for="locUrl">Meeting link <span class="optional">(optional)</span></label>
+      <input
+        id="locUrl"
+        type="url"
+        [value]="value.locationUrl || ''"
+        (input)="onUrlInput($any($event.target).value)"
+        placeholder="https://meet.google.com/…"
+      />
+    </div>
+  </div>
+</div>
