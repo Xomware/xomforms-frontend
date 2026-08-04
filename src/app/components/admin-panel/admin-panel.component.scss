@@ -32,7 +32,7 @@
     flex: 1;
     min-width: 0;
     padding: 9px 12px;
-    border: 1px solid var(--xf-border-strong);
+    border: 1px solid var(--xf-control-border);
     border-radius: var(--xf-radius-sm);
     background: var(--xf-surface-2);
     color: var(--xf-text);
@@ -44,9 +44,9 @@
 .invite-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.9rem;
   font-family: inherit;
@@ -78,9 +78,9 @@
 
 .admin-btn {
   padding: 9px 16px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.85rem;
   font-family: inherit;
@@ -233,13 +233,14 @@
 }
 
 .visibility-option {
+  color: var(--xf-text);
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 10px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
@@ -293,9 +294,9 @@
 
 .filter-chip {
   padding: 6px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-pill);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text-muted);
   font-size: 0.78rem;
   font-family: inherit;
@@ -331,9 +332,9 @@
   width: 100%;
   margin-top: 8px;
   padding: 10px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.88rem;
   font-family: inherit;

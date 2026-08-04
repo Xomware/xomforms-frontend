@@ -16,9 +16,9 @@
   gap: 8px;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.95rem;
   font-family: inherit;
@@ -69,8 +69,8 @@
   left: 0;
   min-width: 268px;
   padding: 10px;
-  background: var(--xf-surface);
-  border: 1px solid var(--xf-border-strong);
+  background: var(--xf-control-bg);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
   box-shadow: var(--xf-shadow-card);
 }
@@ -95,9 +95,9 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 1px solid var(--xf-border);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text-muted);
   font-size: 1rem;
   line-height: 1;
@@ -199,9 +199,9 @@
 
 .xf-date__today {
   padding: 6px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.8rem;
   font-family: inherit;
