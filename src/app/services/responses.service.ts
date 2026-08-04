@@ -13,6 +13,7 @@ import {
   ClaimResult,
   RespondedForm,
   RespondedFormsResponse,
+  Respondent,
 } from '../models/poll.model';
 import { CognitoService } from './cognito.service';
 
@@ -48,9 +49,11 @@ export class ResponsesService {
     pollId: string,
     displayName: string,
     blocks: string[],
+    email?: string,
   ): Observable<SubmitAvailabilityResult> {
     const isAuthed = this.cognito.isAuthenticated();
     const body: SubmitAvailabilityRequest = { pollId, displayName, blocks };
+    if (email) body.email = email;
 
     if (isAuthed) {
       return this.http.post<SubmitAvailabilityResult>(`${this.baseUrl}/submit`, body);
@@ -69,9 +72,11 @@ export class ResponsesService {
     pollId: string,
     displayName: string,
     answers: Record<string, AnswerValue>,
+    email?: string,
   ): Observable<SubmitAnswersResult> {
     const isAuthed = this.cognito.isAuthenticated();
     const body: SubmitAnswersRequest = { pollId, displayName, answers };
+    if (email) body.email = email;
 
     if (isAuthed) {
       return this.http.post<SubmitAnswersResult>(`${this.baseUrl}/submit`, body);
@@ -123,6 +128,13 @@ export class ResponsesService {
     const guestId = this.peekGuestId();
     if (!guestId) return of(null);
     return this.http.post<ClaimResult>(`${this.baseUrl}/claim`, { guestId });
+  }
+
+  /** GET /responses/list -- authed, creator only. Who answered, with contacts. */
+  respondents(pollId: string): Observable<{ respondents: Respondent[] }> {
+    return this.http.get<{ respondents: Respondent[] }>(`${this.baseUrl}/list`, {
+      params: { pollId },
+    });
   }
 
   /** The identifier a guest submitted under, for the results gate. */

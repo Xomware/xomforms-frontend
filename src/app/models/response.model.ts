@@ -15,6 +15,8 @@ export interface SubmitAvailabilityRequest {
    * authed route ignores it (respondentKey is the caller's email).
    */
   guestId?: string;
+  /** Required from guests: the only way to tell them the outcome. */
+  email?: string;
 }
 
 export interface SubmitAvailabilityResult {
@@ -45,6 +47,8 @@ export interface SubmitAnswersRequest {
   answers: Record<string, AnswerValue>;
   /** Guest weak-identity, same semantics as SubmitAvailabilityRequest.guestId. */
   guestId?: string;
+  /** Required from guests: the only way to tell them the outcome. */
+  email?: string;
 }
 
 export interface SubmitAnswersResult {

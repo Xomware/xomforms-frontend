@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   CreatePollRequest,
+  FinalizeResult,
   Poll,
   PollListResponse,
   ResultsVisibility,
@@ -73,6 +74,29 @@ export class PollsService {
   /** POST /polls/close with reopen -- clears closeAt so the form accepts responses again. */
   reopen(pollId: string): Observable<Poll> {
     return this.http.post<Poll>(`${this.baseUrl}/close`, { pollId, reopen: true });
+  }
+
+  /**
+   * POST /polls/finalize -- authed, creator only. Records the winning time,
+   * closes the form, and emails everyone who answered.
+   *
+   * `notify: false` lets a creator correct a mistaken pick without mailing
+   * everyone a second time.
+   */
+  finalize(pollId: string, blockId: string, notify = true): Observable<FinalizeResult> {
+    return this.http.post<FinalizeResult>(`${this.baseUrl}/finalize`, {
+      pollId,
+      blockId,
+      notify,
+    });
+  }
+
+  /**
+   * Public .ics download for a finalized form. Unauthenticated by design so it
+   * opens straight from a mail client, which is where the link lives.
+   */
+  icsUrl(pollId: string): string {
+    return `${this.baseUrl}/ics?pollId=${encodeURIComponent(pollId)}`;
   }
 
   /**
