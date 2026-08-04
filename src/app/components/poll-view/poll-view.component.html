@@ -68,8 +68,8 @@
           <span class="location-note__sub" *ngIf="locationSub">{{ locationSub }}</span>
           <a
             class="location-note__link"
-            *ngIf="poll?.locationUrl"
-            [href]="poll?.locationUrl"
+            *ngIf="poll?.locationUrl as joinUrl"
+            [href]="joinUrl"
             target="_blank"
             rel="noopener noreferrer"
           >Join link</a>
