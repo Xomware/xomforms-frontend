@@ -491,6 +491,9 @@ textarea {
 
 .starter-card__icon {
   font-size: 1.6rem;
+  /* The emoji these replaced carried their own colour; a monochrome icon needs
+     to be given some or the cards read as unfinished. */
+  color: var(--xf-primary);
 }
 
 .starter-card__title {

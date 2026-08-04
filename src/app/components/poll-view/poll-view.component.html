@@ -62,7 +62,7 @@
     <!-- Scheduler: the availability grid (unchanged) -->
     <ng-template #schedulerGrid>
       <div class="location-note" *ngIf="locationLine">
-        <span class="location-note__icon" aria-hidden="true">{{ isVirtual ? '💻' : '📍' }}</span>
+        <span class="location-note__icon"><xf-icon [name]="isVirtual ? 'monitor' : 'pin'"></xf-icon></span>
         <span class="location-note__body">
           <span class="location-note__main">{{ locationLine }}</span>
           <span class="location-note__sub" *ngIf="locationSub">{{ locationSub }}</span>
@@ -80,7 +80,7 @@
         <p class="organizer-note__body">{{ organizerNote }}</p>
       </div>
       <div class="picking-note" *ngIf="pickingSummary">
-        <span class="picking-note__icon" aria-hidden="true">⏱</span>
+        <span class="picking-note__icon"><xf-icon name="clock"></xf-icon></span>
         <span>{{ pickingSummary }}</span>
       </div>
       <app-availability-grid

@@ -9,7 +9,7 @@
     [attr.aria-label]="ariaLabel || placeholder"
   >
     <span class="xf-date__value" [class.is-placeholder]="!hasValue">{{ selectedLabel }}</span>
-    <span class="xf-date__icon" aria-hidden="true">📅</span>
+    <span class="xf-date__icon"><xf-icon name="calendar"></xf-icon></span>
   </button>
 
   <div class="xf-date__panel" *ngIf="open" role="dialog" [attr.aria-label]="ariaLabel || 'Choose a date'">
@@ -19,14 +19,14 @@
         class="xf-date__nav"
         (click)="prevMonth()"
         aria-label="Previous month"
-      >‹</button>
+      ><xf-icon name="chevron-left"></xf-icon></button>
       <span class="xf-date__month" aria-live="polite">{{ monthLabel }}</span>
       <button
         type="button"
         class="xf-date__nav"
         (click)="nextMonth()"
         aria-label="Next month"
-      >›</button>
+      ><xf-icon name="chevron-right"></xf-icon></button>
     </div>
 
     <table class="xf-date__grid">

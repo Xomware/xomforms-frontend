@@ -8,7 +8,7 @@
       [attr.aria-checked]="type === 'in_person'"
       (click)="setType('in_person')"
     >
-      <span class="loc-type__icon" aria-hidden="true">📍</span>
+      <span class="loc-type__icon"><xf-icon name="pin"></xf-icon></span>
       <span class="loc-type__label">In person</span>
     </button>
     <button
@@ -19,7 +19,7 @@
       [attr.aria-checked]="type === 'virtual'"
       (click)="setType('virtual')"
     >
-      <span class="loc-type__icon" aria-hidden="true">💻</span>
+      <span class="loc-type__icon"><xf-icon name="monitor"></xf-icon></span>
       <span class="loc-type__label">Virtual</span>
     </button>
   </div>

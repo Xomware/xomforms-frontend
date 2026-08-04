@@ -1,0 +1,21 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Line-height 0 stops the inline SVG adding descender space, which is what
+     made the old emoji sit off the baseline next to their labels. */
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.xf-icon {
+  /* Scales with the surrounding text unless an explicit size is passed, so an
+     icon in a heading and one in a caption both look deliberate. */
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+.xf-icon--filled {
+  stroke-width: 1;
+}

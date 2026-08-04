@@ -62,7 +62,9 @@
   border-radius: 50%;
   background: var(--xf-yellow);
   color: var(--xf-purple-700);
-  font-size: 0.72rem;
+  /* Stroked icons read smaller than a solid glyph at the same size, so this
+     is bumped to keep the badge looking filled rather than sparse. */
+  font-size: 0.8rem;
   font-weight: 900;
 }
 
