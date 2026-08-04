@@ -21,6 +21,7 @@ import { StyledDateComponent } from './components/styled-date/styled-date.compon
 import { UserMenuComponent } from './components/user-menu/user-menu.component';
 import { AccountComponent } from './components/account/account.component';
 import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
+import { LocationPickerComponent } from './components/location-picker/location-picker.component';
 import { SignInComponent } from './components/auth/sign-in/sign-in.component';
 import { CallbackComponent } from './components/auth/callback/callback.component';
 
@@ -44,6 +45,7 @@ import { jwtInterceptor } from './interceptors/jwt.interceptor';
     UserMenuComponent,
     AccountComponent,
     AdminPanelComponent,
+    LocationPickerComponent,
     SignInComponent,
     CallbackComponent,
   ],

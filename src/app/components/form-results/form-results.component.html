@@ -88,6 +88,20 @@
         This form is closed, so responses can no longer be changed.
       </p>
 
+      <div class="location-note" *ngIf="locationLine">
+        <span class="location-note__icon" aria-hidden="true">{{ isVirtual ? '💻' : '📍' }}</span>
+        <span class="location-note__body">
+          <span class="location-note__main">{{ locationLine }}</span>
+          <span class="location-note__sub" *ngIf="locationSub">{{ locationSub }}</span>
+          <a
+            class="location-note__link"
+            *ngIf="poll?.locationUrl"
+            [href]="poll?.locationUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Join link</a>
+        </span>
+      </div>
       <div class="organizer-note" *ngIf="poll.instructions">
         <span class="organizer-note__label">A note from the organizer</span>
         <p class="organizer-note__body">{{ poll.instructions }}</p>

@@ -11,7 +11,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { GridBlock } from '../../models/poll.model';
-import { formatLocal, viewerTimeZone } from '../../models/grid.util';
+import { formatLocal, timezoneLabel, viewerTimeZone } from '../../models/grid.util';
 
 /**
  * Drag-to-paint availability grid. Promoted from the Phase 0 throwaway
@@ -89,6 +89,8 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
   colDates: string[] = [];
   selected = new Set<string>();
   readonly viewerTz = viewerTimeZone();
+  /** Readable form for the footnote; the raw id still drives formatting. */
+  readonly viewerTzLabel = timezoneLabel(viewerTimeZone());
 
   private dragging = false;
   private paintMode: PaintMode = null;

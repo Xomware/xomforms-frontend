@@ -4,6 +4,7 @@ import { PollsService, UpdatePollSettings } from '../../services/polls.service';
 import { TIME_FILTERS, TimeFilterId } from '../availability-grid/availability-grid.component';
 import {
   FormInvite,
+  FormLocation,
   Poll,
   ResultsVisibility,
   allowsResponseEdits,
@@ -69,6 +70,7 @@ export class AdminPanelComponent implements OnInit {
   settingsError = '';
   /** Local draft so typing doesn't fire a save on every keystroke. */
   instructionsDraft = '';
+  locationDraft: FormLocation = {};
 
   constructor(
     private invitesService: InvitesService,
@@ -77,7 +79,46 @@ export class AdminPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.instructionsDraft = this.poll.instructions ?? '';
+    this.locationDraft = this.readLocation(this.poll);
     this.loadInvites();
+  }
+
+  private readLocation(poll: Poll): FormLocation {
+    return {
+      locationType: poll.locationType ?? null,
+      locationName: poll.locationName ?? null,
+      locationAddress: poll.locationAddress ?? null,
+      locationUrl: poll.locationUrl ?? null,
+      locationLat: poll.locationLat ?? null,
+      locationLon: poll.locationLon ?? null,
+    };
+  }
+
+  get locationDirty(): boolean {
+    const a = this.locationDraft;
+    const b = this.readLocation(this.poll);
+    return (
+      (a.locationType ?? null) !== (b.locationType ?? null) ||
+      (a.locationName ?? '') !== (b.locationName ?? '') ||
+      (a.locationAddress ?? '') !== (b.locationAddress ?? '') ||
+      (a.locationUrl ?? '') !== (b.locationUrl ?? '')
+    );
+  }
+
+  saveLocation(): void {
+    if (!this.locationDirty) return;
+    const d = this.locationDraft;
+    this.save(
+      {
+        locationType: d.locationType ?? null,
+        locationName: d.locationName?.trim() || null,
+        locationAddress: d.locationAddress?.trim() || null,
+        locationUrl: d.locationUrl?.trim() || null,
+        locationLat: d.locationLat ?? null,
+        locationLon: d.locationLon ?? null,
+      },
+      'location',
+    );
   }
 
   get instructionsDirty(): boolean {
@@ -220,6 +261,7 @@ export class AdminPanelComponent implements OnInit {
         // showResultsToRespondents mirror stays consistent here too.
         this.poll = updated;
         this.instructionsDraft = updated.instructions ?? '';
+        this.locationDraft = this.readLocation(updated);
         this.pollChange.emit(updated);
       },
       error: (err) => {

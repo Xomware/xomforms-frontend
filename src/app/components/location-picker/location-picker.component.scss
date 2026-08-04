@@ -1,0 +1,162 @@
+.location-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loc-types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 340px;
+}
+
+.loc-type {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--xf-transition), background var(--xf-transition);
+
+  &:hover {
+    border-color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+}
+
+.loc-type--active {
+  border-color: var(--xf-primary);
+  background: var(--xf-purple-100);
+  box-shadow: inset 0 0 0 1px var(--xf-primary);
+}
+
+.loc-type__label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--xf-text);
+}
+
+.loc-type__icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.loc-fields {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.loc-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 220px;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--xf-text-muted);
+  }
+
+  input {
+    padding: 10px 12px;
+    border: 1px solid var(--xf-border-strong);
+    border-radius: var(--xf-radius-sm);
+    background: var(--xf-surface);
+    color: var(--xf-text);
+    font-size: 0.9rem;
+    font-family: inherit;
+
+    &::placeholder {
+      color: var(--xf-text-faint);
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: var(--xf-primary);
+      box-shadow: 0 0 0 3px var(--xf-focus-ring);
+    }
+  }
+}
+
+.loc-field--address {
+  flex: 2 1 300px;
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--xf-text-faint);
+}
+
+.loc-searching {
+  position: absolute;
+  right: 10px;
+  bottom: 11px;
+  font-size: 0.72rem;
+  color: var(--xf-text-faint);
+}
+
+/* Same panel treatment as the other dropdowns in the app. */
+.loc-suggestions {
+  position: absolute;
+  z-index: 45;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--xf-surface);
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  box-shadow: var(--xf-shadow-card);
+  max-height: 260px;
+  overflow-y: auto;
+
+  button {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    border-radius: var(--xf-radius-sm);
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--xf-surface-2);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--xf-primary);
+      outline-offset: -2px;
+    }
+  }
+}
+
+.loc-suggestion__name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--xf-text);
+}
+
+.loc-suggestion__secondary {
+  font-size: 0.76rem;
+  color: var(--xf-text-muted);
+}

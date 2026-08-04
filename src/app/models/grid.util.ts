@@ -239,3 +239,43 @@ export function startRangeSummary(poll: {
     `${example.label}${example.nextDay ? ' the next day' : ''}. ${range}`
   );
 }
+
+/**
+ * Human-readable timezone label: "America/New_York" -> "Eastern Time — New York".
+ *
+ * IANA identifiers are how the backend and the grid must talk about zones, but
+ * they read like file paths. The long display name comes from Intl (which
+ * knows the current DST state), and the city is recovered from the identifier
+ * because Intl won't give it to you separately.
+ */
+export function timezoneLabel(timeZone: string | null | undefined, at: Date = new Date()): string {
+  if (!timeZone) return '';
+
+  // "America/Indiana/Indianapolis" -> "Indianapolis"; underscores are spaces.
+  const city = timeZone.split('/').pop()?.replace(/_/g, ' ') ?? timeZone;
+  // UTC has no city, and "Coordinated Universal Time — UTC" is just noise.
+  if (timeZone === 'UTC' || timeZone === 'Etc/UTC') return 'UTC';
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      timeZoneName: 'long',
+    }).formatToParts(at);
+    const name = parts.find((p) => p.type === 'timeZoneName')?.value;
+    if (!name) return city;
+    // Intl reports the seasonal name ("Eastern Daylight Time"). Collapse it to
+    // the standing one so a form doesn't appear to change zone in November.
+    const generic = name.replace(/\b(Standard|Daylight|Summer)\s+/i, '');
+    if (generic.toLowerCase() === city.toLowerCase()) return city;
+    return `${generic} — ${city}`;
+  } catch {
+    // Unknown zone: the raw identifier beats an empty label.
+    return city;
+  }
+}
+
+/** Short form for tight spots: "Eastern Time", falling back to the city. */
+export function timezoneShortLabel(timeZone: string | null | undefined): string {
+  const full = timezoneLabel(timeZone);
+  return full.includes(' — ') ? full.split(' — ')[0] : full;
+}

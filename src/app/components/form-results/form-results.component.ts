@@ -4,7 +4,14 @@ import { Subscription } from 'rxjs';
 import { PollsService } from '../../services/polls.service';
 import { ResultsService } from '../../services/results.service';
 import { ResponsesService } from '../../services/responses.service';
-import { GridBlock, Poll, PollStatus, derivePollStatus, isQaPoll } from '../../models/poll.model';
+import {
+  GridBlock,
+  Poll,
+  PollStatus,
+  derivePollStatus,
+  isQaPoll,
+  locationSummary,
+} from '../../models/poll.model';
 import { AnswerValue, FormResult, OverlapResult } from '../../models/response.model';
 import { generateGrid, startRangeSummary } from '../../models/grid.util';
 
@@ -157,6 +164,22 @@ export class FormResultsComponent implements OnInit, OnDestroy {
         /* no prior answer -- start blank */
       },
     });
+  }
+
+  /** Primary location line: venue, address, or "Online". Empty when unstated. */
+  get locationLine(): string {
+    return this.poll ? locationSummary(this.poll) : '';
+  }
+
+  /** The address, when a venue name is already carrying the main line. */
+  get locationSub(): string {
+    if (!this.poll || this.poll.locationType !== 'in_person') return '';
+    const address = this.poll.locationAddress ?? '';
+    return address && address !== this.locationLine ? address : '';
+  }
+
+  get isVirtual(): boolean {
+    return this.poll?.locationType === 'virtual';
   }
 
   /** What the respondent is actually choosing, in plain language. */

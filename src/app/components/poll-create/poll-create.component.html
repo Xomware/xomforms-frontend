@@ -52,6 +52,11 @@
       </div>
 
       <div class="field">
+        <label>Where does it happen? <span class="optional">(optional)</span></label>
+        <app-location-picker [value]="location" (valueChange)="location = $event"></app-location-picker>
+      </div>
+
+      <div class="field">
         <label for="schedInstructions">
           Instructions for respondents <span class="optional">(optional)</span>
         </label>
@@ -248,6 +253,11 @@
       <div class="field">
         <label for="qaDescription">Description <span class="optional">(optional)</span></label>
         <textarea id="qaDescription" formControlName="description" rows="2"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Where does it happen? <span class="optional">(optional)</span></label>
+        <app-location-picker [value]="location" (valueChange)="location = $event"></app-location-picker>
       </div>
 
       <div class="field">
