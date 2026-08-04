@@ -559,3 +559,12 @@ input:not([type='checkbox']):not([type='radio']) {
     box-shadow: 0 0 0 3px var(--xf-danger-bg) !important;
   }
 }
+
+/* Says where the prefilled details came from -- an address appearing by itself
+   reads as a bug, or worse, as us already having their data. */
+.prefill-note {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  color: var(--xf-primary);
+  font-weight: 600;
+}

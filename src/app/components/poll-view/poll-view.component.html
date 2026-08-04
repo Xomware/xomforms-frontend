@@ -83,6 +83,10 @@
         <label for="displayNameGuest">Continue as guest — just your name</label>
         <input id="displayNameGuest" type="text" [(ngModel)]="displayName" placeholder="Your name" autocomplete="name" />
       </div>
+      <p class="prefill-note" *ngIf="prefilledFromInvite" role="status">
+        Filled in from your invite — change it if that's not you.
+      </p>
+
       <div class="field">
         <label for="guestEmail">Email</label>
         <input
