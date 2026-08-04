@@ -17,9 +17,13 @@
   justify-content: center;
   gap: 8px;
   padding: 11px 14px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
+  /* A <button> does NOT inherit color -- it takes the UA default, so an icon
+     drawn in currentColor came out near-black on a dark surface. Every button
+     hosting an icon has to state its colour. */
+  color: var(--xf-text);
   font-family: inherit;
   cursor: pointer;
   transition: border-color var(--xf-transition), background var(--xf-transition);
@@ -48,8 +52,13 @@
 }
 
 .loc-type__icon {
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1;
+  color: var(--xf-text-muted);
+}
+
+.loc-type--active .loc-type__icon {
+  color: var(--xf-primary);
 }
 
 .loc-fields {
@@ -73,9 +82,9 @@
 
   input {
     padding: 10px 12px;
-    border: 1px solid var(--xf-border-strong);
+    border: 1px solid var(--xf-control-border);
     border-radius: var(--xf-radius-sm);
-    background: var(--xf-surface);
+    background: var(--xf-control-bg);
     color: var(--xf-text);
     font-size: 0.9rem;
     font-family: inherit;
@@ -119,8 +128,8 @@
   list-style: none;
   margin: 0;
   padding: 4px;
-  background: var(--xf-surface);
-  border: 1px solid var(--xf-border-strong);
+  background: var(--xf-control-bg);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
   box-shadow: var(--xf-shadow-card);
   max-height: 260px;

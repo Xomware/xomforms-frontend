@@ -41,6 +41,13 @@
   --xf-accent-strong: var(--xf-yellow);
 
   --xf-focus-ring: rgba(106, 54, 169, 0.45);
+
+  /* Form controls, as distinct from the panels they sit on. In light mode a
+     white control pops against a tinted panel; dark mode needs the same
+     relationship stated explicitly, because there the base surface is DARKER
+     than the panel and controls would otherwise recede into it. */
+  --xf-control-bg: #ffffff;
+  --xf-control-border: #d3c7e8;
   --xf-danger-text: #b3261e;
   --xf-danger-bg: #fdeceb;
   --xf-danger-border: #f4c7c3;
@@ -112,6 +119,14 @@
     --xf-danger-border: rgba(198, 40, 40, 0.42);
 
     --xf-heat-rgb: 154, 107, 255;
+
+    /* Lighter than --xf-surface-2 (#1e1834), so a control reads as raised
+       above its panel rather than punched into it. Chosen by measurement:
+       1.34 against the panel and 1.53 against the page, where the previous
+       values sat at 1.07 and barely separated at all. Muted text still clears
+       WCAG AA on it (5.07), which is what caps how light this can go. */
+    --xf-control-bg: #332a63;
+    --xf-control-border: #55488a;
 
     --xf-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --xf-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.45), 0 10px 30px rgba(0, 0, 0, 0.35);

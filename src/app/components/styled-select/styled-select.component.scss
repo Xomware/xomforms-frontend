@@ -15,9 +15,9 @@
   gap: 8px;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.95rem;
   font-family: inherit;
@@ -72,8 +72,8 @@
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: var(--xf-surface);
-  border: 1px solid var(--xf-border-strong);
+  background: var(--xf-control-bg);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
   box-shadow: var(--xf-shadow-card);
   overflow: hidden;
@@ -86,9 +86,9 @@
   input {
     width: 100%;
     padding: 8px 10px;
-    border: 1px solid var(--xf-border-strong);
+    border: 1px solid var(--xf-control-border);
     border-radius: var(--xf-radius-sm);
-    background: var(--xf-surface);
+    background: var(--xf-control-bg);
     color: var(--xf-text);
     font-size: 0.9rem;
     font-family: inherit;

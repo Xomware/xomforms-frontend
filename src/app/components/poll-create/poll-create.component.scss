@@ -90,9 +90,9 @@ input[type='datetime-local'],
 textarea,
 select {
   padding: 10px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.95rem;
   font-family: inherit;
@@ -196,13 +196,15 @@ textarea {
 }
 
 .granularity-option {
+  /* Buttons don't inherit color; stated so nested icons/text resolve. */
+  color: var(--xf-text);
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 10px 12px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   font-family: inherit;
   text-align: left;
   cursor: pointer;

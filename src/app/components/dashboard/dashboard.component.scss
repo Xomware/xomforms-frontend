@@ -87,8 +87,8 @@
   font: inherit;
   font-size: 0.9rem;
   color: var(--xf-text);
-  background: var(--xf-surface);
-  border: 1px solid var(--xf-border-strong);
+  background: var(--xf-control-bg);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius);
   transition: border-color var(--xf-transition), box-shadow var(--xf-transition);
 
@@ -456,9 +456,9 @@
 
 .bulk-btn {
   padding: 8px 14px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.85rem;
   font-family: inherit;
@@ -550,9 +550,9 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text-muted);
   font-size: 1.1rem;
   line-height: 1;
@@ -579,8 +579,8 @@
   right: 0;
   min-width: 160px;
   padding: 4px;
-  background: var(--xf-surface);
-  border: 1px solid var(--xf-border-strong);
+  background: var(--xf-control-bg);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
   box-shadow: var(--xf-shadow-card);
 }
@@ -660,9 +660,9 @@
 
 .confirm-btn {
   padding: 9px 16px;
-  border: 1px solid var(--xf-border-strong);
+  border: 1px solid var(--xf-control-border);
   border-radius: var(--xf-radius-sm);
-  background: var(--xf-surface);
+  background: var(--xf-control-bg);
   color: var(--xf-text);
   font-size: 0.88rem;
   font-family: inherit;
