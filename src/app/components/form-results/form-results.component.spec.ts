@@ -59,9 +59,16 @@ describe('FormResultsComponent — tabs, picks, analytics', () => {
   beforeEach(async () => {
     polls = jasmine.createSpyObj('PollsService', ['get']);
     polls.get.and.returnValue(of(POLL));
-    results = jasmine.createSpyObj('ResultsService', ['pollForCreator', 'pollFormForCreator']);
+    results = jasmine.createSpyObj('ResultsService', [
+      'pollForCreator',
+      'pollFormForCreator',
+      'getForCreator',
+      'getFormForCreator',
+    ]);
     results.pollForCreator.and.returnValue(of(overlap()));
     results.pollFormForCreator.and.returnValue(of({ pollId: 'p1', totalRespondents: 0, fields: [] }));
+    results.getForCreator.and.returnValue(of(overlap()));
+    results.getFormForCreator.and.returnValue(of({ pollId: 'p1', totalRespondents: 0, fields: [] }));
     responses = jasmine.createSpyObj('ResponsesService', [
       'myResponseFor',
       'submit',
@@ -138,6 +145,17 @@ describe('FormResultsComponent — tabs, picks, analytics', () => {
   it('blocks saving on a closed form', () => {
     component.status = 'closed';
     expect(component.canSavePicks).toBeFalse();
+  });
+
+  it('refreshes results immediately after saving, not on the next poll tick', () => {
+    // Saving your own availability changes the results. Leaving the other tabs
+    // stale for 12 seconds looks like the save didn't take.
+    responses.submit.and.returnValue(of(SUBMIT_OK));
+    results.getForCreator.calls.reset();
+
+    component.savePicks();
+
+    expect(results.getForCreator).toHaveBeenCalledWith('p1');
   });
 
   it('marks picks unsaved again after a change', () => {

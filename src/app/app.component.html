@@ -19,20 +19,9 @@
 
       <!-- Nav sits NEXT TO the brand, not pinned to the right edge. -->
       <nav class="header-nav" *ngIf="(cognito.isReady$ | async) && (cognito.user$ | async)">
-        <a
-          routerLink="/dashboard"
-          [queryParams]="{ tab: 'created' }"
-          routerLinkActive="header-tab--active"
-          [routerLinkActiveOptions]="{ queryParams: 'subset', paths: 'exact', matrixParams: 'ignored', fragment: 'ignored' }"
-          class="header-tab"
-        >My forms</a>
-        <a
-          routerLink="/dashboard"
-          [queryParams]="{ tab: 'responded' }"
-          routerLinkActive="header-tab--active"
-          [routerLinkActiveOptions]="{ queryParams: 'subset', paths: 'exact', matrixParams: 'ignored', fragment: 'ignored' }"
-          class="header-tab"
-        >Filled out</a>
+        <a routerLink="/dashboard" routerLinkActive="header-tab--active" class="header-tab">
+          My Forms
+        </a>
       </nav>
     </div>
 
