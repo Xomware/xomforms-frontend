@@ -175,7 +175,7 @@
     </section>
 
     <section class="tab-panel" *ngIf="tab === 'admin'">
-      <app-admin-panel [poll]="poll" (pollChange)="onPollUpdated($event)"></app-admin-panel>
+      <app-admin-panel [poll]="poll" [results]="results" (pollChange)="onPollUpdated($event)"></app-admin-panel>
     </section>
   </ng-container>
 </div>

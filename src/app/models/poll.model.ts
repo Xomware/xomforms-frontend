@@ -155,6 +155,10 @@ export interface Poll {
   locationUrl?: string | null;
   locationLat?: number | null;
   locationLon?: number | null;
+  /** Set once the creator picks the winning time -- what makes it "decided". */
+  finalBlockId?: string | null;
+  finalStartUtc?: string | null;
+  finalizedAt?: string | null;
   invites?: FormInvite[] | null;
   closeAt?: string | null;
   /** Event length in minutes; may be absent on polls created before this field. */
@@ -260,4 +264,28 @@ export function locationSummary(poll: FormLocation): string {
     return poll.locationName || poll.locationAddress || 'In person';
   }
   return '';
+}
+
+/** Someone who answered, as the creator sees them. */
+export interface Respondent {
+  displayName?: string;
+  email?: string | null;
+  isGuest: boolean;
+  submittedAt?: string;
+  blockCount: number;
+}
+
+/** Outcome of finalizing: the chosen slot plus how the notifications went. */
+export interface FinalizeResult {
+  pollId: string;
+  finalBlockId: string;
+  startUtc: string;
+  endUtc: string;
+  notified: number;
+  failed: number;
+}
+
+/** A form is decided once a winning time is recorded, not merely closed. */
+export function isFinalized(poll: Pick<Poll, 'finalBlockId'>): boolean {
+  return !!poll.finalBlockId;
 }

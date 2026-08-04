@@ -62,6 +62,12 @@ export class PollViewComponent implements OnInit, OnDestroy {
   hasResponded = false;
   /** Their existing answer, when editing rather than answering fresh. */
   editingExisting = false;
+  /**
+   * Guests must leave an address: the organizer emails everyone once a time
+   * is picked, and without one their answer is a vote that can never be told
+   * the outcome. Signed-in respondents already have one on their token.
+   */
+  guestEmail = '';
 
   /**
    * Responding used to be a dead end -- a "thanks" screen with no way back to
@@ -166,6 +172,7 @@ export class PollViewComponent implements OnInit, OnDestroy {
 
   canSubmit(): boolean {
     if (this.displayName.trim().length === 0 || this.submitting) return false;
+    if (this.needsGuestEmail && !this.guestEmailValid) return false;
     if (this.isQa) return this.requiredFieldsAnswered();
     return true;
   }
@@ -203,13 +210,13 @@ export class PollViewComponent implements OnInit, OnDestroy {
 
     if (this.isQa) {
       this.responsesService
-        .submitAnswers(this.poll.pollId, this.displayName.trim(), this.answers)
+        .submitAnswers(this.poll.pollId, this.displayName.trim(), this.answers, this.emailForSubmit())
         .subscribe({ next: onSuccess, error: onError });
       return;
     }
 
     this.responsesService
-      .submit(this.poll.pollId, this.displayName.trim(), this.selectedBlocks)
+      .submit(this.poll.pollId, this.displayName.trim(), this.selectedBlocks, this.emailForSubmit())
       .subscribe({ next: onSuccess, error: onError });
   }
 
@@ -275,6 +282,25 @@ export class PollViewComponent implements OnInit, OnDestroy {
    * and "edit your response" genuinely edits rather than starting from blank.
    * Best-effort: a failure just means they fill it in again.
    */
+  /** Permissive on purpose -- this catches typos, the server is the authority. */
+  get guestEmailValid(): boolean {
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(this.guestEmail.trim());
+  }
+
+  get needsGuestEmail(): boolean {
+    return !this.cognito.isAuthenticated();
+  }
+
+  get guestEmailError(): string {
+    if (!this.needsGuestEmail || !this.guestEmail.trim()) return '';
+    return this.guestEmailValid ? '' : 'That doesn\'t look like an email address.';
+  }
+
+  /** Guests send what they typed; the server reads an authed caller's token. */
+  private emailForSubmit(): string | undefined {
+    return this.needsGuestEmail ? this.guestEmail.trim().toLowerCase() : undefined;
+  }
+
   private loadExistingResponse(): void {
     this.responsesService.myResponseFor(this.pollId).subscribe({
       next: (res) => {

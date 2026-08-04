@@ -1,10 +1,14 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { InvitesService } from '../../services/invites.service';
 import { PollsService, UpdatePollSettings } from '../../services/polls.service';
+import { ResponsesService } from '../../services/responses.service';
+import { OverlapResult } from '../../models/response.model';
+import { minutesToClockLabel } from '../../models/grid.util';
 import { TIME_FILTERS, TimeFilterId } from '../availability-grid/availability-grid.component';
 import {
   FormInvite,
   FormLocation,
+  Respondent,
   Poll,
   ResultsVisibility,
   allowsResponseEdits,
@@ -48,7 +52,7 @@ const VISIBILITY_CHOICES: VisibilityChoice[] = [
   templateUrl: './admin-panel.component.html',
   styleUrls: ['./admin-panel.component.scss'],
 })
-export class AdminPanelComponent implements OnInit {
+export class AdminPanelComponent implements OnInit, OnChanges {
   @Input({ required: true }) poll!: Poll;
   /** Emitted with the updated poll so the parent can refresh its own copy. */
   @Output() pollChange = new EventEmitter<Poll>();
@@ -72,15 +76,141 @@ export class AdminPanelComponent implements OnInit {
   instructionsDraft = '';
   locationDraft: FormLocation = {};
 
+  // ── Finalize + roster ──────────────────────────────────────────────
+  respondents: Respondent[] = [];
+  respondentsLoading = false;
+  /** Candidate slots, best-supported first, for the finalize picker. */
+  finalizeOptions: { blockId: string; label: string; count: number }[] = [];
+  chosenBlockId = '';
+  finalizing = false;
+  finalizeError = '';
+  finalizeSummary = '';
+  confirmingFinalize = false;
+
+  @Input() results: OverlapResult | null = null;
+
   constructor(
     private invitesService: InvitesService,
     private pollsService: PollsService,
+    private responsesService: ResponsesService,
   ) {}
 
   ngOnInit(): void {
     this.instructionsDraft = this.poll.instructions ?? '';
     this.locationDraft = this.readLocation(this.poll);
     this.loadInvites();
+    this.loadRespondents();
+  }
+
+  ngOnChanges(): void {
+    this.buildFinalizeOptions();
+  }
+
+  loadRespondents(): void {
+    this.respondentsLoading = true;
+    this.responsesService.respondents(this.poll.pollId).subscribe({
+      next: (res) => {
+        this.respondents = res.respondents ?? [];
+        this.respondentsLoading = false;
+      },
+      error: () => {
+        this.respondentsLoading = false;
+      },
+    });
+  }
+
+  get isFinalized(): boolean {
+    return !!this.poll.finalBlockId;
+  }
+
+  get finalizedLabel(): string {
+    const blockId = this.poll.finalBlockId;
+    if (!blockId) return '';
+    return this.labelForBlock(blockId);
+  }
+
+  get contactableCount(): number {
+    return this.respondents.filter((r) => !!r.email).length;
+  }
+
+  /**
+   * Offer the slots people can actually make, best first, rather than a raw
+   * date picker -- the whole point of the form was to find out which ones
+   * those are.
+   */
+  private buildFinalizeOptions(): void {
+    const blocks = this.results?.blocks ?? [];
+    this.finalizeOptions = [...blocks]
+      .filter((b) => b.count > 0)
+      .sort((a, b) => b.count - a.count || a.blockId.localeCompare(b.blockId))
+      .slice(0, 12)
+      .map((b) => ({
+        blockId: b.blockId,
+        label: this.labelForBlock(b.blockId),
+        count: b.count,
+      }));
+    if (!this.chosenBlockId && this.finalizeOptions.length) {
+      this.chosenBlockId = this.finalizeOptions[0].blockId;
+    }
+  }
+
+  private labelForBlock(blockId: string): string {
+    const [date, time] = blockId.split('T');
+    const [h, m] = time.split(':').map(Number);
+    const d = new Date(`${date}T00:00:00`);
+    const day = d.toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+    return `${day} at ${minutesToClockLabel(h * 60 + m)}`;
+  }
+
+  askFinalize(): void {
+    if (!this.chosenBlockId) return;
+    this.finalizeError = '';
+    this.finalizeSummary = '';
+    this.confirmingFinalize = true;
+  }
+
+  cancelFinalize(): void {
+    this.confirmingFinalize = false;
+  }
+
+  /**
+   * One action, because it's one decision: record the time, close the form,
+   * and tell everyone who answered.
+   */
+  confirmFinalize(notify: boolean): void {
+    if (!this.chosenBlockId || this.finalizing) return;
+    this.finalizing = true;
+    this.finalizeError = '';
+
+    this.pollsService.finalize(this.poll.pollId, this.chosenBlockId, notify).subscribe({
+      next: (res) => {
+        this.finalizing = false;
+        this.confirmingFinalize = false;
+        this.finalizeSummary = notify
+          ? `Time confirmed. ${res.notified} notified${res.failed ? `, ${res.failed} failed` : ''}.`
+          : 'Time confirmed. No emails sent.';
+        // Reflect the new finalized/closed state without a reload.
+        this.poll = {
+          ...this.poll,
+          finalBlockId: res.finalBlockId,
+          finalStartUtc: res.startUtc,
+          closeAt: new Date().toISOString(),
+        };
+        this.pollChange.emit(this.poll);
+      },
+      error: (err) => {
+        this.finalizing = false;
+        this.finalizeError = this.friendlyError(err);
+      },
+    });
+  }
+
+  get icsUrl(): string {
+    return this.pollsService.icsUrl(this.poll.pollId);
   }
 
   private readLocation(poll: Poll): FormLocation {

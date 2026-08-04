@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { AdminPanelComponent } from './admin-panel.component';
 import { InvitesService } from '../../services/invites.service';
 import { PollsService } from '../../services/polls.service';
+import { ResponsesService } from '../../services/responses.service';
 import { Poll } from '../../models/poll.model';
 
 const POLL: Poll = {
@@ -21,11 +22,15 @@ describe('AdminPanelComponent', () => {
   let component: AdminPanelComponent;
   let invites: jasmine.SpyObj<InvitesService>;
   let polls: jasmine.SpyObj<PollsService>;
+  let responses: jasmine.SpyObj<ResponsesService>;
 
   beforeEach(async () => {
     invites = jasmine.createSpyObj('InvitesService', ['send', 'list']);
     invites.list.and.returnValue(of({ pollId: 'p1', invites: [] }));
-    polls = jasmine.createSpyObj('PollsService', ['update']);
+    polls = jasmine.createSpyObj('PollsService', ['update', 'finalize', 'icsUrl']);
+    polls.icsUrl.and.returnValue('/polls/ics?pollId=p1');
+    responses = jasmine.createSpyObj('ResponsesService', ['respondents']);
+    responses.respondents.and.returnValue(of({ respondents: [] }));
 
     await TestBed.configureTestingModule({
       declarations: [AdminPanelComponent],
@@ -33,6 +38,7 @@ describe('AdminPanelComponent', () => {
       providers: [
         { provide: InvitesService, useValue: invites },
         { provide: PollsService, useValue: polls },
+        { provide: ResponsesService, useValue: responses },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -158,6 +164,107 @@ describe('AdminPanelComponent', () => {
   it('does nothing when the note is unchanged', () => {
     component.saveInstructions();
     expect(polls.update).not.toHaveBeenCalled();
+  });
+
+  // ── Finalize ──────────────────────────────────────────────────────
+  const withResults = () => {
+    component.results = {
+      pollId: 'p1',
+      totalRespondents: 3,
+      bestBlockIds: [],
+      blocks: [
+        { blockId: '2026-08-09T18:00', utcInstant: '', count: 3, total: 3, ratio: 1 },
+        { blockId: '2026-08-09T18:30', utcInstant: '', count: 1, total: 3, ratio: 0.33 },
+        { blockId: '2026-08-10T18:00', utcInstant: '', count: 0, total: 3, ratio: 0 },
+      ],
+    };
+    component.ngOnChanges();
+  };
+
+  it('offers the best-supported slots first', () => {
+    withResults();
+    expect(component.finalizeOptions[0].blockId).toBe('2026-08-09T18:00');
+    expect(component.finalizeOptions[0].count).toBe(3);
+  });
+
+  it('never offers a slot nobody can make', () => {
+    withResults();
+    // Confirming a time zero people are free for is not a decision anyone
+    // wants to be one click away from.
+    expect(component.finalizeOptions.some((o) => o.blockId === '2026-08-10T18:00')).toBeFalse();
+  });
+
+  it('preselects the best slot', () => {
+    withResults();
+    expect(component.chosenBlockId).toBe('2026-08-09T18:00');
+  });
+
+  it('asks before closing the form and mailing everyone', () => {
+    withResults();
+    component.askFinalize();
+    expect(component.confirmingFinalize).toBeTrue();
+    expect(polls.finalize).not.toHaveBeenCalled();
+  });
+
+  it('confirms and reports how many were notified', () => {
+    withResults();
+    polls.finalize.and.returnValue(
+      of({
+        pollId: 'p1',
+        finalBlockId: '2026-08-09T18:00',
+        startUtc: '2026-08-09T22:00:00Z',
+        endUtc: '2026-08-10T01:00:00Z',
+        notified: 3,
+        failed: 0,
+      }),
+    );
+
+    component.askFinalize();
+    component.confirmFinalize(true);
+
+    expect(polls.finalize).toHaveBeenCalledWith('p1', '2026-08-09T18:00', true);
+    expect(component.finalizeSummary).toContain('3 notified');
+    expect(component.isFinalized).toBeTrue();
+  });
+
+  it('surfaces partial notification failures rather than claiming success', () => {
+    withResults();
+    polls.finalize.and.returnValue(
+      of({
+        pollId: 'p1',
+        finalBlockId: '2026-08-09T18:00',
+        startUtc: '',
+        endUtc: '',
+        notified: 2,
+        failed: 1,
+      }),
+    );
+
+    component.askFinalize();
+    component.confirmFinalize(true);
+    expect(component.finalizeSummary).toContain('1 failed');
+  });
+
+  it('can correct a pick without emailing again', () => {
+    withResults();
+    polls.finalize.and.returnValue(
+      of({ pollId: 'p1', finalBlockId: '2026-08-09T18:00', startUtc: '', endUtc: '', notified: 0, failed: 0 }),
+    );
+
+    component.confirmFinalize(false);
+
+    expect(polls.finalize).toHaveBeenCalledWith('p1', '2026-08-09T18:00', false);
+    expect(component.finalizeSummary).toContain('No emails sent');
+  });
+
+  it('counts who can actually be reached', () => {
+    component.respondents = [
+      { displayName: 'Sam', email: 'sam@x.com', isGuest: true, blockCount: 2 },
+      { displayName: 'Alex', email: null, isGuest: true, blockCount: 1 },
+    ];
+    // The dialog states this number before closing the form, so it has to
+    // exclude people with no address.
+    expect(component.contactableCount).toBe(1);
   });
 
   it('builds the public share link', () => {

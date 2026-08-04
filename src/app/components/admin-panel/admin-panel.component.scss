@@ -356,3 +356,227 @@
   justify-content: flex-end;
   margin-top: 8px;
 }
+
+/* ── Confirm the time ─────────────────────────────────────────────── */
+.finalize-empty {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface-2);
+  color: var(--xf-text-muted);
+  font-size: 0.85rem;
+}
+
+.finalize-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.finalize-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--xf-control-border);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-control-bg);
+  color: var(--xf-text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--xf-transition), background var(--xf-transition);
+
+  &:hover {
+    border-color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+}
+
+.finalize-option--active {
+  border-color: var(--xf-primary);
+  background: var(--xf-purple-100);
+  box-shadow: inset 0 0 0 1px var(--xf-primary);
+}
+
+.finalize-option__when {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.finalize-option__count {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  color: var(--xf-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.finalized-box {
+  padding: 14px 16px;
+  border: 1px solid var(--xf-primary);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-purple-100);
+}
+
+.finalized-box__when {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--xf-text);
+}
+
+.finalized-box__ics {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--xf-primary);
+  text-decoration: underline;
+}
+
+/* ── Who responded ────────────────────────────────────────────────── */
+.respondents {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.respondent {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--xf-border);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.respondent__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--xf-text);
+}
+
+.respondent__badge {
+  padding: 1px 7px;
+  border-radius: var(--xf-radius-pill);
+  background: var(--xf-surface-3);
+  color: var(--xf-text-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.respondent__email {
+  font-size: 0.8rem;
+  color: var(--xf-text-muted);
+}
+
+/* Flagged, because these people can't be told the outcome. */
+.respondent__email--missing {
+  color: var(--xf-danger-text);
+  font-style: italic;
+}
+
+/* ── Confirm dialog ───────────────────────────────────────────────── */
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(32, 18, 56, 0.45);
+}
+
+.confirm-dialog {
+  width: 100%;
+  max-width: 460px;
+  padding: 22px;
+  background: var(--xf-surface);
+  border-radius: var(--xf-radius-lg);
+  box-shadow: var(--xf-shadow-card);
+}
+
+.confirm-dialog__title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--xf-text);
+}
+
+.confirm-dialog__body {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--xf-text-muted);
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.confirm-btn {
+  padding: 9px 14px;
+  border: 1px solid var(--xf-control-border);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-control-bg);
+  color: var(--xf-text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--xf-primary);
+    box-shadow: 0 0 0 3px var(--xf-focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.confirm-btn--primary {
+  border-color: var(--xf-primary);
+  background: var(--xf-primary);
+  color: var(--xf-on-primary);
+
+  &:hover:not(:disabled) {
+    background: var(--xf-primary-hover);
+    border-color: var(--xf-primary-hover);
+  }
+}

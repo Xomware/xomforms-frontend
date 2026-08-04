@@ -8,7 +8,133 @@
       <button type="button" class="admin-btn" (click)="copyShareLink()">
         {{ copied ? 'Copied' : 'Copy' }}
       </button>
+    
+  <!-- Confirming closes the form and mails everyone; worth a beat. -->
+  <div class="confirm-backdrop" *ngIf="confirmingFinalize" (click)="cancelFinalize()">
+    <div class="confirm-dialog" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h2 class="confirm-dialog__title">Confirm this time?</h2>
+      <p class="confirm-dialog__body">
+        The form closes to new responses, and {{ contactableCount }}
+        {{ contactableCount === 1 ? 'person' : 'people' }} will be emailed the time with a link
+        to add it to their calendar.
+      </p>
+      <div class="confirm-dialog__actions">
+        <button type="button" class="confirm-btn" (click)="cancelFinalize()" [disabled]="finalizing">
+          Cancel
+        </button>
+        <button type="button" class="confirm-btn" (click)="confirmFinalize(false)" [disabled]="finalizing">
+          Confirm without emailing
+        </button>
+        <button
+          type="button"
+          class="confirm-btn confirm-btn--primary"
+          (click)="confirmFinalize(true)"
+          [disabled]="finalizing"
+        >{{ finalizing ? 'Confirming…' : 'Confirm & notify' }}</button>
+      </div>
     </div>
+  </div>
+</div>
+  </section>
+
+  <!-- ── Confirm the time ───────────────────────────────────────── -->
+  <section class="admin-section" *ngIf="poll.timezone">
+    <h2 class="admin-section__title">Confirm the time</h2>
+
+    <ng-container *ngIf="!isFinalized">
+      <p class="admin-section__hint">
+        Pick the winning slot. This closes the form and emails everyone who responded, with a
+        link to add it to their calendar.
+      </p>
+
+      <p class="finalize-empty" *ngIf="finalizeOptions.length === 0">
+        No one has marked availability yet, so there's nothing to confirm.
+      </p>
+
+      <ng-container *ngIf="finalizeOptions.length > 0">
+        <ul class="finalize-options" role="radiogroup" aria-label="Winning time">
+          <li *ngFor="let option of finalizeOptions">
+            <button
+              type="button"
+              class="finalize-option"
+              role="radio"
+              [class.finalize-option--active]="chosenBlockId === option.blockId"
+              [attr.aria-checked]="chosenBlockId === option.blockId"
+              (click)="chosenBlockId = option.blockId"
+            >
+              <span class="finalize-option__when">{{ option.label }}</span>
+              <span class="finalize-option__count">{{ option.count }} free</span>
+            </button>
+          </li>
+        </ul>
+
+        <div class="instructions-actions">
+          <button
+            type="button"
+            class="admin-btn admin-btn--primary"
+            [disabled]="!chosenBlockId || finalizing"
+            (click)="askFinalize()"
+          >Confirm this time</button>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <div class="finalized-box" *ngIf="isFinalized">
+      <p class="finalized-box__when">Confirmed for {{ finalizedLabel }}</p>
+      <a class="finalized-box__ics" [href]="icsUrl">Download calendar file</a>
+      <p class="admin-section__hint">
+        Responses are closed. Pick a different slot below to correct it.
+      </p>
+      <ul class="finalize-options" *ngIf="finalizeOptions.length > 0">
+        <li *ngFor="let option of finalizeOptions">
+          <button
+            type="button"
+            class="finalize-option"
+            [class.finalize-option--active]="chosenBlockId === option.blockId"
+            (click)="chosenBlockId = option.blockId"
+          >
+            <span class="finalize-option__when">{{ option.label }}</span>
+            <span class="finalize-option__count">{{ option.count }} free</span>
+          </button>
+        </li>
+      </ul>
+      <div class="instructions-actions" *ngIf="finalizeOptions.length > 0">
+        <button
+          type="button"
+          class="admin-btn"
+          [disabled]="finalizing || chosenBlockId === poll.finalBlockId"
+          (click)="askFinalize()"
+        >Change the time</button>
+      </div>
+    </div>
+
+    <p class="admin-error" *ngIf="finalizeError" role="alert">{{ finalizeError }}</p>
+    <p class="admin-success" *ngIf="finalizeSummary" role="status">{{ finalizeSummary }}</p>
+  </section>
+
+  <!-- ── Who responded ──────────────────────────────────────────── -->
+  <section class="admin-section">
+    <h2 class="admin-section__title">Who responded</h2>
+    <p class="admin-section__hint" *ngIf="respondents.length > 0">
+      {{ respondents.length }} {{ respondents.length === 1 ? 'person' : 'people' }} ·
+      {{ contactableCount }} reachable by email
+    </p>
+
+    <p class="finalize-empty" *ngIf="!respondentsLoading && respondents.length === 0">
+      No responses yet.
+    </p>
+
+    <ul class="respondents" *ngIf="respondents.length > 0">
+      <li *ngFor="let person of respondents" class="respondent">
+        <span class="respondent__name">
+          {{ person.displayName || 'Anonymous' }}
+          <span class="respondent__badge" *ngIf="person.isGuest">Guest</span>
+        </span>
+        <span class="respondent__email" [class.respondent__email--missing]="!person.email">
+          {{ person.email || 'no email — cannot be notified' }}
+        </span>
+      </li>
+    </ul>
   </section>
 
   <!-- ── Invites ────────────────────────────────────────────────── -->
@@ -164,4 +290,30 @@
       </span>
     </label>
   </section>
+
+  <!-- Confirming closes the form and mails everyone; worth a beat. -->
+  <div class="confirm-backdrop" *ngIf="confirmingFinalize" (click)="cancelFinalize()">
+    <div class="confirm-dialog" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h2 class="confirm-dialog__title">Confirm this time?</h2>
+      <p class="confirm-dialog__body">
+        The form closes to new responses, and {{ contactableCount }}
+        {{ contactableCount === 1 ? 'person' : 'people' }} will be emailed the time with a link
+        to add it to their calendar.
+      </p>
+      <div class="confirm-dialog__actions">
+        <button type="button" class="confirm-btn" (click)="cancelFinalize()" [disabled]="finalizing">
+          Cancel
+        </button>
+        <button type="button" class="confirm-btn" (click)="confirmFinalize(false)" [disabled]="finalizing">
+          Confirm without emailing
+        </button>
+        <button
+          type="button"
+          class="confirm-btn confirm-btn--primary"
+          (click)="confirmFinalize(true)"
+          [disabled]="finalizing"
+        >{{ finalizing ? 'Confirming…' : 'Confirm & notify' }}</button>
+      </div>
+    </div>
+  </div>
 </div>
