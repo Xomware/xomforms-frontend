@@ -1,3 +1,5 @@
+@import 'tokens';
+
 /* Trigger sits on the always-dark header; the panel is a light surface
    matching xf-select / xf-date. */
 :host {
@@ -48,9 +50,9 @@
 .user-menu__avatar--initials {
   background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
   color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: $text-3xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: $tracking-normal;
 }
 
 .user-menu__panel {
@@ -73,8 +75,8 @@
 
 .user-menu__name {
   margin: 0;
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: $text-sm;
+  font-weight: $font-weight-bold;
   color: var(--xf-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -83,7 +85,7 @@
 
 .user-menu__email {
   margin: 2px 0 0;
-  font-size: 0.78rem;
+  font-size: $text-2xs;
   color: var(--xf-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -104,7 +106,7 @@
   border-radius: var(--xf-radius-sm);
   background: transparent;
   color: var(--xf-text);
-  font-size: 0.88rem;
+  font-size: $text-sm;
   font-family: inherit;
   text-align: left;
   text-decoration: none;

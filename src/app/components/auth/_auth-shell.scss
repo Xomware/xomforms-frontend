@@ -1,3 +1,5 @@
+@import 'tokens';
+
 // Shared layout for the Xomforms auth screens (sign-in, callback).
 // Dark, on-brand shell with a purple glow — echoes the app header.
 
@@ -38,9 +40,9 @@
   }
 
   span {
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
+    font-size: $text-md;
+    font-weight: $font-weight-bold;
+    letter-spacing: $tracking-normal;
     color: var(--xf-header-text);
   }
 
@@ -52,14 +54,14 @@
 }
 
 .auth-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: $text-xl;
+  font-weight: $font-weight-bold;
   color: var(--xf-header-text);
   margin: 0 0 8px;
 }
 
 .auth-subtitle {
-  font-size: 0.92rem;
+  font-size: $text-sm;
   line-height: 1.5;
   color: var(--xf-header-muted);
   margin: 0 0 24px;
@@ -72,7 +74,7 @@
   border: 1px solid rgba(255, 82, 82, 0.32);
   border-radius: var(--xf-radius-sm);
   color: #ff9d97;
-  font-size: 0.85rem;
+  font-size: $text-sm;
   text-align: left;
 }
 
@@ -93,8 +95,8 @@
   background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
   color: #fff;
   font: inherit;
-  font-size: 0.98rem;
-  font-weight: 600;
+  font-size: $text-base;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   transition: transform var(--xf-transition), box-shadow var(--xf-transition),
     opacity var(--xf-transition);
@@ -142,8 +144,8 @@
   background: rgba(255, 255, 255, 0.03);
   color: var(--xf-header-text);
   font: inherit;
-  font-size: 0.92rem;
-  font-weight: 500;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
   cursor: pointer;
   transition: background var(--xf-transition), border-color var(--xf-transition);
 
@@ -165,7 +167,7 @@
 
 .auth-fineprint {
   margin: 20px 0 0;
-  font-size: 0.78rem;
+  font-size: $text-2xs;
   color: var(--xf-header-muted);
 }
 

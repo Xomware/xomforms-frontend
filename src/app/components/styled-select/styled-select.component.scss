@@ -1,3 +1,5 @@
+@import 'tokens';
+
 :host {
   display: block;
   position: relative;
@@ -19,7 +21,7 @@
   border-radius: var(--xf-radius-sm);
   background: var(--xf-control-bg);
   color: var(--xf-text);
-  font-size: 0.95rem;
+  font-size: $text-base;
   font-family: inherit;
   text-align: left;
   cursor: pointer;
@@ -56,7 +58,7 @@
 
 .xf-select__chevron {
   flex-shrink: 0;
-  font-size: 0.7rem;
+  font-size: $text-3xs;
   color: var(--xf-text-muted);
   transition: transform var(--xf-transition);
 }
@@ -90,7 +92,7 @@
     border-radius: var(--xf-radius-sm);
     background: var(--xf-control-bg);
     color: var(--xf-text);
-    font-size: 0.9rem;
+    font-size: $text-sm;
     font-family: inherit;
 
     &::placeholder {
@@ -113,10 +115,10 @@
 
 .xf-select__group {
   padding: 8px 10px 4px;
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: $text-3xs;
+  font-weight: $font-weight-bold;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: $tracking-wide;
   color: var(--xf-text-muted);
 }
 
@@ -128,7 +130,7 @@
   border-radius: var(--xf-radius-sm);
   background: transparent;
   color: var(--xf-text);
-  font-size: 0.92rem;
+  font-size: $text-sm;
   font-family: inherit;
   text-align: left;
   cursor: pointer;
@@ -141,7 +143,7 @@
   &.is-selected {
     background: var(--xf-purple-100);
     color: var(--xf-primary);
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
   }
 
   &:focus-visible {
@@ -153,7 +155,7 @@
 .xf-select__empty {
   padding: 12px 10px;
   margin: 0;
-  font-size: 0.86rem;
+  font-size: $text-sm;
   color: var(--xf-text-faint);
   text-align: center;
 }

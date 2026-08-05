@@ -1,3 +1,5 @@
+@import 'tokens';
+
 .admin-panel {
   display: flex;
   flex-direction: column;
@@ -13,14 +15,14 @@
 
 .admin-section__title {
   margin: 0 0 4px;
-  font-size: 0.98rem;
-  font-weight: 700;
+  font-size: $text-base;
+  font-weight: $font-weight-bold;
   color: var(--xf-text);
 }
 
 .admin-section__hint {
   margin: 0 0 12px;
-  font-size: 0.82rem;
+  font-size: $text-xs;
   color: var(--xf-text-muted);
 }
 
@@ -36,7 +38,7 @@
     border-radius: var(--xf-radius-sm);
     background: var(--xf-surface-2);
     color: var(--xf-text);
-    font-size: 0.85rem;
+    font-size: $text-sm;
     font-family: inherit;
   }
 }
@@ -48,7 +50,7 @@
   border-radius: var(--xf-radius-sm);
   background: var(--xf-control-bg);
   color: var(--xf-text);
-  font-size: 0.9rem;
+  font-size: $text-sm;
   font-family: inherit;
   resize: vertical;
 
@@ -72,7 +74,7 @@
 }
 
 .invite-count {
-  font-size: 0.8rem;
+  font-size: $text-xs;
   color: var(--xf-text-muted);
 }
 
@@ -82,9 +84,9 @@
   border-radius: var(--xf-radius-sm);
   background: var(--xf-control-bg);
   color: var(--xf-text);
-  font-size: 0.85rem;
+  font-size: $text-sm;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   transition: border-color var(--xf-transition), background var(--xf-transition);
 
@@ -119,13 +121,13 @@
 
 .admin-error {
   margin: 10px 0 0;
-  font-size: 0.82rem;
+  font-size: $text-xs;
   color: var(--xf-danger-text);
 }
 
 .admin-success {
   margin: 10px 0 0;
-  font-size: 0.82rem;
+  font-size: $text-xs;
   color: var(--xf-primary);
 }
 
@@ -146,10 +148,10 @@
 
 .invite-list__title {
   margin: 0 0 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: $text-2xs;
+  font-weight: $font-weight-bold;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: $tracking-wide;
   color: var(--xf-text-muted);
 }
 
@@ -158,7 +160,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 0.85rem;
+  font-size: $text-sm;
   color: var(--xf-text);
 }
 
@@ -172,8 +174,8 @@
   flex-shrink: 0;
   padding: 2px 8px;
   border-radius: var(--xf-radius-pill);
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: $text-3xs;
+  font-weight: $font-weight-bold;
 }
 
 .invite-badge--sent {
@@ -213,15 +215,15 @@
 
 .setting__label {
   display: block;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
   color: var(--xf-text);
 }
 
 .setting__hint {
   display: block;
   margin-top: 2px;
-  font-size: 0.78rem;
+  font-size: $text-2xs;
   color: var(--xf-text-muted);
 }
 
@@ -269,13 +271,13 @@
 }
 
 .visibility-option__label {
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
   color: var(--xf-text);
 }
 
 .visibility-option__hint {
-  font-size: 0.72rem;
+  font-size: $text-2xs;
   color: var(--xf-text-muted);
 }
 
@@ -298,9 +300,9 @@
   border-radius: var(--xf-radius-pill);
   background: var(--xf-control-bg);
   color: var(--xf-text-muted);
-  font-size: 0.78rem;
+  font-size: $text-2xs;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   transition: border-color var(--xf-transition), color var(--xf-transition),
     background var(--xf-transition);
@@ -336,7 +338,7 @@
   border-radius: var(--xf-radius-sm);
   background: var(--xf-control-bg);
   color: var(--xf-text);
-  font-size: 0.88rem;
+  font-size: $text-sm;
   font-family: inherit;
   resize: vertical;
 
@@ -365,7 +367,7 @@
   border-radius: var(--xf-radius-sm);
   background: var(--xf-surface-2);
   color: var(--xf-text-muted);
-  font-size: 0.85rem;
+  font-size: $text-sm;
 }
 
 .finalize-options {
@@ -411,13 +413,13 @@
 }
 
 .finalize-option__when {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
 }
 
 .finalize-option__count {
   flex-shrink: 0;
-  font-size: 0.74rem;
+  font-size: $text-2xs;
   color: var(--xf-text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -431,16 +433,16 @@
 
 .finalized-box__when {
   margin: 0 0 6px;
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: $text-base;
+  font-weight: $font-weight-bold;
   color: var(--xf-text);
 }
 
 .finalized-box__ics {
   display: inline-block;
   margin-bottom: 10px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
   color: var(--xf-primary);
   text-decoration: underline;
 }
@@ -474,8 +476,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
   color: var(--xf-text);
 }
 
@@ -484,14 +486,14 @@
   border-radius: var(--xf-radius-pill);
   background: var(--xf-surface-3);
   color: var(--xf-text-muted);
-  font-size: 0.66rem;
-  font-weight: 700;
+  font-size: $text-3xs;
+  font-weight: $font-weight-bold;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: $tracking-wide;
 }
 
 .respondent__email {
-  font-size: 0.8rem;
+  font-size: $text-xs;
   color: var(--xf-text-muted);
 }
 
@@ -524,14 +526,14 @@
 
 .confirm-dialog__title {
   margin: 0 0 8px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: $text-md;
+  font-weight: $font-weight-bold;
   color: var(--xf-text);
 }
 
 .confirm-dialog__body {
   margin: 0 0 20px;
-  font-size: 0.9rem;
+  font-size: $text-sm;
   line-height: 1.5;
   color: var(--xf-text-muted);
 }
@@ -549,9 +551,9 @@
   border-radius: var(--xf-radius-sm);
   background: var(--xf-control-bg);
   color: var(--xf-text);
-  font-size: 0.85rem;
+  font-size: $text-sm;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
 
   &:hover:not(:disabled) {
