@@ -69,10 +69,8 @@
   font-size: $text-xs;
   // 900 is intentional here (see comment above) and sits above the
   // $font-weight-* scale, which stops at 800. Kept rather than tokenised.
-  // NOTE: this app declares 'Inter' but never loads it — no @font-face and
-  // no webfont link — so it renders in the system fallback, which does
-  // carry a 900. If Inter is ever actually loaded, check it ships a 900
-  // face or this becomes synthetic faux-bold.
+  // Inter is now loaded at wght@400..900 in index.html, so this resolves to a
+  // real 900 face rather than synthetic faux-bold.
   // stylelint-disable-next-line declaration-property-value-allowed-list
   font-weight: 900;
 }

@@ -13,6 +13,16 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=3">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
   <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Inter was declared first in --xf-font but never loaded, so the app
+       silently rendered in the system fallback (-apple-system / Segoe UI /
+       Roboto) on every platform. Weights cover 400-900: 900 is used once, on
+       the overlap-heatmap badge, and without it the browser synthesises
+       faux-bold. JetBrains Mono is loaded for --xf-font-mono for the same
+       reason. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
   <app-root></app-root>
