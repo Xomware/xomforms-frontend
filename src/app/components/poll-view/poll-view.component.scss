@@ -1,3 +1,5 @@
+@import 'tokens';
+
 :host {
   display: block;
 }
@@ -13,14 +15,14 @@
 }
 
 h1 {
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: $text-2xl;
+  font-weight: $font-weight-bold;
   margin: 0 0 8px;
 }
 
 h2 {
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: $text-md;
+  font-weight: $font-weight-semibold;
   margin: 28px 0 12px;
 }
 
@@ -47,7 +49,7 @@ h2 {
   color: var(--xf-on-primary);
   border-radius: var(--xf-radius);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   transition: transform var(--xf-transition), box-shadow var(--xf-transition);
 
   &:hover {
@@ -81,8 +83,8 @@ h2 {
 }
 
 label {
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
   color: var(--xf-text);
 }
 
@@ -95,7 +97,7 @@ input:not([type='checkbox']):not([type='radio']) {
   border-radius: var(--xf-radius-sm);
   background: var(--xf-control-bg);
   color: var(--xf-text);
-  font-size: 0.95rem;
+  font-size: $text-base;
   font-family: inherit;
   transition: border-color var(--xf-transition), box-shadow var(--xf-transition);
 
@@ -128,14 +130,14 @@ input:not([type='checkbox']):not([type='radio']) {
   align-self: flex-start;
   margin: 0;
   padding: 7px 13px;
-  font-size: 0.82rem;
+  font-size: $text-xs;
   color: var(--xf-text);
   background: var(--xf-surface-2);
   border: 1px solid var(--xf-border-strong);
   border-radius: var(--xf-radius-pill);
 
   strong {
-    font-weight: 700;
+    font-weight: $font-weight-bold;
   }
 }
 
@@ -149,22 +151,22 @@ input:not([type='checkbox']):not([type='radio']) {
 
 .identity__note {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: $text-xs;
   color: var(--xf-text-muted);
 
   a {
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
   }
 }
 
 .optional {
-  font-weight: 400;
+  font-weight: $font-weight-regular;
   color: var(--xf-text-faint);
 }
 
 .form-error {
   color: var(--xf-danger-text);
-  font-size: 0.9rem;
+  font-size: $text-sm;
   background: var(--xf-danger-bg);
   border: 1px solid var(--xf-danger-border);
   border-radius: var(--xf-radius-sm);
@@ -179,8 +181,8 @@ input:not([type='checkbox']):not([type='radio']) {
   color: var(--xf-on-primary);
   border: none;
   border-radius: var(--xf-radius);
-  font-size: 0.98rem;
-  font-weight: 600;
+  font-size: $text-base;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   transition: transform var(--xf-transition), box-shadow var(--xf-transition),
     opacity var(--xf-transition);
@@ -221,7 +223,7 @@ input:not([type='checkbox']):not([type='radio']) {
   }
 
   h1 {
-    font-size: 1.4rem;
+    font-size: $text-xl;
   }
 
   // Name input shouldn't be capped narrow on a phone — let it fill the width.
@@ -245,13 +247,13 @@ input:not([type='checkbox']):not([type='radio']) {
   border-radius: var(--xf-radius-sm);
   background: var(--xf-surface-2);
   color: var(--xf-text-muted);
-  font-size: 0.88rem;
+  font-size: $text-sm;
   text-align: center;
 }
 
 .edit-hint {
   margin: 6px 0 0;
-  font-size: 0.82rem;
+  font-size: $text-xs;
   color: var(--xf-text-muted);
 }
 
@@ -262,7 +264,7 @@ input:not([type='checkbox']):not([type='radio']) {
   border-radius: var(--xf-radius-sm);
   background: var(--xf-purple-100);
   color: var(--xf-text);
-  font-size: 0.85rem;
+  font-size: $text-sm;
 }
 
 .editing-banner--locked {
@@ -284,13 +286,13 @@ input:not([type='checkbox']):not([type='radio']) {
   border-radius: var(--xf-radius-sm);
   background: var(--xf-surface-2);
   color: var(--xf-text);
-  font-size: 0.86rem;
+  font-size: $text-sm;
   line-height: 1.5;
 }
 
 .picking-note__icon {
   flex-shrink: 0;
-  font-size: 0.95rem;
+  font-size: $text-base;
   line-height: 1.4;
 }
 
@@ -308,16 +310,16 @@ input:not([type='checkbox']):not([type='radio']) {
 .organizer-note__label {
   display: block;
   margin-bottom: 4px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: $text-3xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: $tracking-wide;
   text-transform: uppercase;
   color: var(--xf-text-muted);
 }
 
 .organizer-note__body {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: $text-sm;
   line-height: 1.5;
   color: var(--xf-text);
   white-space: pre-wrap;
@@ -339,7 +341,7 @@ input:not([type='checkbox']):not([type='radio']) {
 
 .location-note__icon {
   flex-shrink: 0;
-  font-size: 0.95rem;
+  font-size: $text-base;
   line-height: 1.4;
 }
 
@@ -351,20 +353,20 @@ input:not([type='checkbox']):not([type='radio']) {
 }
 
 .location-note__main {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
   color: var(--xf-text);
 }
 
 .location-note__sub {
-  font-size: 0.8rem;
+  font-size: $text-xs;
   color: var(--xf-text-muted);
 }
 
 .location-note__link {
   margin-top: 2px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
   color: var(--xf-primary);
   text-decoration: underline;
   width: fit-content;
@@ -387,9 +389,9 @@ input:not([type='checkbox']):not([type='radio']) {
   border-radius: var(--xf-radius-pill);
   background: transparent;
   color: var(--xf-text-muted);
-  font-size: 0.85rem;
+  font-size: $text-sm;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   transition: background var(--xf-transition), color var(--xf-transition);
 
@@ -416,8 +418,8 @@ input:not([type='checkbox']):not([type='radio']) {
   border-radius: var(--xf-radius-sm);
   background: var(--xf-purple-100);
   color: var(--xf-text);
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
 }
 
 /* Guests have answered but have nowhere for it to live yet. */
@@ -432,7 +434,7 @@ input:not([type='checkbox']):not([type='radio']) {
   border: 1px dashed var(--xf-border-strong);
   border-radius: var(--xf-radius-sm);
   background: var(--xf-surface-2);
-  font-size: 0.85rem;
+  font-size: $text-sm;
   color: var(--xf-text-muted);
 }
 
@@ -442,7 +444,7 @@ input:not([type='checkbox']):not([type='radio']) {
   border-radius: var(--xf-radius-sm);
   background: var(--xf-primary);
   color: var(--xf-on-primary);
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   text-decoration: none;
 
   &:hover {
@@ -469,21 +471,21 @@ input:not([type='checkbox']):not([type='radio']) {
 }
 
 .stat__value {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: $text-xl;
+  font-weight: $font-weight-bold;
   color: var(--xf-primary);
   font-variant-numeric: tabular-nums;
 }
 
 .stat__label {
-  font-size: 0.76rem;
+  font-size: $text-2xs;
   color: var(--xf-text-muted);
 }
 
 .analytics-subtitle {
   margin: 0 0 10px;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: $text-sm;
+  font-weight: $font-weight-bold;
   color: var(--xf-text);
 }
 
@@ -501,7 +503,7 @@ input:not([type='checkbox']):not([type='radio']) {
   grid-template-columns: 105px 1fr 54px;
   align-items: center;
   gap: 12px;
-  font-size: 0.8rem;
+  font-size: $text-xs;
   color: var(--xf-text-muted);
 }
 
@@ -533,21 +535,21 @@ input:not([type='checkbox']):not([type='radio']) {
   border-radius: var(--xf-radius-sm);
   background: var(--xf-surface-2);
   color: var(--xf-text-muted);
-  font-size: 0.82rem;
+  font-size: $text-xs;
 }
 
 /* These existed in the markup but had no styles here at all, so validation
    messages rendered invisible and nothing ever turned red. */
 .field-hint {
   margin: 4px 0 0;
-  font-size: 0.78rem;
+  font-size: $text-2xs;
   color: var(--xf-text-muted);
 }
 
 .field-error {
   margin: 4px 0 0;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: $text-2xs;
+  font-weight: $font-weight-semibold;
   color: var(--xf-danger-text);
 }
 
@@ -564,7 +566,7 @@ input:not([type='checkbox']):not([type='radio']) {
    reads as a bug, or worse, as us already having their data. */
 .prefill-note {
   margin: 0 0 10px;
-  font-size: 0.8rem;
+  font-size: $text-xs;
   color: var(--xf-primary);
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
 }

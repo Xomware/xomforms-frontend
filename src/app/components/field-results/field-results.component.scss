@@ -1,3 +1,5 @@
+@import 'tokens';
+
 :host {
   display: block;
 }
@@ -19,21 +21,21 @@
 }
 
 .field-result__label {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: $text-base;
+  font-weight: $font-weight-semibold;
   margin: 0;
 }
 
 .field-result__count {
   flex-shrink: 0;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: $text-2xs;
+  font-weight: $font-weight-semibold;
   color: var(--xf-text-muted);
 }
 
 .field-result__note {
   margin: 0 0 10px;
-  font-size: 0.76rem;
+  font-size: $text-2xs;
   color: var(--xf-text-faint);
 }
 
@@ -45,12 +47,12 @@
 }
 
 .field-result__stat {
-  font-size: 0.82rem;
+  font-size: $text-xs;
   color: var(--xf-text-muted);
 
   strong {
     color: var(--xf-primary);
-    font-size: 1rem;
+    font-size: $text-base;
   }
 }
 
@@ -69,7 +71,7 @@
 }
 
 .bar-row__label {
-  font-size: 0.85rem;
+  font-size: $text-sm;
   color: var(--xf-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -78,12 +80,12 @@
 
 .bar-row__label--scale {
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   text-align: center;
 }
 
 .bar-row--top .bar-row__label {
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
 }
 
 .bar-row__track {
@@ -107,7 +109,7 @@
 
 .bar-row__value {
   flex-shrink: 0;
-  font-size: 0.8rem;
+  font-size: $text-xs;
   font-variant-numeric: tabular-nums;
   color: var(--xf-text-muted);
   min-width: 58px;
@@ -116,7 +118,7 @@
 
 .field-result__empty {
   margin: 8px 0 0;
-  font-size: 0.85rem;
+  font-size: $text-sm;
   color: var(--xf-text-faint);
 }
 
@@ -136,7 +138,7 @@
     .bar-row__label {
       grid-column: 1 / -1;
       white-space: normal;
-      font-size: 0.88rem;
+      font-size: $text-sm;
       line-height: 1.3;
     }
 

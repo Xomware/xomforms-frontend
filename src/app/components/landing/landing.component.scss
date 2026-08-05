@@ -1,3 +1,5 @@
+@import 'tokens';
+
 :host {
   display: block;
 }
@@ -23,8 +25,8 @@
 
 .hero-title {
   font-size: clamp(1.7rem, 4.5vw, 2.5rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: $font-weight-extrabold;
+  letter-spacing: $tracking-tight;
   margin: 0 auto 12px;
   max-width: 16ch;
   background: linear-gradient(120deg, var(--xf-text) 40%, var(--xf-primary) 100%);
@@ -63,13 +65,13 @@
 }
 
 .door-title {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: $text-lg;
+  font-weight: $font-weight-bold;
   margin: 0 0 6px;
 }
 
 .door-copy {
-  font-size: 0.92rem;
+  font-size: $text-sm;
   color: var(--xf-text-muted);
   line-height: 1.5;
   margin: 0 0 20px;
@@ -78,7 +80,7 @@
 .door-error {
   margin: 0 0 14px;
   padding: 9px 12px;
-  font-size: 0.82rem;
+  font-size: $text-xs;
   color: var(--xf-danger-text);
   background: var(--xf-danger-bg);
   border: 1px solid var(--xf-danger-border);
@@ -87,7 +89,7 @@
 
 .door-fineprint {
   margin: 16px 0 0;
-  font-size: 0.78rem;
+  font-size: $text-2xs;
   color: var(--xf-text-faint);
 }
 
@@ -106,7 +108,7 @@
   justify-content: center;
   gap: 10px;
   font: inherit;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   border-radius: var(--xf-radius);
   transition: transform var(--xf-transition), box-shadow var(--xf-transition),
@@ -129,7 +131,7 @@
   border: 1px solid var(--xf-border-strong);
   background: #fff;
   color: #23202b;
-  font-size: 0.96rem;
+  font-size: $text-base;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
@@ -146,8 +148,8 @@
   border: 1px solid var(--xf-border-strong);
   background: var(--xf-surface-2);
   color: var(--xf-text);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
 
   &:hover:not(:disabled) {
     background: var(--xf-surface-3);
@@ -162,8 +164,8 @@
 /* ── Open-by-key form ─────────────────────────────────────────────── */
 .key-label {
   display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
   color: var(--xf-text-muted);
   margin-bottom: 6px;
 }
@@ -178,7 +180,7 @@
   min-width: 0;
   padding: 11px 13px;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: $text-sm;
   color: var(--xf-text);
   background: var(--xf-surface-2);
   border: 1px solid var(--xf-border-strong);
@@ -206,7 +208,7 @@
   border: none;
   color: var(--xf-on-primary);
   background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
-  font-size: 0.9rem;
+  font-size: $text-sm;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);

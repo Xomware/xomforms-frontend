@@ -1,3 +1,5 @@
+@import 'tokens';
+
 .app-header {
   /* Always dark: the neon banner is designed to sit on a dark backdrop. */
   background: color-mix(in srgb, var(--xf-header-bg) 88%, transparent);
@@ -72,8 +74,8 @@
   padding: 7px 12px;
   border-radius: var(--xf-radius-pill);
   color: var(--xf-header-muted);
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
   text-decoration: none;
   white-space: nowrap;
   transition: color var(--xf-transition), background var(--xf-transition);
@@ -104,8 +106,8 @@
   background: rgba(255, 255, 255, 0.04);
   color: var(--xf-header-text);
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
   text-decoration: none;
   cursor: pointer;
   transition: background var(--xf-transition), border-color var(--xf-transition);
@@ -150,6 +152,6 @@
 
   .header-tab {
     padding: 6px 10px;
-    font-size: 13px;
+    font-size: $text-xs;
   }
 }

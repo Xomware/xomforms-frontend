@@ -1,3 +1,5 @@
+@import 'tokens';
+
 :host {
   display: block;
 }
@@ -12,8 +14,8 @@
 
 .fr__legend {
   padding: 0;
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
   color: var(--xf-text);
   margin-bottom: 10px;
 }
@@ -62,7 +64,7 @@
 }
 
 .fr__option-label {
-  font-size: 0.9rem;
+  font-size: $text-sm;
   color: var(--xf-text);
 }
 
@@ -73,7 +75,7 @@
   border-radius: var(--xf-radius-sm);
   background: var(--xf-surface);
   color: var(--xf-text);
-  font-size: 0.95rem;
+  font-size: $text-base;
   font-family: inherit;
 
   &:hover {
@@ -101,8 +103,8 @@
   border-radius: var(--xf-radius-sm);
   background: var(--xf-surface);
   color: var(--xf-text);
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: $text-base;
+  font-weight: $font-weight-semibold;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition: border-color var(--xf-transition), background var(--xf-transition),
@@ -129,6 +131,6 @@
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
-  font-size: 0.76rem;
+  font-size: $text-2xs;
   color: var(--xf-text-faint);
 }

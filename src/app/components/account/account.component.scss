@@ -1,3 +1,5 @@
+@import 'tokens';
+
 .account-page {
   max-width: 620px;
   margin: 0 auto;
@@ -8,7 +10,7 @@
   display: inline-block;
   margin-bottom: 16px;
   color: var(--xf-text-muted);
-  font-size: 0.85rem;
+  font-size: $text-sm;
   text-decoration: none;
 
   &:hover {
@@ -25,7 +27,7 @@
 h1 {
   margin: 0 0 20px;
   font-size: clamp(1.5rem, 4vw, 1.9rem);
-  font-weight: 700;
+  font-weight: $font-weight-bold;
   color: var(--xf-text);
 }
 
@@ -54,8 +56,8 @@ h1 {
 .profile-avatar--initials {
   background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
   color: #fff;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: $text-lg;
+  font-weight: $font-weight-bold;
 }
 
 .profile-details {
@@ -64,8 +66,8 @@ h1 {
 
 .profile-name {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: $text-md;
+  font-weight: $font-weight-bold;
   color: var(--xf-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -73,7 +75,7 @@ h1 {
 
 .profile-email {
   margin: 3px 0 0;
-  font-size: 0.88rem;
+  font-size: $text-sm;
   color: var(--xf-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -81,7 +83,7 @@ h1 {
 
 .profile-provider {
   margin: 8px 0 0;
-  font-size: 0.78rem;
+  font-size: $text-2xs;
   color: var(--xf-text-faint);
 }
 
@@ -95,9 +97,9 @@ h1 {
   border-radius: var(--xf-radius-sm);
   background: var(--xf-control-bg);
   color: var(--xf-text);
-  font-size: 0.9rem;
+  font-size: $text-sm;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   transition: border-color var(--xf-transition), color var(--xf-transition);
 
