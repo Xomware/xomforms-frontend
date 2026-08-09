@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 /* =====================================================================
    Xomforms — global design tokens + base styles
@@ -147,7 +148,10 @@ body {
 }
 
 body {
-  min-height: 100vh;
+  /* dvh, not vh: on iOS Safari 100vh is the URL-bar-collapsed height, so a
+     100vh layout is taller than the visible viewport on load and the bottom of
+     the page sits under the browser chrome. dvh tracks the live viewport. */
+  min-height: 100dvh;
   background: var(--xf-bg);
   color: var(--xf-text);
   font-family: var(--xf-font);
@@ -155,6 +159,11 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Long unbroken strings — respondent emails in the admin list, share URLs,
+     pasted location names — are wider than a phone and force the whole page
+     into horizontal scroll, which reads as a broken layout everywhere else on
+     the page too. break-word only splits words that don't otherwise fit. */
+  overflow-wrap: break-word;
 }
 
 h1,
@@ -173,6 +182,43 @@ a {
 :focus-visible {
   outline: 2px solid var(--xf-primary);
   outline-offset: 2px;
+}
+
+/* ── Touch ergonomics ──────────────────────────────────────────────
+   Stated once, globally, rather than in each of the 23 components — 54 button
+   rules in this app used <=8px padding, which lands near 30px tall with 13px
+   type, well under the 44px WCAG 2.5.5 / Apple HIG target.
+
+   Keyed on (pointer: coarse), NOT on width: a 1024px iPad is a touch device
+   and a 500px desktop window is not, so sizing targets by viewport gets both
+   wrong. Desktop density is completely untouched by this block.
+
+   These are element selectors, so any component that sets its own min-height
+   on a class still wins on specificity — this is a floor, not an override. */
+@include coarse-pointer {
+  button,
+  [role='button'],
+  select,
+  textarea,
+  input:not([type='checkbox']):not([type='radio']) {
+    min-height: 44px;
+  }
+
+  /* Checkboxes and radios are sized by the UA and resist min-height; grow the
+     box itself so the tappable area grows with it. */
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* iOS paints an opaque grey block over any tapped element by default, which
+   reads as a rendering glitch on our dark surfaces. Tinted to brand rather
+   than removed — set to transparent it would strip touch feedback from the
+   many controls here that have no :active state of their own. */
+* {
+  -webkit-tap-highlight-color: rgba(106, 54, 169, 0.15);
 }
 
 ::selection {

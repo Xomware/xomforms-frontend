@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 /* Chrome deliberately mirrors styled-select.component.scss so the date and
    dropdown fields read as one system. */
@@ -28,7 +29,7 @@
   cursor: pointer;
   transition: border-color var(--xf-transition), box-shadow var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
   }
 
@@ -108,7 +109,7 @@
   transition: border-color var(--xf-transition), color var(--xf-transition),
     background var(--xf-transition);
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
     color: var(--xf-primary);
     background: var(--xf-surface-2);
@@ -162,7 +163,7 @@
   transition: background var(--xf-transition), color var(--xf-transition),
     border-color var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     background: var(--xf-surface-2);
   }
 
@@ -210,7 +211,7 @@
   cursor: pointer;
   transition: border-color var(--xf-transition), color var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
     color: var(--xf-primary);
   }

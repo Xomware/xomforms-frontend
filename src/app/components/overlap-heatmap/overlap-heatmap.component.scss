@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 .heatmap-wrap {
   display: flex;
@@ -399,7 +400,7 @@
   text-align: center;
 }
 
-@media (max-width: 560px) {
+@include phone {
   .scroll-hint {
     display: block;
   }
@@ -423,14 +424,21 @@
   }
 
   /* Slimmer time column + tighter cells so more days fit before scrolling.
-     These cells are display-only (not tap targets), so sub-44px is fine. */
+     These cells are display-only (not tap targets), so sub-44px is fine.
+
+     Type does NOT go below $text-2xs here. _tokens.scss reserves $text-3xs
+     (11px) for "dense admin/dashboard chrome ONLY" and states that public
+     surfaces must not go below 12px — this is the results view every
+     respondent lands on, and it was breaking that rule in three places. The
+     cells are a little wider to pay for it; the grid scrolls horizontally and
+     that gesture actually works here. */
   .grid {
-    --xf-label-w: 58px;
-    --xf-cell-w: 34px;
+    --xf-label-w: 62px;
+    --xf-cell-w: 38px;
   }
 
   .cell {
-    min-height: 30px;
+    min-height: 32px;
     font-size: $text-2xs;
   }
 
@@ -439,15 +447,15 @@
   }
 
   .row-header {
-    font-size: $text-3xs;
+    font-size: $text-2xs;
   }
 
   .col-header {
-    font-size: $text-3xs;
+    font-size: $text-2xs;
     padding: 4px 2px;
   }
 
   .heat-count {
-    font-size: $text-3xs;
+    font-size: $text-2xs;
   }
 }

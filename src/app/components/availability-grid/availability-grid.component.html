@@ -40,31 +40,129 @@
     </div>
   </div>
 
-  <p class="scroll-hint" *ngIf="colDates.length > 3" aria-hidden="true">
-    Swipe the grid sideways to see every day →
-  </p>
-  <div class="grid-scroll">
-    <div #gridEl class="grid" [style.--xf-cols]="colDates.length">
-      <div class="cell label corner"></div>
-      <div class="cell label col-header" *ngFor="let date of colDates">{{ colHeaderLabel(date) }}</div>
+  <!-- ── Phone: one day at a time ─────────────────────────────────────
+       The desktop grid is not rendered at all below 576px. It set
+       `touch-action: none`, which made a sideways swipe paint cells instead
+       of panning to more days and a vertical swipe paint instead of
+       scrolling — with the grid taller than the screen there was nowhere
+       left to scroll from. Here the browser owns vertical scrolling and every
+       row is a full-width tap target. -->
+  <ng-container *ngIf="isPhone; else desktopGrid">
+    <div class="day-nav">
+      <button
+        type="button"
+        class="day-nav__arrow"
+        (click)="prevDay()"
+        [disabled]="activeDayIndex === 0"
+        aria-label="Previous day"
+      >‹</button>
+      <div class="day-nav__current" aria-live="polite">
+        <span class="day-nav__label">{{ activeDayLabel }}</span>
+        <span class="day-nav__meta">
+          Day {{ activeDayIndex + 1 }} of {{ colDates.length }}
+          <ng-container *ngIf="!readOnly">
+            · {{ selectedCountForDay(colDates[activeDayIndex]) }} selected
+          </ng-container>
+        </span>
+      </div>
+      <button
+        type="button"
+        class="day-nav__arrow"
+        (click)="nextDay()"
+        [disabled]="activeDayIndex >= colDates.length - 1"
+        aria-label="Next day"
+      >›</button>
+    </div>
 
-      <ng-container *ngFor="let row of rows">
-        <div class="cell label row-header">{{ row.label }}</div>
+    <!-- Scrollable chips rather than fixed dots: a month-long poll would turn
+         a dot row into 30 unlabelled 8px targets. -->
+    <div class="day-chips" role="tablist" aria-label="Choose a day">
+      <button
+        type="button"
+        role="tab"
+        class="day-chip"
+        *ngFor="let date of colDates; let i = index"
+        [class.day-chip--active]="i === activeDayIndex"
+        [attr.aria-selected]="i === activeDayIndex"
+        (click)="goToDay(i)"
+      >
+        {{ dayChipLabel(date) }}
+        <span class="day-chip__dot" *ngIf="selectedCountForDay(date) > 0" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="day-actions" *ngIf="!readOnly">
+      <button type="button" class="preset-btn" (click)="selectActiveDay()" [disabled]="activeDayFullySelected">
+        Select whole day
+      </button>
+      <button
+        type="button"
+        class="preset-btn"
+        (click)="clearActiveDay()"
+        [disabled]="selectedCountForDay(colDates[activeDayIndex]) === 0"
+      >
+        Clear day
+      </button>
+    </div>
+
+    <ul
+      class="time-list"
+      (pointerdown)="onListPointerDown($event)"
+      (pointerup)="onListPointerUp($event)"
+      (pointercancel)="onListPointerUp($event)"
+    >
+      <li *ngFor="let block of activeDayBlocks">
         <button
           type="button"
-          *ngFor="let block of row.cells"
-          class="cell paint-cell"
-          [class.selected]="isSelected(block.blockId)"
-          [attr.data-block-id]="block.blockId"
+          class="time-row"
+          [class.time-row--selected]="isSelected(block.blockId)"
+          [disabled]="readOnly"
           [attr.aria-pressed]="isSelected(block.blockId)"
           [attr.aria-label]="cellTitle(block)"
-          [title]="cellTitle(block)"
           (click)="onCellClick(block.blockId)"
-        ></button>
-      </ng-container>
-    </div>
-  </div>
+        >
+          <span class="time-row__time">{{ timeLabel(block) }}</span>
+          <span class="time-row__state" aria-hidden="true">
+            {{ isSelected(block.blockId) ? 'Available' : 'Tap to mark' }}
+          </span>
+          <span class="time-row__check" aria-hidden="true"></span>
+        </button>
+      </li>
+    </ul>
 
-  <p class="tz-note" *ngIf="!readOnly">Times shown in your local timezone ({{ viewerTzLabel }}). Drag to paint availability, drag again over painted cells to erase.</p>
+    <p class="swipe-hint" *ngIf="colDates.length > 1" aria-hidden="true">
+      Swipe left or right to change day
+    </p>
+  </ng-container>
+
+  <ng-template #desktopGrid>
+    <p class="scroll-hint" *ngIf="colDates.length > 3" aria-hidden="true">
+      Scroll the grid sideways to see every day →
+    </p>
+    <div class="grid-scroll">
+      <div #gridEl class="grid" [style.--xf-cols]="colDates.length">
+        <div class="cell label corner"></div>
+        <div class="cell label col-header" *ngFor="let date of colDates">{{ colHeaderLabel(date) }}</div>
+
+        <ng-container *ngFor="let row of rows">
+          <div class="cell label row-header">{{ row.label }}</div>
+          <button
+            type="button"
+            *ngFor="let block of row.cells"
+            class="cell paint-cell"
+            [class.selected]="isSelected(block.blockId)"
+            [attr.data-block-id]="block.blockId"
+            [attr.aria-pressed]="isSelected(block.blockId)"
+            [attr.aria-label]="cellTitle(block)"
+            [title]="cellTitle(block)"
+            (click)="onCellClick(block.blockId)"
+          ></button>
+        </ng-container>
+      </div>
+    </div>
+  </ng-template>
+
+  <p class="tz-note" *ngIf="!readOnly && !isPhone">Times shown in your local timezone ({{ viewerTzLabel }}). Drag to paint availability, drag again over painted cells to erase.</p>
+  <p class="tz-note" *ngIf="!readOnly && isPhone">Times shown in your local timezone ({{ viewerTzLabel }}). Tap each time you're free.</p>
   <p class="tz-note" *ngIf="readOnly">Sample grid · times shown in your local timezone ({{ viewerTzLabel }}).</p>
 </div>

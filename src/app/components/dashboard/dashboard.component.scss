@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 :host {
   display: block;
@@ -56,7 +57,7 @@
     line-height: 1;
   }
 
-  &:hover {
+  @include hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px var(--xf-purple-glow);
   }
@@ -128,7 +129,7 @@
   cursor: pointer;
   transition: background var(--xf-transition), color var(--xf-transition);
 
-  &:hover {
+  @include hover {
     color: var(--xf-text);
   }
 
@@ -167,7 +168,7 @@
   transition: border-color var(--xf-transition), box-shadow var(--xf-transition),
     transform var(--xf-transition);
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-border-strong);
     box-shadow: var(--xf-shadow-card);
   }
@@ -266,7 +267,7 @@
   background: var(--xf-primary);
   border: 1px solid var(--xf-primary);
 
-  &:hover {
+  @include hover {
     background: var(--xf-primary-hover);
     border-color: var(--xf-primary-hover);
   }
@@ -277,7 +278,7 @@
   background: transparent;
   border: 1px solid var(--xf-border-strong);
 
-  &:hover {
+  @include hover {
     background: var(--xf-surface-2);
     border-color: var(--xf-primary);
   }
@@ -337,7 +338,7 @@
   cursor: pointer;
   transition: background var(--xf-transition), border-color var(--xf-transition);
 
-  &:hover {
+  @include hover {
     background: var(--xf-surface-3);
     border-color: var(--xf-primary);
   }
@@ -376,7 +377,7 @@
   }
 }
 
-@media (max-width: 560px) {
+@include phone {
   .form-card {
     flex-direction: column;
     align-items: stretch;
@@ -471,7 +472,7 @@
   transition: border-color var(--xf-transition), color var(--xf-transition),
     background var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
     color: var(--xf-primary);
   }
@@ -492,7 +493,7 @@
   border-color: var(--xf-danger-border);
   color: var(--xf-danger-text);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-danger-text);
     color: var(--xf-danger-text);
     background: var(--xf-danger-bg);
@@ -564,7 +565,7 @@
   cursor: pointer;
   transition: border-color var(--xf-transition), color var(--xf-transition);
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
     color: var(--xf-primary);
   }
@@ -603,7 +604,7 @@
   cursor: pointer;
   transition: background var(--xf-transition);
 
-  &:hover {
+  @include hover {
     background: var(--xf-surface-2);
   }
 
@@ -616,7 +617,7 @@
 .row-menu__item--danger {
   color: var(--xf-danger-text);
 
-  &:hover {
+  @include hover {
     background: var(--xf-danger-bg);
   }
 }
@@ -630,6 +631,8 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
+  @include safe-inline(20px);
+  @include safe-bottom(20px);
   background: rgba(32, 18, 56, 0.45);
 }
 
@@ -637,6 +640,10 @@
   width: 100%;
   max-width: 420px;
   padding: 22px;
+  // A fixed dialog taller than the phone viewport has no scroll of its own,
+  // so its action buttons end up unreachable below the fold.
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   background: var(--xf-surface);
   border-radius: var(--xf-radius-lg);
   box-shadow: var(--xf-shadow-card);
@@ -674,7 +681,7 @@
   cursor: pointer;
   transition: border-color var(--xf-transition), background var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
   }
 
@@ -695,7 +702,7 @@
   background: var(--xf-primary);
   color: var(--xf-on-primary);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     background: var(--xf-primary-hover);
     border-color: var(--xf-primary-hover);
   }
@@ -705,13 +712,13 @@
   border-color: var(--xf-danger);
   background: var(--xf-danger);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     background: var(--xf-danger-text);
     border-color: var(--xf-danger-text);
   }
 }
 
-@media (max-width: 560px) {
+@include phone {
   .form-card-actions {
     flex-wrap: wrap;
   }
@@ -740,7 +747,7 @@
   cursor: pointer;
   transition: background var(--xf-transition), color var(--xf-transition);
 
-  &:hover {
+  @include hover {
     color: var(--xf-text);
   }
 
@@ -778,7 +785,7 @@
   font-family: inherit;
   cursor: pointer;
 
-  &:hover {
+  @include hover {
     color: var(--xf-text);
   }
 }

@@ -1,0 +1,114 @@
+@import 'tokens';
+
+// ================================================
+// RESPONSIVE + INPUT-MODE MIXINS
+// ================================================
+//
+// Before this file the app had 14 media queries across 6,071 lines of SCSS,
+// written against four ad-hoc pixel values (420 / 480 / 560 / 640) while
+// $breakpoint-sm sat unused in _tokens.scss. Everything now goes through these
+// mixins so a breakpoint is a decision made once.
+//
+// _tokens.scss is GENERATED and shared across the Xomware apps — it is not
+// edited from here. $breakpoint-xs below is the one value this app needs that
+// the shared scale doesn't carry; see the note on it.
+
+// ── Small-phone tier ─────────────────────────────
+// The shared scale bottoms out at $breakpoint-sm (576px), which is well above
+// the 375px iPhone SE / 390px iPhone 15 class of device where our layouts
+// actually start to break. Held locally until it can be promoted upstream into
+// xomware-frontend/src/styles/_tokens.scss via sync-tokens.mjs — do not add
+// more local breakpoints alongside it.
+$breakpoint-xs: 400px;
+
+// Subtracted from a min-width to build the matching max-width, so `phone` and
+// `tablet-up` can never both match at exactly 576px. 0.02px is the standard
+// value — it survives the 1/64px rounding browsers apply to media queries,
+// where a plain -1px leaves a gap on fractional-DPR screens.
+$bp-step: 0.02px;
+
+// ── Width ────────────────────────────────────────
+
+/// Phones. The app's primary respondent surface.
+@mixin phone {
+  @media (max-width: $breakpoint-sm - $bp-step) {
+    @content;
+  }
+}
+
+/// Narrow phones (SE-class). Use only for things that genuinely break at
+/// 375px — most layouts should stop at `phone`.
+@mixin phone-narrow {
+  @media (max-width: $breakpoint-xs - $bp-step) {
+    @content;
+  }
+}
+
+/// Phones and portrait tablets.
+@mixin tablet-down {
+  @media (max-width: $breakpoint-md - $bp-step) {
+    @content;
+  }
+}
+
+/// Desktop and up — for opting layouts back IN rather than patching them out.
+@mixin desktop-up {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+// ── Input mode ───────────────────────────────────
+// Width is not input mode. A 1024px iPad is a touch device; a 500px desktop
+// window is not. Sizing tap targets by width alone gets both wrong.
+
+/// Touch and other imprecise pointers. Grow hit areas in here.
+@mixin coarse-pointer {
+  @media (pointer: coarse) {
+    @content;
+  }
+}
+
+/// Real hover only.
+///
+/// Unguarded `:hover` is applied by mobile browsers on tap and then STICKS
+/// until the next tap elsewhere, so a painted cell keeps its hover tint and
+/// reads as a different state than it is. Every `:hover` rule in the app
+/// belongs inside this mixin.
+///
+/// $suffix appends further compound selectors to the `:hover`, so the guard
+/// composes with the codebase's existing disabled-state pattern:
+///
+///   @include hover(':not(:disabled)') { ... }
+@mixin hover($suffix: '') {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover#{$suffix} {
+      @content;
+    }
+  }
+}
+
+// ── Ergonomics ───────────────────────────────────
+
+/// Minimum comfortable touch target (WCAG 2.5.5 AAA / Apple HIG = 44px).
+///
+/// Applied only under a coarse pointer so desktop density is untouched. Sets
+/// min-height only — it deliberately does NOT impose display/alignment, since
+/// callers range from centred pills to left-aligned stacked option cards.
+@mixin tap-target($size: 44px) {
+  @include coarse-pointer {
+    min-height: $size;
+  }
+}
+
+/// Pads the bottom of a fixed/sticky element clear of the iPhone home
+/// indicator. Falls back to $fallback where the env() var is unsupported.
+@mixin safe-bottom($fallback: 0px) {
+  padding-bottom: calc(#{$fallback} + env(safe-area-inset-bottom, 0px));
+}
+
+/// Same for a notch / Dynamic Island in landscape.
+@mixin safe-inline($fallback: 0px) {
+  padding-left: calc(#{$fallback} + env(safe-area-inset-left, 0px));
+  padding-right: calc(#{$fallback} + env(safe-area-inset-right, 0px));
+}

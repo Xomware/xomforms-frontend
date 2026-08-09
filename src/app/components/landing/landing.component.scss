@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 :host {
   display: block;
@@ -133,7 +134,7 @@
   color: #23202b;
   font-size: $text-base;
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(32, 18, 56, 0.16);
   }
@@ -151,7 +152,7 @@
   font-size: $text-sm;
   font-weight: $font-weight-medium;
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     background: var(--xf-surface-3);
     border-color: var(--xf-primary);
   }
@@ -210,7 +211,7 @@
   background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
   font-size: $text-sm;
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px var(--xf-purple-glow);
   }
@@ -262,7 +263,7 @@
   }
 }
 
-@media (max-width: 420px) {
+@include phone-narrow {
   .key-row {
     flex-direction: column;
   }

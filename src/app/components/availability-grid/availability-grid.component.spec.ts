@@ -128,3 +128,157 @@ describe('AvailabilityGridComponent — quick filters', () => {
     expect(component.hasActiveFilters).toBeFalse();
   });
 });
+
+/**
+ * The phone layout replaced a grid that was unusable on touch: it set
+ * `touch-action: none`, so a sideways swipe painted a streak of cells rather
+ * than panning to more days, and a vertical swipe painted rather than
+ * scrolling the page. These cover the day-at-a-time model that replaced it.
+ */
+describe('AvailabilityGridComponent — phone layout', () => {
+  let fixture: ComponentFixture<AvailabilityGridComponent>;
+  let component: AvailabilityGridComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [AvailabilityGridComponent],
+      schemas: [NO_ERRORS_SCHEMA],
+    }).compileComponents();
+    fixture = TestBed.createComponent(AvailabilityGridComponent);
+    component = fixture.componentInstance;
+    component.blocks = BLOCKS;
+    component.ngOnChanges({ blocks: { currentValue: BLOCKS } as never });
+    fixture.detectChanges();
+  });
+
+  /** The handlers read only these three fields. */
+  const pointer = (x: number, y: number) =>
+    ({ isPrimary: true, clientX: x, clientY: y }) as PointerEvent;
+
+  const swipe = (fromX: number, toX: number, fromY = 0, toY = 0) => {
+    component.onListPointerDown(pointer(fromX, fromY));
+    component.onListPointerUp(pointer(toX, toY));
+  };
+
+  it('shows one day at a time', () => {
+    expect(component.colDates).toEqual(['2026-08-03', '2026-08-08']);
+    expect(component.activeDayBlocks.map((b) => b.blockId)).toEqual([
+      '2026-08-03T10:00',
+      '2026-08-03T18:00',
+      '2026-08-03T20:00',
+    ]);
+  });
+
+  it('moves between days and stops at both ends', () => {
+    component.nextDay();
+    expect(component.activeDayIndex).toBe(1);
+    component.nextDay();
+    expect(component.activeDayIndex).toBe(1);
+    component.prevDay();
+    component.prevDay();
+    expect(component.activeDayIndex).toBe(0);
+  });
+
+  it('counts selections per day, which is what the chip dots read', () => {
+    component.onCellClick('2026-08-03T10:00');
+    component.onCellClick('2026-08-08T18:00');
+    expect(component.selectedCountForDay('2026-08-03')).toBe(1);
+    expect(component.selectedCountForDay('2026-08-08')).toBe(1);
+  });
+
+  it('selects and clears just the day on screen', () => {
+    component.selectActiveDay();
+    expect(component.selectedCountForDay('2026-08-03')).toBe(3);
+    expect(component.selectedCountForDay('2026-08-08')).toBe(0);
+    expect(component.activeDayFullySelected).toBeTrue();
+
+    component.clearActiveDay();
+    expect(component.selectedCountForDay('2026-08-03')).toBe(0);
+  });
+
+  it('a decisive horizontal swipe changes the day', () => {
+    swipe(300, 200); // leftward -> next
+    expect(component.activeDayIndex).toBe(1);
+    swipe(200, 300); // rightward -> prev
+    expect(component.activeDayIndex).toBe(0);
+  });
+
+  it('ignores a short drag, so a tap is never read as a swipe', () => {
+    swipe(300, 280);
+    expect(component.activeDayIndex).toBe(0);
+  });
+
+  it('ignores a mostly-vertical drag, so scrolling never changes the day', () => {
+    // The failure this prevents: a diagonal scroll-flick flipping the day out
+    // from under the user mid-scroll.
+    swipe(300, 220, 0, 200);
+    expect(component.activeDayIndex).toBe(0);
+  });
+
+  it('a swipe that starts on a time row does not also toggle it', () => {
+    // pointerup precedes click, so the guard is already set by then.
+    swipe(300, 200);
+    component.onCellClick('2026-08-03T10:00');
+    expect(component.selected.has('2026-08-03T10:00')).toBeFalse();
+
+    // ...and only the one click is swallowed.
+    component.onCellClick('2026-08-03T10:00');
+    expect(component.selected.has('2026-08-03T10:00')).toBeTrue();
+  });
+
+  it('clamps the active day when the poll range shrinks under it', () => {
+    component.nextDay();
+    expect(component.activeDayIndex).toBe(1);
+
+    const shorter = BLOCKS.filter((b) => b.blockId.startsWith('2026-08-03'));
+    component.blocks = shorter;
+    component.ngOnChanges({ blocks: { currentValue: shorter } as never });
+
+    expect(component.activeDayIndex).toBe(0);
+    expect(component.activeDayBlocks.length).toBe(3);
+  });
+
+  it('renders the day list instead of the grid, and never both', () => {
+    // The two layouts are swapped by *ngIf, so this also guards the thing AOT
+    // can't: that the phone branch is reachable and the grid is really gone
+    // (its pointer listeners are what made touch unusable).
+    component.isPhone = true;
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelectorAll('.time-row').length).toBe(3);
+    expect(el.querySelector('.grid')).toBeNull();
+    expect(el.querySelectorAll('.day-chip').length).toBe(2);
+
+    component.isPhone = false;
+    fixture.detectChanges();
+    expect(el.querySelector('.grid')).not.toBeNull();
+    expect(el.querySelector('.time-row')).toBeNull();
+  });
+
+  it('marks the row for a selected block', () => {
+    component.isPhone = true;
+    component.onCellClick('2026-08-03T18:00');
+    fixture.detectChanges();
+
+    const rows = fixture.nativeElement.querySelectorAll('.time-row');
+    expect(rows[1].classList).toContain('time-row--selected');
+    expect(rows[1].getAttribute('aria-pressed')).toBe('true');
+    expect(rows[0].getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('builds the day index from blocks, not from grid rows', () => {
+    // A sparse grid (a day missing a time the others have) would shift every
+    // later day by one if the day index were sliced out of `rows`.
+    const sparse: GridBlock[] = [
+      block('2026-08-03', '10:00'),
+      block('2026-08-03', '18:00'),
+      block('2026-08-08', '18:00'), // no 10:00 on this day
+    ];
+    component.blocks = sparse;
+    component.ngOnChanges({ blocks: { currentValue: sparse } as never });
+
+    component.goToDay(1);
+    expect(component.activeDayBlocks.map((b) => b.blockId)).toEqual(['2026-08-08T18:00']);
+  });
+});
