@@ -40,37 +40,65 @@
     <button type="button" class="back-link back-link--btn" (click)="backToPicker()">← Starting point</button>
     <h1>Create a scheduler poll</h1>
     <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-      <div class="field">
-        <label for="title">Title</label>
-        <input id="title" type="text" formControlName="title" placeholder="Fantasy Draft Night" />
-        <p class="field-error" *ngIf="fieldInvalid('title')">Title is required.</p>
-      </div>
+      <!-- ── 1. What is it? ──────────────────────────────────────────
+           Title is the only required field here. The three optional text
+           fields that used to sit between it and the first date are behind a
+           disclosure — a creator whose goal is "find a time next week" was
+           scrolling past a description box, a location picker and an
+           instructions box before reaching anything that shapes the poll. -->
+      <section class="form-section">
+        <h2 class="form-section__title">What is it?</h2>
 
-      <div class="field">
-        <label for="description">Description <span class="optional">(optional)</span></label>
-        <textarea id="description" formControlName="description" rows="3"></textarea>
-      </div>
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" type="text" formControlName="title" placeholder="Fantasy Draft Night" />
+          <p class="field-error" *ngIf="fieldInvalid('title')">Title is required.</p>
+        </div>
 
-      <div class="field">
-        <label>Where does it happen? <span class="optional">(optional)</span></label>
-        <app-location-picker [value]="location" (valueChange)="location = $event"></app-location-picker>
-      </div>
+        <button
+          type="button"
+          class="disclosure"
+          (click)="showDetails = !showDetails"
+          [attr.aria-expanded]="showDetails"
+        >
+          <span class="disclosure__sign" aria-hidden="true">{{ showDetails ? '−' : '+' }}</span>
+          Description, location, and instructions
+          <span class="disclosure__note">optional</span>
+        </button>
 
-      <div class="field">
-        <label for="schedInstructions">
-          Instructions for respondents <span class="optional">(optional)</span>
-        </label>
-        <textarea
-          id="schedInstructions"
-          formControlName="instructions"
-          rows="2"
-          placeholder="e.g. Only pick slots you can commit to for the whole season."
-        ></textarea>
-        <p class="field-hint">
-          Shown above the grid and included in invite emails. Use it to say <em>how</em> to
-          answer — the event details are filled in automatically.
+        <div class="detail-fields" *ngIf="showDetails">
+          <div class="field">
+            <label for="description">Description</label>
+            <textarea id="description" formControlName="description" rows="3"></textarea>
+          </div>
+
+          <div class="field">
+            <label>Where does it happen?</label>
+            <app-location-picker [value]="location" (valueChange)="location = $event"></app-location-picker>
+          </div>
+
+          <div class="field">
+            <label for="schedInstructions">Instructions for respondents</label>
+            <textarea
+              id="schedInstructions"
+              formControlName="instructions"
+              rows="2"
+              placeholder="e.g. Only pick slots you can commit to for the whole season."
+            ></textarea>
+            <p class="field-hint">
+              Shown above the grid and included in invite emails. Use it to say <em>how</em> to
+              answer — the event details are filled in automatically.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 2. When could it happen? ───────────────────────────────── -->
+      <section class="form-section">
+        <h2 class="form-section__title">When could it happen?</h2>
+        <p class="form-section__hint">
+          The window you're searching inside. Respondents pick their times within it.
         </p>
-      </div>
 
       <div class="field-row">
         <div class="field">
@@ -90,9 +118,7 @@
         </div>
       </div>
 
-      <fieldset class="time-config">
-        <legend>When can it happen?</legend>
-
+      <div class="time-config">
         <div class="field">
           <span class="field-label">Offer start times</span>
           <div class="granularity-group" role="radiogroup" aria-label="Start time interval">
@@ -178,7 +204,8 @@
             The event's home timezone. Responders always see times in <em>their own</em> local zone.
           </p>
         </div>
-      </fieldset>
+      </div>
+      </section>
 
       <!-- Responder preview -->
       <section class="preview" *ngIf="hasPreview">
@@ -199,36 +226,41 @@
         <app-availability-grid [blocks]="previewBlocks" [readOnly]="true"></app-availability-grid>
       </section>
 
-      <div class="field checkbox-field">
-        <label>
-          <input type="checkbox" formControlName="guestAllowed" />
-          Anyone with the link can respond <span class="checkbox-note">— no account needed (default)</span>
-        </label>
-      </div>
+      <!-- ── 3. Responses ───────────────────────────────────────────── -->
+      <section class="form-section">
+        <h2 class="form-section__title">Responses</h2>
 
-      <div class="field checkbox-field">
-        <label>
-          <input type="checkbox" formControlName="showResultsToRespondents" />
-          Let respondents see the live results too
-        </label>
-      </div>
-
-      <div class="field">
-        <label for="closeAtDate">Close responses at <span class="optional">(optional)</span></label>
-        <div class="field-row">
-          <xf-date
-            formControlName="closeAtDate"
-            ariaLabel="Close responses on"
-            placeholder="Never closes"
-          ></xf-date>
-          <xf-select
-            [options]="closeTimeOptions"
-            formControlName="closeAtTime"
-            [searchable]="true"
-            ariaLabel="Close responses at time"
-          ></xf-select>
+        <div class="field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="guestAllowed" />
+            Anyone with the link can respond <span class="checkbox-note">— no account needed (default)</span>
+          </label>
         </div>
-      </div>
+
+        <div class="field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="showResultsToRespondents" />
+            Let respondents see the live results too
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="closeAtDate">Close responses at <span class="optional">(optional)</span></label>
+          <div class="field-row">
+            <xf-date
+              formControlName="closeAtDate"
+              ariaLabel="Close responses on"
+              placeholder="Never closes"
+            ></xf-date>
+            <xf-select
+              [options]="closeTimeOptions"
+              formControlName="closeAtTime"
+              [searchable]="true"
+              ariaLabel="Close responses at time"
+            ></xf-select>
+          </div>
+        </div>
+      </section>
 
       <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
 

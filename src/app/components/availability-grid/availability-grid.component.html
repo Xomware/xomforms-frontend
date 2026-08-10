@@ -1,4 +1,22 @@
 <div class="grid-wrap" [class.grid-wrap--readonly]="readOnly">
+  <!-- Most people's availability is a sentence, not 40 cells. The same day/time
+       filters used to live only as small pills in the toolbar below, where they
+       read as a utility rather than as the way to answer. -->
+  <div class="quick-answer" *ngIf="!readOnly && quickAnswers.length > 0">
+    <p class="quick-answer__q">How are you usually free?</p>
+    <div class="quick-answer__opts">
+      <button
+        type="button"
+        *ngFor="let qa of quickAnswers"
+        class="quick-btn"
+        [class.quick-btn--active]="isQuickAnswerActive(qa.id)"
+        [attr.aria-pressed]="isQuickAnswerActive(qa.id)"
+        (click)="applyQuickAnswer(qa.id)"
+      >{{ qa.label }}</button>
+    </div>
+    <p class="quick-answer__then">Pick one to fill it in, then adjust below — or just answer by hand.</p>
+  </div>
+
   <div class="toolbar" *ngIf="!readOnly">
     <span class="selected-count">{{ selected.size }} block{{ selected.size === 1 ? '' : 's' }} selected</span>
     <!-- Toggles that combine: day filters union with each other, then
@@ -93,7 +111,7 @@
 
     <div class="day-actions" *ngIf="!readOnly">
       <button type="button" class="preset-btn" (click)="selectActiveDay()" [disabled]="activeDayFullySelected">
-        Select whole day
+        Whole day
       </button>
       <button
         type="button"
@@ -103,7 +121,23 @@
       >
         Clear day
       </button>
+      <!-- The biggest single saving here: most people's week is the same shape
+           every day, so this turns "set 5 days" into "set 1 and tap once". -->
+      <button
+        type="button"
+        class="preset-btn"
+        *ngIf="colDates.length > 1"
+        (click)="copyActiveDayToAllDays()"
+        [disabled]="selectedCountForDay(colDates[activeDayIndex]) === 0"
+      >
+        Copy to every day
+      </button>
     </div>
+
+    <p class="range-hint" *ngIf="rangeAnchorId && !readOnly" aria-live="polite">
+      Started at <strong>{{ rangeAnchorLabel }}</strong> — tap another time to fill everything
+      in between, or tap it again to undo.
+    </p>
 
     <ul
       class="time-list"
@@ -116,14 +150,21 @@
           type="button"
           class="time-row"
           [class.time-row--selected]="isSelected(block.blockId)"
+          [class.time-row--anchor]="rangeAnchorId === block.blockId"
           [disabled]="readOnly"
           [attr.aria-pressed]="isSelected(block.blockId)"
           [attr.aria-label]="cellTitle(block)"
-          (click)="onCellClick(block.blockId)"
+          (click)="onTimeRowClick(block.blockId)"
         >
           <span class="time-row__time">{{ timeLabel(block) }}</span>
           <span class="time-row__state" aria-hidden="true">
-            {{ isSelected(block.blockId) ? 'Available' : 'Tap to mark' }}
+            {{
+              rangeAnchorId === block.blockId
+                ? 'Start — tap an end time'
+                : isSelected(block.blockId)
+                  ? 'Available'
+                  : 'Tap to mark'
+            }}
           </span>
           <span class="time-row__check" aria-hidden="true"></span>
         </button>

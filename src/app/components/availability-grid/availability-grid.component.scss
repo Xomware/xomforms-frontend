@@ -9,6 +9,77 @@
   -webkit-user-select: none;
 }
 
+/* ── Quick answers ─────────────────────────────────────────────────────
+   Leads the component on every viewport. These are the same day/time filters
+   the toolbar pills below drive — the difference is only that here they're
+   phrased as an answer to a question and given the weight of the primary
+   path, which is what they always should have been. */
+.quick-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius);
+  background: var(--xf-surface-2);
+}
+
+.quick-answer__q {
+  margin: 0;
+  font-size: $text-md;
+  font-weight: $font-weight-bold;
+  color: var(--xf-text);
+}
+
+.quick-answer__opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-answer__then {
+  margin: 0;
+  font-size: $text-2xs;
+  color: var(--xf-text-muted);
+}
+
+.quick-btn {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-control-bg);
+  color: var(--xf-text);
+  font: inherit;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: border-color var(--xf-transition), background var(--xf-transition),
+    color var(--xf-transition);
+
+  @include hover {
+    border-color: var(--xf-primary);
+    color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
+  }
+}
+
+.quick-btn--active {
+  border-color: var(--xf-primary);
+  background: var(--xf-primary);
+  color: var(--xf-on-primary);
+
+  @include hover {
+    background: var(--xf-primary-hover);
+    color: var(--xf-on-primary);
+  }
+}
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -348,6 +419,18 @@
   }
 }
 
+/* Live explanation of the half-finished range. Without it, the first tap of a
+   two-tap gesture looks identical to a plain single selection. */
+.range-hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--xf-primary);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-purple-100);
+  font-size: $text-2xs;
+  color: var(--xf-text);
+}
+
 .time-list {
   list-style: none;
   margin: 0;
@@ -438,6 +521,18 @@
         var(--xf-on-primary) 74%,
         transparent 74%
       );
+  }
+}
+
+/* The pending range start. Dashed so it reads as "not finished yet" rather
+   than as a differently-coloured selection. */
+.time-row--anchor {
+  border-style: dashed;
+  border-color: var(--xf-primary);
+
+  .time-row__state {
+    color: var(--xf-primary);
+    font-weight: $font-weight-bold;
   }
 }
 

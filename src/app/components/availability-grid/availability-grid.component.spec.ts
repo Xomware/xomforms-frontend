@@ -129,6 +129,89 @@ describe('AvailabilityGridComponent — quick filters', () => {
   });
 });
 
+describe('AvailabilityGridComponent — quick answers', () => {
+  let fixture: ComponentFixture<AvailabilityGridComponent>;
+  let component: AvailabilityGridComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [AvailabilityGridComponent],
+      schemas: [NO_ERRORS_SCHEMA],
+    }).compileComponents();
+    fixture = TestBed.createComponent(AvailabilityGridComponent);
+    component = fixture.componentInstance;
+    component.blocks = BLOCKS;
+    fixture.detectChanges();
+  });
+
+  it('answers "weekday evenings" in one tap', () => {
+    component.applyQuickAnswer('weekday-evenings');
+    expect(Array.from(component.selected).sort()).toEqual([
+      '2026-08-03T18:00',
+      '2026-08-03T20:00',
+    ]);
+    expect(component.isQuickAnswerActive('weekday-evenings')).toBeTrue();
+  });
+
+  it('answers "weekends" in one tap', () => {
+    component.applyQuickAnswer('weekends');
+    expect(Array.from(component.selected).sort()).toEqual([
+      '2026-08-08T10:00',
+      '2026-08-08T18:00',
+    ]);
+  });
+
+  it('replaces rather than accumulates, so two answers are never both on', () => {
+    component.applyQuickAnswer('weekday-evenings');
+    component.applyQuickAnswer('weekends');
+    expect(component.isQuickAnswerActive('weekday-evenings')).toBeFalse();
+    expect(component.isQuickAnswerActive('weekends')).toBeTrue();
+  });
+
+  it('narrows correctly when going from "anytime" to a specific answer', () => {
+    // Regression: "anytime" via selectAll() wrote into the hand-painted set,
+    // which filters never take back — so this left everything selected and
+    // "Weekends" looked like a dead control.
+    component.applyQuickAnswer('anytime');
+    expect(component.selected.size).toBe(BLOCKS.length);
+
+    component.applyQuickAnswer('weekends');
+    expect(Array.from(component.selected).sort()).toEqual([
+      '2026-08-08T10:00',
+      '2026-08-08T18:00',
+    ]);
+  });
+
+  it('tapping the active answer again undoes it', () => {
+    component.applyQuickAnswer('weekends');
+    component.applyQuickAnswer('weekends');
+    expect(component.selected.size).toBe(0);
+    expect(component.isQuickAnswerActive('weekends')).toBeFalse();
+  });
+
+  it('"anytime" selects everything, and toggles back off', () => {
+    component.applyQuickAnswer('anytime');
+    expect(component.selected.size).toBe(BLOCKS.length);
+    expect(component.isQuickAnswerActive('anytime')).toBeTrue();
+
+    component.applyQuickAnswer('anytime');
+    expect(component.selected.size).toBe(0);
+  });
+
+  it('hides the evenings answer when the creator offers no evening filter', () => {
+    // A button labelled "Weekday evenings" on a mornings-only poll would be a
+    // control that can't do what it says.
+    component.timeFilterIds = ['morning'];
+    expect(component.quickAnswers.map((q) => q.id)).toEqual(['weekends', 'anytime']);
+  });
+
+  it('keeps hand-painted cells when a quick answer is applied', () => {
+    component.onCellClick('2026-08-08T10:00');
+    component.applyQuickAnswer('weekday-evenings');
+    expect(component.selected.has('2026-08-08T10:00')).toBeTrue();
+  });
+});
+
 /**
  * The phone layout replaced a grid that was unusable on touch: it set
  * `touch-action: none`, so a sideways swipe painted a streak of cells rather
@@ -265,6 +348,58 @@ describe('AvailabilityGridComponent — phone layout', () => {
     expect(rows[1].classList).toContain('time-row--selected');
     expect(rows[1].getAttribute('aria-pressed')).toBe('true');
     expect(rows[0].getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('fills the range between two taps', () => {
+    // The whole point: a 4-hour window used to be one tap per 30-minute slot.
+    component.onTimeRowClick('2026-08-03T10:00');
+    expect(component.rangeAnchorId).toBe('2026-08-03T10:00');
+
+    component.onTimeRowClick('2026-08-03T20:00');
+    expect(Array.from(component.selected).sort()).toEqual([
+      '2026-08-03T10:00',
+      '2026-08-03T18:00',
+      '2026-08-03T20:00',
+    ]);
+    expect(component.rangeAnchorId).toBeNull();
+  });
+
+  it('closes a range regardless of which end is tapped first', () => {
+    component.onTimeRowClick('2026-08-03T20:00');
+    component.onTimeRowClick('2026-08-03T10:00');
+    expect(component.selected.size).toBe(3);
+  });
+
+  it('tapping a picked time un-picks it and cancels a pending range', () => {
+    component.onTimeRowClick('2026-08-03T10:00');
+    expect(component.rangeAnchorId).toBe('2026-08-03T10:00');
+
+    component.onTimeRowClick('2026-08-03T10:00');
+    expect(component.selected.has('2026-08-03T10:00')).toBeFalse();
+    expect(component.rangeAnchorId).toBeNull();
+  });
+
+  it('drops a pending range when the day changes', () => {
+    // Otherwise the next tap fills a range the user never started, on a day
+    // they were only passing through.
+    component.onTimeRowClick('2026-08-03T10:00');
+    component.nextDay();
+    expect(component.rangeAnchorId).toBeNull();
+
+    component.onTimeRowClick('2026-08-08T18:00');
+    expect(component.selected.has('2026-08-08T10:00')).toBeFalse();
+  });
+
+  it('copies the day on screen to every other day by time-of-day', () => {
+    component.onTimeRowClick('2026-08-03T18:00');
+    component.copyActiveDayToAllDays();
+    expect(component.selected.has('2026-08-08T18:00')).toBeTrue();
+    expect(component.selected.has('2026-08-08T10:00')).toBeFalse();
+  });
+
+  it('copying a day with nothing picked does nothing', () => {
+    component.copyActiveDayToAllDays();
+    expect(component.selected.size).toBe(0);
   });
 
   it('builds the day index from blocks, not from grid rows', () => {
