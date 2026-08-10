@@ -83,6 +83,13 @@ export const TIME_FILTERS: TimeFilterOption[] = [
 /** Shown when a creator hasn't picked a set -- the broadly useful ones. */
 export const DEFAULT_TIME_FILTER_IDS: TimeFilterId[] = ['after5', 'after7'];
 
+export type QuickAnswerId = 'weekday-evenings' | 'weekends' | 'anytime';
+
+export interface QuickAnswer {
+  id: QuickAnswerId;
+  label: string;
+}
+
 @Component({
   selector: 'app-availability-grid',
   templateUrl: './availability-grid.component.html',
@@ -281,6 +288,84 @@ export class AvailabilityGridComponent implements OnChanges, OnDestroy {
     this.emitSelection();
   }
 
+  // ── Quick answers ──────────────────────────────────────────────────
+  // Most people's availability is a sentence, not a set of 40 cells: "weekday
+  // evenings", "weekends", "whenever". The primitives to express that already
+  // existed as day/time filters, but they were rendered as small pills in a
+  // toolbar above the grid, so they read as a secondary utility and the grid
+  // read as the way to answer. These are the same primitives promoted to the
+  // top and phrased as an answer to a question.
+
+  /**
+   * The first non-morning filter the creator left enabled — what "evenings"
+   * resolves to for this poll. A creator who offers only mornings gets no
+   * evening quick answer rather than a button that lies.
+   */
+  private get eveningFilterId(): TimeFilterId | null {
+    return this.enabledTimeFilters.find((f) => f.id !== 'morning')?.id ?? null;
+  }
+
+  get quickAnswers(): QuickAnswer[] {
+    const out: QuickAnswer[] = [];
+    if (this.eveningFilterId) out.push({ id: 'weekday-evenings', label: 'Weekday evenings' });
+    out.push({ id: 'weekends', label: 'Weekends' });
+    out.push({ id: 'anytime', label: "I'm free anytime" });
+    return out;
+  }
+
+  isQuickAnswerActive(id: QuickAnswerId): boolean {
+    if (id === 'anytime') {
+      return (
+        this.activeTimeFilterId === null &&
+        this.activeDayFilters.has('weekdays') &&
+        this.activeDayFilters.has('weekends')
+      );
+    }
+    if (id === 'weekends') {
+      return (
+        this.activeTimeFilterId === null &&
+        this.activeDayFilters.size === 1 &&
+        this.activeDayFilters.has('weekends')
+      );
+    }
+    return (
+      this.activeTimeFilterId === this.eveningFilterId &&
+      this.activeDayFilters.size === 1 &&
+      this.activeDayFilters.has('weekdays')
+    );
+  }
+
+  /**
+   * Quick answers REPLACE the current filter combination rather than adding to
+   * it — they're answers to one question, so two of them being on at once
+   * would be incoherent. Hand-painted cells still survive, as with any filter.
+   */
+  applyQuickAnswer(id: QuickAnswerId): void {
+    if (this.isQuickAnswerActive(id)) {
+      // Tapping the active answer again undoes it, so the control is a toggle
+      // in both directions rather than a one-way trap.
+      this.clearFilters();
+      this.applyFilters();
+      return;
+    }
+
+    this.clearFilters();
+    if (id === 'anytime') {
+      // Expressed as "every day, no time restriction" rather than via
+      // selectAll(). selectAll() writes into the hand-painted set, which
+      // filters deliberately never take back — so a subsequent "Weekends"
+      // would have left everything selected and looked like a dead control.
+      this.activeDayFilters.add('weekdays');
+      this.activeDayFilters.add('weekends');
+    } else if (id === 'weekends') {
+      this.activeDayFilters.add('weekends');
+    } else {
+      this.activeDayFilters.add('weekdays');
+      this.activeTimeFilterId = this.eveningFilterId;
+    }
+    this.applyFilters();
+  }
+
   // ── Phone layout ───────────────────────────────────────────────────
   // One day at a time as a full-width vertical list. This exists because the
   // desktop grid is unusable on a phone: it set `touch-action: none`, so a
@@ -329,6 +414,82 @@ export class AvailabilityGridComponent implements OnChanges, OnDestroy {
   goToDay(index: number): void {
     if (index < 0 || index >= this.colDates.length) return;
     this.activeDayIndex = index;
+    // A range can only span one day, so leaving it armed across a day change
+    // would make the next tap fill a range the user never started.
+    this.rangeAnchorId = null;
+  }
+
+  // ── Range tap ──────────────────────────────────────────────────────
+  // Tapping every block individually is the real cost of answering on a phone:
+  // a 5-day poll with 30-minute slots over a 4-hour window is ~40 taps. Tap a
+  // start, tap an end, and everything between fills — 2 taps per day.
+
+  /** The row awaiting a second tap to close a range, if any. */
+  rangeAnchorId: string | null = null;
+
+  get rangeAnchorLabel(): string {
+    const block = this.activeDayBlocks.find((b) => b.blockId === this.rangeAnchorId);
+    return block ? this.timeLabel(block) : '';
+  }
+
+  /**
+   * The phone list's tap handler. Distinct from onCellClick (the desktop grid's
+   * plain toggle) because a range only makes sense in a single ordered column
+   * of times.
+   */
+  onTimeRowClick(blockId: string): void {
+    if (this.readOnly) return;
+    if (this.swipeConsumed) {
+      this.swipeConsumed = false;
+      return;
+    }
+
+    // Tapping something already picked always just un-picks it. That keeps a
+    // mistap cheap to undo, and doubles as the way to cancel a pending range
+    // (the anchor is itself selected).
+    if (this.selected.has(blockId)) {
+      this.rangeAnchorId = null;
+      this.selected.delete(blockId);
+      this.manualSelected.delete(blockId);
+      this.emitSelection();
+      return;
+    }
+
+    const day = this.activeDayBlocks;
+    const anchorIdx = this.rangeAnchorId ? day.findIndex((b) => b.blockId === this.rangeAnchorId) : -1;
+    const targetIdx = day.findIndex((b) => b.blockId === blockId);
+
+    if (anchorIdx !== -1 && targetIdx !== -1) {
+      // Order-independent: tapping an earlier time to close the range reads
+      // the same to the user as tapping a later one.
+      const [lo, hi] = anchorIdx < targetIdx ? [anchorIdx, targetIdx] : [targetIdx, anchorIdx];
+      for (let i = lo; i <= hi; i++) this.manualSelected.add(day[i].blockId);
+      this.rangeAnchorId = null;
+      this.applyFilters();
+      return;
+    }
+
+    this.manualSelected.add(blockId);
+    this.rangeAnchorId = blockId;
+    this.applyFilters();
+  }
+
+  /**
+   * Applies the day on screen to every other day, matched on time-of-day.
+   * The single biggest saving available: most people's week is the same shape
+   * every day, so this turns "set 5 days" into "set 1 day and tap once".
+   */
+  copyActiveDayToAllDays(): void {
+    const times = new Set(
+      this.activeDayBlocks
+        .filter((b) => this.selected.has(b.blockId))
+        .map((b) => b.blockId.split('T')[1]),
+    );
+    if (times.size === 0) return;
+    for (const b of this.blocks) {
+      if (times.has(b.blockId.split('T')[1])) this.manualSelected.add(b.blockId);
+    }
+    this.applyFilters();
   }
 
   prevDay(): void {

@@ -151,6 +151,13 @@ export class PollCreateComponent implements OnInit, OnDestroy {
   readonly addableFieldTypes: FieldType[] = ['single_choice', 'multi_choice', 'dropdown', 'scale'];
 
   mode: CreateMode = 'picker';
+  /**
+   * Whether the scheduler form's optional description/location/instructions
+   * fields are revealed. Collapsed by default: they were sitting between the
+   * title and the first date, so the controls that actually define the poll
+   * started below the fold.
+   */
+  showDetails = false;
   /** Where the event happens; edited by the location picker as one object. */
   location: FormLocation = {};
   qaFields: BuilderField[] = [];

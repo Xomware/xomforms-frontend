@@ -52,10 +52,97 @@ h2 {
   margin: 28px 0 12px;
 }
 
+/* ── Form rhythm ──────────────────────────────────────────────────────
+   The scheduler form was a flat column of 14 controls at a uniform 18px gap,
+   with the one grouped fieldset using 16px internally. Two pixels of
+   difference between "next field" and "next section" meant nothing grouped —
+   the form had no shape, which is what read as odd spacing.
+
+   Three tiers now, each clearly distinct:
+     6px   label -> input          (.field, unchanged)
+     16px  field -> field          (within a section)
+     40px  section -> section      (+ a rule and a heading) */
 form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-section + .form-section,
+.preview + .form-section {
+  margin-top: 16px;
+  padding-top: 28px;
+  border-top: 1px solid var(--xf-border);
+}
+
+.form-section__title {
+  margin: 0;
+  font-size: $text-md;
+  font-weight: $font-weight-bold;
+  color: var(--xf-text);
+}
+
+/* Sits directly under the heading, so it cancels the section's 16px gap. */
+.form-section__hint {
+  margin: -10px 0 0;
+  font-size: $text-sm;
+  color: var(--xf-text-muted);
+}
+
+/* Reveals the three optional text fields. Deliberately plain — it must read as
+   "there is more if you want it", not as an action worth taking. */
+.disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 8px 12px;
+  border: 1px dashed var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: transparent;
+  color: var(--xf-text-muted);
+  font: inherit;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: border-color var(--xf-transition), color var(--xf-transition);
+
+  @include hover {
+    border-color: var(--xf-primary);
+    color: var(--xf-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
+  }
+}
+
+.disclosure__sign {
+  font-size: $text-md;
+  line-height: 1;
+  font-weight: $font-weight-bold;
+}
+
+.disclosure__note {
+  font-size: $text-2xs;
+  text-transform: uppercase;
+  letter-spacing: $tracking-wide;
+  color: var(--xf-text-faint);
+}
+
+.detail-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-left: 12px;
+  border-left: 2px solid var(--xf-border);
 }
 
 /* Start/end date, earliest/latest start, close-at date+time, scale min/max —
@@ -175,6 +262,9 @@ textarea {
 }
 
 /* ── Time config + end-time warning + preview ────────────────────── */
+/* The section heading now does the grouping the legend used to, so this is a
+   plain tinted panel holding the time controls rather than a second, competing
+   group boundary around them. */
 .time-config {
   display: flex;
   flex-direction: column;
@@ -184,14 +274,6 @@ textarea {
   border: 1px solid var(--xf-border);
   border-radius: var(--xf-radius);
   background: var(--xf-surface-2);
-
-  legend {
-    padding: 0 8px;
-    margin-left: -4px;
-    font-size: $text-sm;
-    font-weight: $font-weight-bold;
-    color: var(--xf-text);
-  }
 }
 
 /* Segmented control for the start interval -- three mutually exclusive options
