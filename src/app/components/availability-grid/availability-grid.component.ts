@@ -1,9 +1,10 @@
 import {
-  AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
   Input,
+  NgZone,
   OnChanges,
   OnDestroy,
   Output,
@@ -11,7 +12,23 @@ import {
   ViewChild,
 } from '@angular/core';
 import { GridBlock } from '../../models/poll.model';
-import { formatLocal, timezoneLabel, viewerTimeZone } from '../../models/grid.util';
+import { formatDayLong, formatLocal, formatTime, timezoneLabel, viewerTimeZone } from '../../models/grid.util';
+
+/**
+ * MUST stay in lockstep with the `phone` mixin in src/styles/_responsive.scss
+ * ($breakpoint-sm - $bp-step = 576px - 0.02px). The two layouts are swapped by
+ * *ngIf rather than by CSS `display`, so if this value and the mixin disagree
+ * the app renders a layout its own stylesheet isn't styling.
+ *
+ * Why *ngIf and not CSS: rendering both layouts would double the DOM for what
+ * is often 200+ cells, and would attach the desktop drag-paint pointer
+ * listeners on phones — which is the exact behaviour this rebuild exists to
+ * remove.
+ */
+export const PHONE_MEDIA_QUERY = '(max-width: 575.98px)';
+
+/** Horizontal travel (px) that separates a day-swipe from a tap. */
+const SWIPE_THRESHOLD_PX = 50;
 
 /**
  * Drag-to-paint availability grid. Promoted from the Phase 0 throwaway
@@ -71,7 +88,7 @@ export const DEFAULT_TIME_FILTER_IDS: TimeFilterId[] = ['after5', 'after7'];
   templateUrl: './availability-grid.component.html',
   styleUrls: ['./availability-grid.component.scss'],
 })
-export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDestroy {
+export class AvailabilityGridComponent implements OnChanges, OnDestroy {
   /** The poll's full candidate grid, chronologically ordered (see grid.util.ts::generateGrid). */
   @Input() blocks: GridBlock[] = [];
   /** Pre-selected blockIds, e.g. when a respondent is editing a prior submission. */
@@ -83,11 +100,33 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
   @Input() readOnly = false;
   @Output() selectionChange = new EventEmitter<string[]>();
 
-  @ViewChild('gridEl', { static: false }) gridEl?: ElementRef<HTMLDivElement>;
+  /**
+   * Setter rather than a plain @ViewChild: the desktop grid is behind an
+   * *ngIf, so it appears and disappears as the viewport crosses the phone
+   * breakpoint. ngAfterViewInit fires once and would leave the listeners
+   * bound to a detached node (or never bound at all, if the app opened on a
+   * phone-width viewport and was then widened).
+   */
+  @ViewChild('gridEl')
+  set gridEl(ref: ElementRef<HTMLDivElement> | undefined) {
+    const next = ref?.nativeElement;
+    if (next === this.gridElement) return;
+    this.detachListeners();
+    this.gridElement = next;
+    this.attachListeners();
+  }
+  private gridElement?: HTMLDivElement;
 
   rows: GridRow[] = [];
   colDates: string[] = [];
   selected = new Set<string>();
+
+  /** True while the viewport is phone-width; drives the layout swap. */
+  isPhone = false;
+  /** Index into colDates — the single day the phone layout is showing. */
+  activeDayIndex = 0;
+  private blocksByDate = new Map<string, GridBlock[]>();
+  private readonly phoneQuery = window.matchMedia(PHONE_MEDIA_QUERY);
   readonly viewerTz = viewerTimeZone();
   /** Readable form for the footnote; the raw id still drives formatting. */
   readonly viewerTzLabel = timezoneLabel(viewerTimeZone());
@@ -97,6 +136,23 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
   private lastPaintedKey: string | null = null;
   private listenersAttached = false;
   private pointerJustHandled = false;
+
+  constructor(
+    private readonly zone: NgZone,
+    private readonly cdr: ChangeDetectorRef,
+  ) {
+    this.isPhone = this.phoneQuery.matches;
+    this.phoneQuery.addEventListener('change', this.onPhoneQueryChange);
+  }
+
+  private onPhoneQueryChange = (ev: MediaQueryListEvent): void => {
+    // matchMedia fires outside Angular's zone in some browsers, so the layout
+    // swap would otherwise not repaint until the next unrelated event.
+    this.zone.run(() => {
+      this.isPhone = ev.matches;
+      this.cdr.markForCheck();
+    });
+  };
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['blocks']) {
@@ -109,29 +165,31 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
     }
   }
 
-  ngAfterViewInit(): void {
-    this.attachListeners();
-  }
-
   ngOnDestroy(): void {
-    const el = this.gridEl?.nativeElement;
-    if (!el) return;
-    el.removeEventListener('pointerdown', this.onPointerDown);
-    el.removeEventListener('pointermove', this.onPointerMove);
-    el.removeEventListener('pointerup', this.onPointerUp);
-    el.removeEventListener('pointercancel', this.onPointerUp);
+    this.detachListeners();
+    this.phoneQuery.removeEventListener('change', this.onPhoneQueryChange);
   }
 
   private attachListeners(): void {
     // Preview/read-only grids never paint -- skip all pointer wiring.
     if (this.readOnly) return;
-    const el = this.gridEl?.nativeElement;
+    const el = this.gridElement;
     if (!el || this.listenersAttached) return;
     el.addEventListener('pointerdown', this.onPointerDown, { passive: false });
     el.addEventListener('pointermove', this.onPointerMove, { passive: false });
     el.addEventListener('pointerup', this.onPointerUp);
     el.addEventListener('pointercancel', this.onPointerUp);
     this.listenersAttached = true;
+  }
+
+  private detachListeners(): void {
+    const el = this.gridElement;
+    if (!el || !this.listenersAttached) return;
+    el.removeEventListener('pointerdown', this.onPointerDown);
+    el.removeEventListener('pointermove', this.onPointerMove);
+    el.removeEventListener('pointerup', this.onPointerUp);
+    el.removeEventListener('pointercancel', this.onPointerUp);
+    this.listenersAttached = false;
   }
 
   private rebuildGrid(): void {
@@ -146,6 +204,20 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
     const times = Array.from(timeSet).sort();
 
     const byBlockId = new Map(this.blocks.map((b) => [b.blockId, b] as const));
+
+    // Day-major index for the phone layout. Built from `blocks` directly rather
+    // than by slicing a column out of `rows`, because rows drop missing cells
+    // and a sparse grid would silently shift every later day by one.
+    this.blocksByDate = new Map();
+    for (const block of this.blocks) {
+      const date = block.blockId.split('T')[0];
+      const bucket = this.blocksByDate.get(date);
+      if (bucket) bucket.push(block);
+      else this.blocksByDate.set(date, [block]);
+    }
+    // The poll's date range can change under us (creator preview re-renders on
+    // every edit); an out-of-range index would render an empty day.
+    this.activeDayIndex = Math.min(this.activeDayIndex, Math.max(this.colDates.length - 1, 0));
 
     this.rows = times.map((time) => {
       const cells = this.colDates.map((date) => byBlockId.get(`${date}T${time}`)).filter((b): b is GridBlock => !!b);
@@ -171,6 +243,15 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
     if (this.readOnly) return;
     if (this.pointerJustHandled) {
       this.pointerJustHandled = false;
+      return;
+    }
+    // A day-swipe that started on a time row still ends with a click on it,
+    // which would toggle a block the user only meant to swipe past. pointerup
+    // (where swipeConsumed is set) always precedes click, so this is settled
+    // by the time we get here. Angular templates can't bind capture-phase
+    // listeners, so the guard lives at the handler rather than on the list.
+    if (this.swipeConsumed) {
+      this.swipeConsumed = false;
       return;
     }
     if (this.selected.has(blockId)) {
@@ -199,6 +280,114 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
     this.clearFilters();
     this.emitSelection();
   }
+
+  // ── Phone layout ───────────────────────────────────────────────────
+  // One day at a time as a full-width vertical list. This exists because the
+  // desktop grid is unusable on a phone: it set `touch-action: none`, so a
+  // sideways swipe painted a streak of cells instead of panning to more days,
+  // and a vertical swipe painted instead of scrolling the page. With the grid
+  // taller than the viewport there was nowhere left to start a scroll from.
+  //
+  // Here the browser owns vertical scrolling outright, each row is a
+  // full-width tap target, and days are changed by an explicit control rather
+  // than by a gesture that overlaps painting.
+
+  /** Blocks for the day currently on screen, chronological. */
+  get activeDayBlocks(): GridBlock[] {
+    const date = this.colDates[this.activeDayIndex];
+    return date ? (this.blocksByDate.get(date) ?? []) : [];
+  }
+
+  /** e.g. "Saturday, Aug 1" — full weekday, since there's room for it here. */
+  get activeDayLabel(): string {
+    const first = this.activeDayBlocks[0];
+    return first ? formatDayLong(first.utcInstant, this.viewerTz) : '';
+  }
+
+  /** Short chip label, e.g. "Sat 1". */
+  dayChipLabel(date: string): string {
+    const first = this.blocksByDate.get(date)?.[0];
+    if (!first) return date;
+    // formatLocal gives "Sat, Aug 1, 7:00 PM"; take weekday + day number.
+    const [weekday, monthDay] = formatLocal(first.utcInstant, this.viewerTz).split(', ');
+    return `${weekday} ${monthDay?.split(' ')[1] ?? ''}`.trim();
+  }
+
+  /** Clock time for a row, e.g. "7:00 PM". */
+  timeLabel(block: GridBlock): string {
+    return formatTime(block.utcInstant, this.viewerTz);
+  }
+
+  selectedCountForDay(date: string): number {
+    const blocks = this.blocksByDate.get(date);
+    if (!blocks) return 0;
+    let count = 0;
+    for (const b of blocks) if (this.selected.has(b.blockId)) count++;
+    return count;
+  }
+
+  goToDay(index: number): void {
+    if (index < 0 || index >= this.colDates.length) return;
+    this.activeDayIndex = index;
+  }
+
+  prevDay(): void {
+    this.goToDay(this.activeDayIndex - 1);
+  }
+
+  nextDay(): void {
+    this.goToDay(this.activeDayIndex + 1);
+  }
+
+  /** Selects every block on the day currently shown. */
+  selectActiveDay(): void {
+    for (const b of this.activeDayBlocks) this.manualSelected.add(b.blockId);
+    this.applyFilters();
+  }
+
+  /** Clears every block on the day currently shown. */
+  clearActiveDay(): void {
+    for (const b of this.activeDayBlocks) this.manualSelected.delete(b.blockId);
+    this.applyFilters();
+  }
+
+  get activeDayFullySelected(): boolean {
+    const blocks = this.activeDayBlocks;
+    return blocks.length > 0 && blocks.every((b) => this.selected.has(b.blockId));
+  }
+
+  // ── Swipe between days ─────────────────────────────────────────────
+  // The list sets `touch-action: pan-y`, so the browser keeps vertical
+  // scrolling (native, and never fought over) while horizontal gestures reach
+  // these handlers. That split is the whole point — the old code claimed BOTH
+  // axes with `touch-action: none` and broke scrolling entirely.
+
+  private swipeStartX: number | null = null;
+  private swipeStartY = 0;
+  private swipeConsumed = false;
+
+  onListPointerDown(ev: PointerEvent): void {
+    if (!ev.isPrimary) return;
+    this.swipeStartX = ev.clientX;
+    this.swipeStartY = ev.clientY;
+    this.swipeConsumed = false;
+  }
+
+  onListPointerUp(ev: PointerEvent): void {
+    if (!ev.isPrimary || this.swipeStartX === null) return;
+    const dx = ev.clientX - this.swipeStartX;
+    const dy = ev.clientY - this.swipeStartY;
+    this.swipeStartX = null;
+
+    // Require the gesture to be decisively horizontal. Without the dy
+    // comparison a diagonal scroll-flick would also flip the day.
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+    this.swipeConsumed = true;
+    if (dx < 0) this.nextDay();
+    else this.prevDay();
+  }
+
 
   // ── Quick filters ──────────────────────────────────────────────────
   // Toggles rather than one-shot buttons, and they COMBINE across categories:
@@ -345,6 +534,13 @@ export class AvailabilityGridComponent implements OnChanges, AfterViewInit, OnDe
     // Only handle the primary pointer -- ignore secondary touches so a
     // second finger landing mid-drag can't hijack the gesture.
     if (!ev.isPrimary) return;
+
+    // Drag-paint is a mouse/pen interaction only. Phones get the day-at-a-time
+    // layout instead, but touch TABLETS (577px+) still render this grid, and
+    // claiming their touches here would recreate the scroll trap this rebuild
+    // exists to remove. They toggle via the cell's own click handler; see the
+    // matching coarse-pointer `touch-action` rule on .grid.
+    if (ev.pointerType === 'touch') return;
 
     const blockId = this.cellFromPoint(ev.clientX, ev.clientY);
     if (!blockId) return;

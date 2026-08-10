@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 .admin-panel {
   display: flex;
@@ -90,7 +91,7 @@
   cursor: pointer;
   transition: border-color var(--xf-transition), background var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
     color: var(--xf-primary);
   }
@@ -112,7 +113,7 @@
   background: var(--xf-primary);
   color: var(--xf-on-primary);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     background: var(--xf-primary-hover);
     border-color: var(--xf-primary-hover);
     color: var(--xf-on-primary);
@@ -248,7 +249,7 @@
   cursor: pointer;
   transition: border-color var(--xf-transition), background var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
   }
 
@@ -281,7 +282,7 @@
   color: var(--xf-text-muted);
 }
 
-@media (max-width: 640px) {
+@include tablet-down {
   .visibility-group {
     grid-template-columns: 1fr;
   }
@@ -307,7 +308,7 @@
   transition: border-color var(--xf-transition), color var(--xf-transition),
     background var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
     color: var(--xf-primary);
   }
@@ -395,7 +396,7 @@
   cursor: pointer;
   transition: border-color var(--xf-transition), background var(--xf-transition);
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
   }
 
@@ -512,6 +513,8 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
+  @include safe-inline(20px);
+  @include safe-bottom(20px);
   background: rgba(32, 18, 56, 0.45);
 }
 
@@ -519,6 +522,10 @@
   width: 100%;
   max-width: 460px;
   padding: 22px;
+  // A fixed dialog taller than the phone viewport has no scroll of its own,
+  // so its action buttons end up unreachable below the fold.
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   background: var(--xf-surface);
   border-radius: var(--xf-radius-lg);
   box-shadow: var(--xf-shadow-card);
@@ -556,7 +563,7 @@
   font-weight: $font-weight-semibold;
   cursor: pointer;
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
   }
 
@@ -577,7 +584,7 @@
   background: var(--xf-primary);
   color: var(--xf-on-primary);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     background: var(--xf-primary-hover);
     border-color: var(--xf-primary-hover);
   }

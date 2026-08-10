@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 :host {
   display: block;
@@ -125,7 +126,7 @@
 /* On phones a 26%-wide label column truncates option text ("Cooking cl…").
    Give choice labels their own full-width line above the bar; keep the compact
    numeric scale rows inline (single digits never truncate). */
-@media (max-width: 560px) {
+@include phone {
   .field-result {
     padding: 16px 15px;
   }

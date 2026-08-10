@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 .app-header {
   /* Always dark: the neon banner is designed to sit on a dark backdrop. */
@@ -19,6 +20,10 @@
   align-items: center;
   gap: 8px;
   padding: 8px clamp(16px, 3vw, 28px);
+  // In landscape the notch/Dynamic Island overlaps the leading edge, which
+  // clipped the brand banner. viewport-fit=cover (index.html) is what makes
+  // these insets report a real value.
+  @include safe-inline(clamp(16px, 3vw, 28px));
 }
 
 /* Pushes the account cluster right without pinning the nav there too. */
@@ -80,7 +85,7 @@
   white-space: nowrap;
   transition: color var(--xf-transition), background var(--xf-transition);
 
-  &:hover {
+  @include hover {
     color: var(--xf-header-text);
     background: rgba(255, 255, 255, 0.06);
   }
@@ -112,7 +117,7 @@
   cursor: pointer;
   transition: background var(--xf-transition), border-color var(--xf-transition);
 
-  &:hover {
+  @include hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.28);
   }
@@ -128,7 +133,7 @@
   background: linear-gradient(135deg, var(--xf-purple) 0%, var(--xf-purple-600) 100%);
   color: #fff;
 
-  &:hover {
+  @include hover {
     background: linear-gradient(135deg, var(--xf-purple-600) 0%, var(--xf-purple-700) 100%);
     border-color: transparent;
   }
@@ -138,7 +143,7 @@
   display: block;
 }
 
-@media (max-width: 560px) {
+@include phone {
   .brand-banner {
     height: 34px;
     max-width: 46vw;

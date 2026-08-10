@@ -5,10 +5,17 @@
       "font-size": ["/^\\$text-/", "/^clamp\\(/", "inherit", "1em"],
       "letter-spacing": ["/^\\$tracking-/", "normal", "inherit"],
       "font-weight": ["/^\\$font-weight-/", "inherit", "normal"]
+    },
+    "media-feature-name-value-allowed-list": {
+      "max-width": ["/\\$breakpoint-/"],
+      "min-width": ["/\\$breakpoint-/"]
     }
   },
   "ignoreFiles": ["node_modules/**", "dist/**"],
   "overrides": [
-    { "files": ["src/styles/_tokens.scss"], "rules": { "declaration-property-value-allowed-list": null } }
+    {
+      "files": ["src/styles/_tokens.scss"],
+      "rules": { "declaration-property-value-allowed-list": null }
+    }
   ]
 }

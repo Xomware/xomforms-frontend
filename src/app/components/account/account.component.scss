@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 .account-page {
   max-width: 620px;
@@ -13,7 +14,7 @@
   font-size: $text-sm;
   text-decoration: none;
 
-  &:hover {
+  @include hover {
     color: var(--xf-primary);
   }
 
@@ -103,7 +104,7 @@ h1 {
   cursor: pointer;
   transition: border-color var(--xf-transition), color var(--xf-transition);
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
     color: var(--xf-primary);
   }
@@ -115,7 +116,7 @@ h1 {
   }
 }
 
-@media (max-width: 480px) {
+@include phone {
   .profile-card {
     flex-direction: column;
     text-align: center;

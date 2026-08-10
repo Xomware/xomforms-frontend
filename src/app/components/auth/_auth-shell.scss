@@ -1,14 +1,20 @@
 @import 'tokens';
+@import 'responsive';
 
 // Shared layout for the Xomforms auth screens (sign-in, callback).
 // Dark, on-brand shell with a purple glow — echoes the app header.
 
 .auth-shell {
-  min-height: calc(100vh - 66px);
+  // dvh so the card stays centred in the VISIBLE viewport on iOS rather than
+  // in a taller-than-screen box, which pushed the sign-in button under the
+  // Safari toolbar. 66px is the header height being subtracted.
+  min-height: calc(100dvh - 66px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
+  @include safe-inline(20px);
+  @include safe-bottom(40px);
   background:
     radial-gradient(ellipse at 50% -10%, rgba(106, 54, 169, 0.35) 0%, transparent 55%),
     var(--xf-header-bg);
@@ -101,7 +107,7 @@
   transition: transform var(--xf-transition), box-shadow var(--xf-transition),
     opacity var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     transform: translateY(-1px);
     box-shadow: 0 8px 22px var(--xf-purple-glow);
   }
@@ -125,7 +131,7 @@
   background: #fff;
   color: #23202b;
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
   }
 }
@@ -149,7 +155,7 @@
   cursor: pointer;
   transition: background var(--xf-transition), border-color var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.28);
   }

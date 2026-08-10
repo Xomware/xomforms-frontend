@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 :host {
   display: block;
@@ -40,7 +41,7 @@
     margin-bottom: 0;
   }
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
     background: var(--xf-surface-2);
   }
@@ -78,7 +79,7 @@
   font-size: $text-base;
   font-family: inherit;
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
   }
 
@@ -110,7 +111,7 @@
   transition: border-color var(--xf-transition), background var(--xf-transition),
     color var(--xf-transition), transform var(--xf-transition);
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
     transform: translateY(-1px);
   }

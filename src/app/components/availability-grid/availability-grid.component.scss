@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 .grid-wrap {
   display: flex;
@@ -41,7 +42,7 @@
   transition: background var(--xf-transition), border-color var(--xf-transition),
     color var(--xf-transition);
 
-  &:hover {
+  @include hover {
     background: var(--xf-purple-100);
     border-color: var(--xf-primary);
     color: var(--xf-primary);
@@ -66,7 +67,7 @@
   transition: background var(--xf-transition), border-color var(--xf-transition),
     color var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     background: var(--xf-surface-2);
     border-color: var(--xf-primary);
     color: var(--xf-primary);
@@ -97,26 +98,40 @@
     inset 14px 0 12px -12px rgba(20, 15, 34, 0.5);
 }
 
-// Mobile-only "there's more to the right" hint.
+// "There's more to the right" hint. Phones never see this grid at all now;
+// it's for the tablet range, where the grid can still overflow horizontally.
 .scroll-hint {
   display: none;
   margin: 0;
   font-size: $text-2xs;
   font-weight: $font-weight-semibold;
   color: var(--xf-primary);
+
+  @include tablet-down {
+    display: block;
+  }
 }
 
 .grid {
   display: grid;
   width: max-content;
-  // Column widths via CSS vars so media queries can slim the time column on
-  // phones while keeping the paint cells at a ~44px tap target.
+  // Column widths via CSS vars so the time column can be slimmed without the
+  // component needing to know the column count.
   grid-template-columns:
     var(--xf-label-w, 88px)
     repeat(var(--xf-cols, 1), minmax(var(--xf-cell-w, 44px), 1fr));
-  // Critical for mobile Safari: stop the browser from hijacking the
-  // gesture as a page-scroll before our pointer handlers run.
+  // Claims both axes so a mouse drag paints instead of selecting text. Safe
+  // here because only a fine pointer ever reaches it — see below.
   touch-action: none;
+
+  @include coarse-pointer {
+    // Touch tablets (577px+) still render this grid. Leaving `touch-action:
+    // none` in place for them would reproduce exactly the trap this rebuild
+    // removes on phones: the grid would swallow both scroll axes and a swipe
+    // would paint instead of pan. Drag-paint is given up for touch here
+    // (onPointerDown bails on pointerType 'touch'); tap-to-toggle still works.
+    touch-action: pan-x pan-y;
+  }
 }
 
 .cell {
@@ -170,7 +185,7 @@
   margin: 0;
   transition: background-color 0.1s ease;
 
-  &:hover {
+  @include hover {
     background: var(--xf-purple-100);
   }
 
@@ -185,7 +200,7 @@
     background: var(--xf-primary);
     border-color: var(--xf-primary-active);
 
-    &:hover {
+    @include hover {
       background: var(--xf-primary-hover);
     }
   }
@@ -206,43 +221,238 @@
   .paint-cell {
     cursor: default;
 
-    &:hover {
+    @include hover {
       background: var(--xf-surface);
     }
   }
 }
 
-// Grow touch targets toward the ~44px recommendation on narrow viewports.
-@media (max-width: 560px) {
-  .scroll-hint {
-    display: block;
+/* ══ Phone layout: one day at a time ═══════════════════════════════════
+   Rendered instead of .grid below 576px (see PHONE_MEDIA_QUERY in the
+   component — the two values must agree). Nothing here is inside a media
+   query: the *ngIf already guarantees these elements only exist on phones,
+   and wrapping them again would just be a second place to keep in sync. */
+
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-nav__arrow {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface);
+  color: var(--xf-text);
+  font-size: $text-lg;
+  line-height: 1;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
   }
 }
 
-@media (max-width: 480px) {
-  // Slim the time column (but NOT the cells — these are drag/tap targets).
-  .grid {
-    --xf-label-w: 64px;
-  }
+.day-nav__current {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
 
-  .cell {
+.day-nav__label {
+  display: block;
+  font-size: $text-md;
+  font-weight: $font-weight-bold;
+  color: var(--xf-text);
+}
+
+.day-nav__meta {
+  display: block;
+  font-size: $text-2xs;
+  color: var(--xf-text-muted);
+}
+
+/* Horizontally scrollable so a month-long poll degrades gracefully instead of
+   crushing 30 chips into the width of the screen. */
+.day-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  /* Vertical is the page's; horizontal is this strip's. Stated explicitly so
+     the strip can never swallow a page scroll. */
+  touch-action: pan-x;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.day-chip {
+  position: relative;
+  flex: none;
+  padding: 8px 14px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-pill);
+  background: var(--xf-surface);
+  color: var(--xf-text-muted);
+  font: inherit;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
+  }
+}
+
+.day-chip--active {
+  border-color: var(--xf-primary);
+  background: var(--xf-purple-100);
+  color: var(--xf-primary);
+}
+
+/* Marks a day that already has picks — the reason to scan the strip at all. */
+.day-chip__dot {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--xf-primary);
+}
+
+.day-actions {
+  display: flex;
+  gap: 8px;
+
+  .preset-btn {
+    flex: 1;
     min-height: 44px;
   }
+}
 
-  .row-header {
-    font-size: $text-3xs;
-    padding: 4px 6px;
+.time-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* The load-bearing line. The browser keeps vertical scrolling outright,
+     which is what the old `touch-action: none` took away; horizontal gestures
+     fall through to the swipe handlers. */
+  touch-action: pan-y;
+}
+
+.time-row {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: var(--xf-surface);
+  color: var(--xf-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--xf-transition), border-color var(--xf-transition);
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-primary);
+    outline-offset: 2px;
   }
 
-  .col-header {
-    font-size: $text-3xs;
-    padding: 4px 2px;
+  &:disabled {
+    cursor: default;
   }
+}
+
+.time-row__time {
+  flex: none;
+  font-size: $text-base;
+  font-weight: $font-weight-semibold;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-row__state {
+  flex: 1;
+  font-size: $text-2xs;
+  color: var(--xf-text-muted);
+}
+
+/* Selection is carried by the checkmark and the border, not by colour alone —
+   the fill is a tint rather than a solid so the time stays readable. */
+.time-row__check {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--xf-border-strong);
+  border-radius: var(--xf-radius-sm);
+  background: transparent;
+}
+
+.time-row--selected {
+  border-color: var(--xf-primary);
+  background: var(--xf-purple-100);
+
+  .time-row__state {
+    color: var(--xf-primary);
+    font-weight: $font-weight-semibold;
+  }
+
+  .time-row__check {
+    border-color: var(--xf-primary);
+    background: var(--xf-primary);
+    /* Tick drawn with borders so there's no icon dependency here. */
+    background-image: linear-gradient(
+        45deg,
+        transparent 40%,
+        var(--xf-on-primary) 40%,
+        var(--xf-on-primary) 52%,
+        transparent 52%
+      ),
+      linear-gradient(
+        -45deg,
+        transparent 62%,
+        var(--xf-on-primary) 62%,
+        var(--xf-on-primary) 74%,
+        transparent 74%
+      );
+  }
+}
+
+.swipe-hint {
+  margin: 0;
+  text-align: center;
+  font-size: $text-2xs;
+  color: var(--xf-text-faint);
 }
 
 @media (prefers-color-scheme: dark) {
-  .paint-cell:hover {
-    background: rgba(154, 107, 255, 0.18);
+  .paint-cell {
+    @include hover {
+      background: rgba(154, 107, 255, 0.18);
+    }
   }
 }
 

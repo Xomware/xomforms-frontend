@@ -1,4 +1,5 @@
 @import 'tokens';
+@import 'responsive';
 
 :host {
   display: block;
@@ -24,7 +25,7 @@
   text-decoration: none;
   transition: color var(--xf-transition);
 
-  &:hover {
+  @include hover {
     color: var(--xf-primary);
   }
 
@@ -57,12 +58,22 @@ form {
   gap: 18px;
 }
 
+/* Start/end date, earliest/latest start, close-at date+time, scale min/max —
+   five two-up rows, all of which stayed two-up on a phone. At 390px that left
+   each side ~170px, and xf-date's popover alone has a 268px min-width, so the
+   date pickers overflowed their own column.
+
+   A flex-basis rather than a media query: 200px is the width below which these
+   controls stop working, so they stack exactly when they need to and the rule
+   states the actual constraint. `> *` and not `.field` because the close-at row
+   puts xf-date/xf-select in the row directly. */
 .field-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 
-  .field {
-    flex: 1;
+  > * {
+    flex: 1 1 200px;
     min-width: 0;
   }
 }
@@ -104,7 +115,7 @@ select {
     color: var(--xf-text-faint);
   }
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
   }
 
@@ -213,7 +224,7 @@ textarea {
   transition: border-color var(--xf-transition), box-shadow var(--xf-transition),
     background var(--xf-transition);
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
   }
 
@@ -242,7 +253,7 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 560px) {
+@include phone {
   .granularity-group {
     grid-template-columns: 1fr;
   }
@@ -335,7 +346,7 @@ textarea {
   text-decoration: none;
   transition: transform var(--xf-transition), box-shadow var(--xf-transition);
 
-  &:hover {
+  @include hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px var(--xf-purple-glow);
   }
@@ -369,7 +380,7 @@ textarea {
   transition: transform var(--xf-transition), box-shadow var(--xf-transition),
     opacity var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px var(--xf-purple-glow);
   }
@@ -399,6 +410,13 @@ textarea {
   display: flex;
   gap: 8px;
 
+  // The share link is the whole point of this screen and it's rendered in a
+  // mono font; sharing the row with the Copy button left it showing about a
+  // third of the URL on a phone.
+  @include phone {
+    flex-direction: column;
+  }
+
   input {
     flex: 1;
     min-width: 0;
@@ -427,7 +445,7 @@ textarea {
     cursor: pointer;
     transition: background var(--xf-transition), color var(--xf-transition);
 
-    &:hover {
+    @include hover {
       background: var(--xf-primary);
       color: var(--xf-on-primary);
     }
@@ -481,7 +499,7 @@ textarea {
   transition: transform var(--xf-transition), box-shadow var(--xf-transition),
     border-color var(--xf-transition);
 
-  &:hover:not(.starter-card--soon) {
+  @include hover(':not(.starter-card--soon)') {
     transform: translateY(-2px);
     border-color: var(--xf-primary);
     box-shadow: 0 10px 26px var(--xf-purple-glow);
@@ -581,7 +599,7 @@ textarea {
   transition: border-color var(--xf-transition), color var(--xf-transition),
     background var(--xf-transition);
 
-  &:hover:not(:disabled) {
+  @include hover(':not(:disabled)') {
     border-color: var(--xf-primary);
     color: var(--xf-primary);
   }
@@ -597,9 +615,11 @@ textarea {
   }
 }
 
-.icon-btn--danger:hover:not(:disabled) {
-  border-color: var(--xf-danger-text);
-  color: var(--xf-danger-text);
+.icon-btn--danger {
+  @include hover(':not(:disabled)') {
+    border-color: var(--xf-danger-text);
+    color: var(--xf-danger-text);
+  }
 }
 
 .builder-options {
@@ -646,7 +666,7 @@ textarea {
   font-family: inherit;
   transition: border-color var(--xf-transition), background var(--xf-transition);
 
-  &:hover {
+  @include hover {
     border-color: var(--xf-primary);
     background: var(--xf-purple-100);
   }
@@ -693,7 +713,7 @@ textarea {
   margin-right: 2px;
 }
 
-@media (max-width: 560px) {
+@include phone {
   .field-row {
     flex-direction: column;
     gap: 18px;
@@ -768,7 +788,7 @@ textarea {
   cursor: pointer;
   transition: background var(--xf-transition);
 
-  &:hover {
+  @include hover {
     background: var(--xf-primary-hover);
   }
 
