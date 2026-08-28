@@ -13,10 +13,19 @@ on:
 
 jobs:
   build-and-deploy:
+    permissions:
+      id-token: write # mint the OIDC token traded for the deploy role
+      contents: read
     # Run on push, workflow_dispatch, or merged PRs (not just closed)
     if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
       - name: Checkout code
         uses: actions/checkout@v6
 
@@ -35,10 +44,6 @@ jobs:
         # SSM rather than hardcoded so a pool/client change never requires
         # an application-code change. Mirrors xomware-frontend's
         # deploy-frontend.yml exactly.
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
         run: |
           {
             echo "COGNITO_USER_POOL_ID=$(aws ssm get-parameter --name /xomware/shared/cognito/user-pool-id --query Parameter.Value --output text)"
@@ -64,30 +69,18 @@ jobs:
         run: npm run build:prod
 
       - name: Deploy hashed bundles to S3 (1 year cache)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
         run: |
           aws s3 sync ./dist/xomforms-frontend/browser s3://xomforms.xomware.com --delete \
             --exclude "index.html" \
             --cache-control "public, max-age=31536000, immutable"
 
       - name: Deploy index.html (no-cache)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
         run: |
           aws s3 cp ./dist/xomforms-frontend/browser/index.html s3://xomforms.xomware.com/index.html \
             --cache-control "no-cache, no-store, must-revalidate" \
             --content-type "text/html"
 
       - name: Invalidate CloudFront and wait
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
         run: |
           # Resolved dynamically (not a stored secret) -- same pattern as
           # xomware-frontend's deploy-frontend.yml. Distribution is
