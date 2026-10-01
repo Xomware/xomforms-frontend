@@ -63,6 +63,29 @@
   }
 }
 
+.brand-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Outlined rather than filled so it reads as a label, not a button. */
+.beta-pill {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--xf-yellow) 55%, transparent);
+  border-radius: var(--xf-radius-pill);
+  color: var(--xf-yellow);
+  font-size: $text-2xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: $tracking-wide;
+  line-height: 1.4;
+  text-transform: uppercase;
+  user-select: none;
+}
+
 .brand-banner {
   display: block;
   height: 46px;
@@ -147,6 +170,20 @@
   .brand-banner {
     height: 34px;
     max-width: 46vw;
+  }
+
+  /* A signed-in phone header already fills 375px, so the pill can't take
+     width here. It sits as a filled tag over the empty space under the
+     wordmark instead. */
+  .beta-pill {
+    position: absolute;
+    right: -4px;
+    bottom: -8px;
+    padding: 0 5px;
+    border-color: var(--xf-yellow);
+    background: var(--xf-yellow);
+    color: var(--xf-header-bg);
+    pointer-events: none;
   }
 
   /* The tab stays -- it's the only nav item, and the avatar alone would leave

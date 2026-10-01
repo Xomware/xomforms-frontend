@@ -23,6 +23,7 @@ import { AccountComponent } from './components/account/account.component';
 import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
 import { LocationPickerComponent } from './components/location-picker/location-picker.component';
 import { IconComponent } from './components/icon/icon.component';
+import { BetaBannerComponent } from './components/beta-banner/beta-banner.component';
 import { SignInComponent } from './components/auth/sign-in/sign-in.component';
 import { CallbackComponent } from './components/auth/callback/callback.component';
 
@@ -48,6 +49,7 @@ import { jwtInterceptor } from './interceptors/jwt.interceptor';
     AdminPanelComponent,
     LocationPickerComponent,
     IconComponent,
+    BetaBannerComponent,
     SignInComponent,
     CallbackComponent,
   ],
