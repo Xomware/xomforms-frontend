@@ -1,0 +1,84 @@
+@import 'tokens';
+@import 'responsive';
+
+/* Sits above the always-dark header, so it uses the header's palette rather
+   than the light/dark page tokens. */
+.beta-banner {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs 0;
+  background: var(--xf-purple-700);
+  color: var(--xf-header-text);
+  // Same inline gutter as the header, so the text lines up with the brand.
+  @include safe-inline(clamp(16px, 3vw, 28px));
+  padding-right: calc(#{$spacing-sm} + env(safe-area-inset-right, 0px));
+}
+
+.beta-banner__text {
+  flex: 1;
+  margin: 0;
+  font-size: $text-xs;
+  line-height: 1.45;
+}
+
+.beta-banner__link {
+  color: var(--xf-yellow);
+  font-weight: $font-weight-semibold;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: var(--xf-radius-sm);
+
+  @include hover {
+    text-decoration-thickness: 2px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-yellow);
+    outline-offset: 2px;
+  }
+}
+
+.beta-banner__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--xf-radius-sm);
+  background: transparent;
+  color: var(--xf-header-muted);
+  cursor: pointer;
+  transition: color var(--xf-transition), background var(--xf-transition);
+
+  @include hover {
+    color: var(--xf-header-text);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--xf-yellow);
+    outline-offset: -2px;
+  }
+
+  @include coarse-pointer {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

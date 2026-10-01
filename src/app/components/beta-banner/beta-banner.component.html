@@ -1,0 +1,11 @@
+<section *ngIf="!dismissed" class="beta-banner" aria-label="Beta notice">
+  <p class="beta-banner__text">
+    Xomforms is in beta — things may change or break.
+    <a class="beta-banner__link" [href]="feedbackUrl" target="_blank" rel="noopener noreferrer">
+      Feedback welcome<span class="visually-hidden"> (opens GitHub in a new tab)</span>
+    </a>.
+  </p>
+  <button type="button" class="beta-banner__close" aria-label="Dismiss beta notice" (click)="dismiss()">
+    <xf-icon name="close" [size]="18"></xf-icon>
+  </button>
+</section>
